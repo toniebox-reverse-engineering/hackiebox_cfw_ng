@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\app1.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\app2.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\loader.ewp</path>
+  </project>
+  <batchBuild/>
+</workspace>
+
+

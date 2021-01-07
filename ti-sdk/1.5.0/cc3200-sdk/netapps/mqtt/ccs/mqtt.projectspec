@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="ARM"
+                deviceId="Cortex M.CC3200"
+            />
+        </when>
+    </applicability>
+
+    <project
+        title="MQTT Library"
+        name="mqtt"
+        toolChain="TI"
+        connection=""
+        device="Cortex M.CC3200"
+        ignoreDefaultDeviceSettings="true"
+        references=""
+        linkerBuildOptions=""
+        postBuildStep=""
+		outputType="staticLibrary"
+		artifactExtension="a"
+        description="MQTT library">
+		
+		<configuration name="client" 
+		compilerBuildOptions="
+		-I${CG_TOOL_ROOT}/include
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/client/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/include/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/common/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/platform/
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/oslib/
+		-I${CC3200_SDK_ROOT}/inc/
+		-I${CC3200_SDK_ROOT}/simplelink
+		-I${CC3200_SDK_ROOT}/netapps
+		-I${CC3200_SDK_ROOT}/simplelink/include
+		-I${CC3200_SDK_ROOT}/simplelink/source
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/provisioninglib
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/third_party/FreeRTOS/source/
+		-I${CC3200_SDK_ROOT}/third_party/FreeRTOS/source/include/
+		-I${CC3200_SDK_ROOT}/third_party/FreeRTOS/source/portable/CCS/ARM_CM3
+		-mv7M4 
+		-me 
+		--float_support=none 
+		-Ooff 
+		--define=cc3200 
+		--define=ccs
+		--define=USE_FREERTOS
+		--define=SL_PLATFORM_MULTI_THREADED
+		--gcc 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number 
+		--gen_func_subsections=on" />
+		
+		<configuration name="client_server" 
+		compilerBuildOptions="
+		-I${CG_TOOL_ROOT}/include
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/client/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/include/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/server/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/common/
+		-I${CC3200_SDK_ROOT}/netapps/mqtt/platform/
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/oslib/
+		-I${CC3200_SDK_ROOT}/inc/
+		-I${CC3200_SDK_ROOT}/simplelink
+		-I${CC3200_SDK_ROOT}/netapps
+		-I${CC3200_SDK_ROOT}/simplelink/include
+		-I${CC3200_SDK_ROOT}/simplelink/source
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/provisioninglib
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/third_party/FreeRTOS/source/
+		-I${CC3200_SDK_ROOT}/third_party/FreeRTOS/source/include/
+		-I${CC3200_SDK_ROOT}/third_party/FreeRTOS/source/portable/CCS/ARM_CM3
+		-mv7M4 
+		-me 
+		--float_support=none 
+		-Ooff 
+		--define=cc3200 
+		--define=ccs
+		--define=USE_FREERTOS
+		--define=SL_PLATFORM_MULTI_THREADED
+		--gcc 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number 
+		--gen_func_subsections=on" />
+
+        <property name="buildProfile" value="release"/>
+		<pathVariable name="CC3200_SDK_ROOT" path="../../../" scope="project" />
+		
+        <file path="${CC3200_SDK_ROOT}/netapps/mqtt/platform/cc32xx_sl_net.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/netapps/mqtt/platform/cc32xx_platform.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/netapps/mqtt/server/client_mgmt.c" openOnCreation="false" action="link" applicableConfigurations="client_server">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/netapps/mqtt/client/mqtt_client.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/common/mqtt_common.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/server/server_core.c" openOnCreation="false" action="link" applicableConfigurations="client_server">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/server/server_pkts.c" openOnCreation="false" action="link" applicableConfigurations="client_server">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/server/server_plug.c" openOnCreation="false" action="link" applicableConfigurations="client_server">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/server/server_util.c" openOnCreation="false" action="link" applicableConfigurations="client_server">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/sl/sl_mqtt_client.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/mqtt/sl/sl_mqtt_server.c" openOnCreation="false" action="link" applicableConfigurations="client_server">
+        </file>
+
+		
+    </project>
+</projectSpec>

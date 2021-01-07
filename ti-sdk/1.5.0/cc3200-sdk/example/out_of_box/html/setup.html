@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+$(function(){
+    // assume that webserver will replace all the __SL_G token values with their
+    // appropriate values if they exist
+    var tokens = {"__SL_P_S.R" : "__SL_G_S.R",
+            "__SL_P_N.D" : "__SL_G_N.D",
+            "__SL_P_N.A" : "__SL_G_N.A",
+            "__SL_P_N.B" : "__SL_G_N.B",
+            "__SL_P_N.C" : "__SL_G_N.C",
+            "__SL_P_N.H" : "__SL_G_N.H",
+            "__SL_P_PRR" : "__SL_G_PRR",
+            "__SL_P_S.B" : "__SL_G_S.B",
+            "__SL_P_S.C" : "__SL_G_S.C",
+            "__SL_P_S.D" : "__SL_G_S.D",
+            "__SL_P_P.E" : "__SL_G_P.E",
+            "__SL_P_P.F" : "__SL_G_P.F",
+            "__SL_P_P.G" : "__SL_G_P.G",
+            "__SL_P_P.P" : "__SL_G_P.P",
+            "__SL_P_W.A" : "__SL_G_W.A",
+            "__SL_P_W.B" : "__SL_G_W.B",
+            "__SL_P_W.C" : "__SL_G_W.C",
+            "__SL_P_R.E" : "__SL_G_R.E",
+            "__SL_P_R.L" : "__SL_G_R.L",
+            "__SL_P_N.P" : "__SL_G_N.P",
+            "__SL_P_N.I" : "__SL_G_N.I",
+            "__SL_P_N.J" : "__SL_G_N.J",
+            "__SL_P_N.K" : "__SL_G_N.K"};
+
+    // go through each input field in this page and set their values    
+    $('input').each(function(i){
+        var $this = $(this),
+            thisName = $this.attr('name');
+        switch ($this.attr('type')) {
+            case "text":
+                // set the value
+                $this.val(tokens[thisName]);
+                break;
+            case "radio":
+                if ($this.attr('value') == tokens[thisName]) {
+                    $this.attr('checked','checked');
+                }
+                break;
+            case "checkbox":
+                if ('Set' == tokens[thisName]) {
+                    $this.attr('checked','checked');
+                }
+                break;
+            default:
+                break;
+        }
+    });
+    // go through all the selects and select the appropriate options
+    $('select').each(function(i){
+        var $this = $(this),
+            selName = $this.attr('name');
+        $this.find('option').each(function(o){
+            var $opt = $(this);
+            if ($opt.val() == tokens[selName]) {
+                $opt.attr('selected','selected');
+                return false;
+            }
+        });        
+    });
+
+    // populate the profiles table
+    // go get the tokens for the profiles
+    $.ajax({
+        "type": "GET",
+        "url": "param_config.html",
+        "cache": false,
+        "dataType": "html"
+    })
+    // define callback for get request success
+    .done(function(getdata, status, xhr) {
+        var datapage = $(getdata),
+            defaultSecurity = "OPEN",
+            emptyStatus = "   -   ",
+            numProfiles = 7,
+            i = 0,
+            profNum = 0,
+            profSSID = '',
+            profSecurity = '',
+            profPriority = '',
+            output = [];
+
+        for (i=0;i<numProfiles;i++) {
+            profNum = i + 1;
+            profSSID = datapage.filter('#Profile_'+profNum+'_SSID').text();
+            
+            profSecurity = datapage.filter('#Profile_'+profNum+'_Security_Status').text();
+            if (profSecurity == emptyStatus) profSecurity = defaultSecurity;
+
+            profPriority = datapage.filter('#Profile_'+profNum+'_Priority').text();
+            
+            if (profSSID != emptyStatus) {
+                output = [];
+                output.push('<tr>');
+                output.push('<td><div class="profileItem"><input type="checkbox" name="__SL_P_PRR" value="'+profNum+'"> '+profNum+'. <b>'+profSSID+'</b></div></td>');
+                output.push('<td><div class="profileItem">Security: <b>'+profSecurity+'</b></div></td>');
+                output.push('<td><div class="profileItem">Priority: <b>'+profPriority+'</b></div></td>');
+                output.push('</tr>');                
+                $(output.join('')).insertBefore('#profile_holding_area');
+            }
+        }
+    })
+    .fail(function(jqxhr, settings, exception) {
+        // do nothing
+    });
+
+    // setup binding for all form submits
+    // handle form submit of 'form_id'  
+    $('form').on('submit', function(event){
+        event.preventDefault();
+        // attach a message for the user
+        var $form = $(this),
+            submitBtn = $form.find(':submit'),
+            statusMessage = submitBtn.parent().find('.status'),
+            bClearForm = (submitBtn.val().indexOf('Add') > -1);
+        if (statusMessage.length == 0) {
+            statusMessage = $('<p class="status">Applying changes...</p>');
+            submitBtn.parent().append(statusMessage);    
+        } else {
+            statusMessage.show();
+        }
+        // do the post to 'action' defined by form html
+        // serialize the form data for submission
+        $.post($form.attr('action'), $form.serialize())
+            // define callback function for when the submission completes
+            .done(function(data, textStatus, jqXHR) {
+                // textStatus returns 'success' if http status 200 or similar
+                if (textStatus == 'success') {
+                    statusMessage.html('Changes applied.').delay( 3000 ).fadeOut( 400 );
+                    if (bClearForm) {
+                        $form.each(function(){
+                            this.reset();                            
+                        });
+                    }
+                    location.reload();
+                } else {
+                    statusMessage.html('Failed to apply changes.').delay( 3000 ).fadeOut( 400 );
+                }
+            })
+            // define callback function for if the form fails
+            .fail(function(jqxhr, settings, exception) {
+                statusMessage.html('Failed to apply changes.').delay( 3000 ).fadeOut( 400 );
+            });
+    });
+});
+</script>
+<title>Overview</title>
+</head>
+<body>
+<a name="top"></a>
+<div class="header">
+	<div class="ti-logo"></div>
+    <div class="page-title"></div>
+    <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+    <div class="status-bar"> Current Status: <em>Offline</em></div> <!-- toggle class "online" to change status - use js to change status message (later) -->
+</div>
+<div class="tabs">
+<ul>
+	<li class="" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+	<li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+    <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+    <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+    <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+<li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+</ul>
+</div>
+<div class="content">
+  <ul>
+    <li><a href="#AccessPointConfiguration">Access Point Configuration</a></li>
+    <li><a href="#WiFiConnectivityProfilesSettings">WiFi Connectivity Profiles Settings</a></li>
+    <li><a href="#DeviceConfiguration">Device Configuration</a></li>
+  </ul>
+  <br />
+
+<div class="device-properties settings">
+   
+<a name="WiFiConnectivityProfilesSettings"></a>
+<p>The SimpleLink Wi-Fi family also allows the user to set-up different profiles by simply filling out the settings below.</p>
+        <form method="POST" name="SimpleLink Configuration" action="profiles_add.html">
+            <input type="hidden" name="__SL_P_S.R" value="setup.html">
+            <table>
+            <tr><td class="tbl-header top" colspan="2">WiFi Connectivity Profiles Settings</td></tr>
+<tr><td colspan="2">Add Profile</td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td> SSID:</td><td><input type="text" maxlength="32" name="__SL_P_P.A"></td></tr>
+<tr><td> Security Type:</td><td><input type="radio" name="__SL_P_P.B" value="0" checked="">Open
+<input type="radio" name="__SL_P_P.B" value="1">WEP
+<input type="radio" name="__SL_P_P.B" value="2">WPA1
+<input type="radio" name="__SL_P_P.B" value="3">WPA2</td></tr>
+<tr><td> Security Key:</td><td><input type="text" maxlength="64" name="__SL_P_P.C"> A sequence of ASCII-encoded char</td></tr>
+<tr><td> Profile Priority:</td><td><input type="text" maxlength="1" name="__SL_P_P.D"> Enter a value 0-7 (0- lowest and 7-highest)</td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2" align="center"><input type="submit" value="Add"></td></tr>
+<tr><td colspan="2" align="center"> The new Profile will take affect only after reset</td></tr>
+<tr><td colspan="2"></td></tr>
+            </table>
+        </form>
+<br><br>
+        <form method="POST" name="SimpleLink Configuration" action="remove_all_profiles">
+            <input type="hidden" name="__SL_P_S.R" value="setup.html">
+        <table>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2">Remove Profiles</td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2" align="center"><input type="submit" value="Remove All Profiles" name="remove_profiles"></td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2"></td></tr>
+</table>
+        </form>
+<br><br>
+        <form method="POST" name="SimpleLink Configuration" action="remove_selected_profiles">
+            <input type="hidden" name="__SL_P_S.R" value="setup.html">
+        <table>
+            <tr><td colspan="3"></td></tr>
+            <tr><td colspan="3">Profiles</td></tr>
+            <tr><td colspan="3"></td></tr>
+            <!-- profiles go here -->
+            <tr id="profile_holding_area"><td colspan="3"></td></tr>
+            <tr><td colspan="3" align="center"><input type="submit" value="Remove Selected Profiles"></td></tr>
+            <tr><td colspan="3"></td></tr>
+            <tr><td colspan="3"></td></tr>
+        </table>
+        </form>
+<div class="backToTop settings"><a href="#top">Back to top</a></div>
+
+<br><br>
+<a name="DeviceConfiguration"></a>
+<p>The SimpleLink Wi-Fi family also allows the user to set-up different Device Configuration by simply filling out the settings below.</p>
+        <form method="POST" name="SimpleLink Configuration" action="mode_config">
+            <input type="hidden" name="__SL_P_S.R" value="setup.html">
+        <table>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2" class="tbl-header top">Device Configuration</td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td> Device Name:</td><td><input type="text" maxlength="32" name="__SL_P_S.B" value="mysimplelink"></td></tr>
+<tr><td> Domain Name:</td><td><input type="text" maxlength="24" name="__SL_P_S.C" value="mysimplelink.net"></td></tr>
+<tr><td> Device Mode:</td><td><select name="__SL_P_S.D">
+    <option value="Station" __SL_G_S.E >Station</option>
+    <option value="AP" __SL_G_S.F >Access Point</option>
+</select></td></tr>
+<tr><td colspan="2" align="center"><input type="submit" value="Apply"></td></tr>
+<tr><td colspan="2" align="center"> Mode will take effect after Reset</td></tr>
+<tr><td colspan="2"></td></tr>
+</table>
+        </form>
+<br><br>
+        <form method="POST" name="SimpleLink Configuration" action="policy_config.html">
+            <input type="hidden" name="__SL_P_S.R" value="setup.html">
+        <table>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2">Connection Policy</td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2"><input type="checkbox" name="__SL_P_P.E" value="Set" __SL_G_P.E> Auto Start</td></tr>
+<tr><td colspan="2"><input type="checkbox" name="__SL_P_P.F" value="Set" __SL_G_P.F> Fast Connect</td></tr>
+<tr><td colspan="2"><input type="checkbox" name="__SL_P_P.G" value="Set" __SL_G_P.G> Any P2P</td></tr>
+<tr><td colspan="2"><input type="checkbox" name="__SL_P_P.P" value="Set" __SL_G_P.P> Auto Smart Config</td></tr>
+<tr><td colspan="2" align="center"><input type="submit" value="Set Connection Policy"></td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2"></td></tr>
+</table>
+        </form>
+<div class="backToTop settings"><a href="#top">Back to top</a></div>
+
+<br><br>
+ <a name="AccessPointConfiguration"></a>
+  <form method="POST" name="SimpleLink Configuration" action="AP_config">
+            <input type="hidden" name="__SL_P_S.R" value="setup.html">
+        <table>
+<tr><td colspan="2" class="tbl-header top">Access Point Configuration</td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td> Channel:</td><td><input type="text" size="2" maxlength="2" name="__SL_P_W.A" value="__SL_G_W.A"> Range: 1..13</td></tr>
+<tr><td> SSID:</td><td><input type="text" maxlength="32" name="__SL_P_W.B" value="__SL_G_W.B"></td></tr>
+<tr><td> Security Type:</td><td><input type="radio" name="__SL_P_W.C" value="0"__SL_G_W.D />Open
+<input type="radio" name="__SL_P_W.C" value="1"__SL_G_W.E />WEP
+<input type="radio" name="__SL_P_W.C" value="2"__SL_G_W.F />WPA</td></tr>
+<tr><td> Password:</td><td><input type="text" maxlength="64" name="__SL_P_W.G" value=""></td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2" align="center"><input type="submit" value="Apply"></td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2"></td></tr>
+<tr><td colspan="2"></td></tr>
+</table>
+        </form>
+<div class="backToTop settings"><a href="#top">Back to top</a></div>
+
+<br><br>  
+    </div>
+    <div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

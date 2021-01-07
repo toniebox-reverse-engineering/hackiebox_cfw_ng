@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="ARM"
+                deviceId="Cortex M.CC3200"
+            />
+        </when>
+    </applicability>
+
+    <project
+        title="SMTP Library"
+        name="libemail"
+        toolChain="TI"
+        connection=""
+        device="Cortex M.CC3200"
+        ignoreDefaultDeviceSettings="true"
+        references=""
+        linkerBuildOptions=""
+        postBuildStep=""
+		outputType="staticLibrary"
+		artifactExtension="a"
+        description="SMTP library">
+		
+		<configuration name="Release" 
+		compilerBuildOptions="
+		-I${CG_TOOL_ROOT}/include
+		-I${CC3200_SDK_ROOT}/inc
+		-I${CC3200_SDK_ROOT}/simplelink
+		-I${CC3200_SDK_ROOT}/simplelink/include
+		-I${CC3200_SDK_ROOT}/simplelink/source
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/provisioninglib
+		-mv7M4 
+		-me 
+		--float_support=none 
+		-Ooff 
+		--define=cc3200
+		--gcc 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number 
+		--gen_func_subsections=on" />
+
+        <property name="buildProfile" value="release"/>
+		<pathVariable name="CC3200_SDK_ROOT" path="../../../../" scope="project" />
+		
+        <file path="${CC3200_SDK_ROOT}/netapps/smtp/client/base64.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/netapps/smtp/client/email.c" openOnCreation="false" action="link">
+        </file>
+		
+    </project>
+</projectSpec>

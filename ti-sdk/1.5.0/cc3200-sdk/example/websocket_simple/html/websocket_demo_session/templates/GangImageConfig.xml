@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+
+<Root>
+	<!-- Expected host file in intel hex format -->
+	<GangImageBuilder  GangImageVendorVersion ='verExample'   StorageCapacityBytes ='1048576' />
+	<GangCommandsSetList >
+		<!-- First command set, command set 0 -->
+		<GangCommandsSet Description ="Command set contain list of commands, this is the first(0) command set ">
+		</GangCommandsSet>
+	</GangCommandsSetList>
+</Root>

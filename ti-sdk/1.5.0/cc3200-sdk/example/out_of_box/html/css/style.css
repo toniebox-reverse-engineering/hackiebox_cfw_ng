@@ -1,0 +1,393 @@
+@charset "utf-8";
+/* CSS Document */
+
+body { margin:0; font-size:14px; font-family:Arial, Helvetica, sans-serif; }
+
+h1 { font-size: 16px; font-weight:bold; }
+a { text-decoration:none; }
+a:link { color:#CC0000; }
+a:visited { color:#000000 }
+a:hover { color:#CC0000; }
+a:active { color:#AAAAAA; }
+h2 { padding-left: 10%; }
+.ti-logo {
+    display: block;
+    height: 30px;
+    width: 200px;
+	float:none;
+	background-image: url("../images/ti-logo.png");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+
+}
+
+.header .red-bar, .footer .red-bar {
+    background: none repeat scroll 0 0 #CC0000;
+    color: #FFFFFF;
+    font-style: italic;
+    font-weight: bold;
+    height: 25px;
+    line-height: 1.6em;
+    width: 100%;
+	padding-left: 15px;
+}
+
+.footer {
+    padding-top: 20px;
+}
+
+.status-bar {
+    background-color: #CCCCCC;
+    border-bottom: 1px solid #AAAAAA;
+    color: #CC0000;
+    line-height: 1.5em;
+    padding-left: 15px;
+    width: 100%;
+	font-weight:bold;
+}
+.status-bar.online {
+    background-color: #009933;
+    border-top: 1px solid #FFFFFF;
+    color: #FFFFFF;
+}
+.tabs {
+    float: left;
+    width: 100%;
+	background-image: url("../images/tab-line.gif");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+}
+.tabs ul {
+	list-style: none outside none;
+    margin: 0;
+    max-width: none;
+    padding: 5px 0 0 15px;
+	line-height: 1.3em;
+}
+.tabs li {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+.tabs .active a {
+ 	background-position: 0 -118px;
+    border-width: 0;
+    font-weight: bold;
+}
+.tabs .active a span {
+    background-position: 100% -119px;
+    color: #333333;
+    padding-bottom: 7px;
+}
+.tabs a {
+    border-bottom: 1px solid #9E9D9D;
+    float: left;
+    margin: 0;
+    padding: 0 0 0 7px;
+    text-decoration: none;
+    white-space: nowrap;
+	background-image: url("../images/ticom3-tab-left.gif");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+}
+.tabs a span {
+    color: #585858;
+    display: block;
+    padding: 10px 9px 6px 0;
+	background-image: url("../images/ticom3-tab-right.gif");
+	background-position: right top;
+	background-repeat:no-repeat;
+}
+
+.content { min-height:200px; clear:both; padding: 15px; font-size:12px; max-width:90%;}
+
+.content .hilight-text {
+    font-weight: bold;
+}
+
+.links-list {
+   /* list-style: disc outside url("http://www.ti.com/assets/images/icons/icon_l_html_a.png"); */
+}
+.links-list > li {
+    list-style: none outside none;
+    margin-top: 10px;
+    padding-left: 30px;
+	background-image: url("../images/icon_l_html_a.png");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+
+	
+}
+.links-list li a {
+    color: #CC0000;
+}
+
+.tbl-header {
+    border-top: 1px solid #333333;
+    font-weight: bold;
+    padding-top: 8px;
+}
+
+.tbl-header.top {
+	border-top:none;
+}
+
+.device-properties {
+    border: 1px solid #CCCCCC;
+    border-radius: 5px 5px 5px 5px;
+    padding: 5px 10px;
+    width: 40%;
+}
+
+.device-properties table {
+    width: 100%;
+}
+
+.device-properties table td {
+    width: 50%;
+}
+
+.device-properties.settings {
+    border: medium none;
+    width: 80%;
+}
+.device-properties.settings table {
+	border: 1px solid #CCC;
+	border-radius:5px;
+	padding:5px 10px;
+}
+
+
+/* demos page */
+.demoMenu {
+	width:340px;
+}
+.demoLink.automation {
+	background-image: url("../images/icon-demo-homeAutomation.gif");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+
+}
+.demoLink.appliances {
+	background-image: url("../images/icon-demo-homeAppliances.gif");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+
+}
+.demoLink.safety {
+	background-image: url("../images/icon-demo-safety.gif");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+
+}
+.demoLink.smartEnergy {
+	background-image: url("../images/icon-demo-smartEnergy.gif");
+	background-position: 0px 0px;
+	background-repeat:no-repeat;
+
+}
+.demoLink:hover, .demoLink.active {
+	background-position:0 -50px;
+}
+
+.demoLink {
+    display: block;
+    float: left;
+    height: 50px;
+    width: 50px;
+	margin: 0 0 0 10px;
+	cursor:pointer;
+}
+
+.demo {
+	font-weight:bold;
+    clear: both;
+    padding-top: 20px;
+}
+.washDryer {
+	min-width:300px;
+}
+.washerText {
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    color: #CC0000;
+    left: 30px;
+    position: relative;
+    padding: 4px;
+    width: 95px;
+	float:left;
+}
+.dryerText {
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    color: #000000;
+    left: 70px;
+    position: relative;
+    padding: 4px;
+    width: 95px;
+	float:left;
+}
+.switchControl {
+    float: left;
+    width: 50px;
+}
+
+#switchImage {
+    background-image: url("../images/demo-lightswitch.jpg");
+    background-position: 0 -72px;
+    background-repeat:no-repeat; 
+    border: 0;  
+    cursor:pointer;
+    width: 50px;
+    height: 70px;
+}
+#switchImage.on {
+    background-image: url("../images/demo-lightswitch.jpg");
+    background-position: 0px 0px;
+}
+.sprinklerOn, .sprinklerOff, .alarmsOn, .alarmsOff {
+	cursor:pointer;
+}
+#sprinkler img {
+	height:342px\0/IE8+9;
+}
+#tempInput {
+    -moz-user-select     : none;
+    -khtml-user-select   : none;
+    -webkit-user-select  : none;
+    -o-user-select       : none;
+    user-select          : none;
+}
+
+#tempInput a {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    font-size: 5em;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+#tempInput input[type="text"] {
+    font-size: 3em;
+    border: none;
+    text-align: center;
+    width: 3em;
+    vertical-align: middle;
+}
+
+#tempInput input[type="number"] {
+    font-size: 3em;
+    border: none;
+    text-align: center;
+    width: 3em;
+    vertical-align: middle;
+}
+
+.didYouKnow {
+    border-radius: 5px;
+    border: 2px solid #333;
+    width: 350px;
+    padding: 5px;
+    margin: 0 0 0 3em;
+    background: #FFFFAA;
+	font-size:12px;
+}
+
+.didYouKnow span {
+	font-weight:bold;
+	font-size:14px;
+}
+.bubble {
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    padding: 10px;
+    position: relative;
+    width: 300px;
+    z-index: 90;
+}
+.sbdImage > img, .hwdiagram {
+    max-width: 100%;
+}
+.active {
+	display:block;
+}
+.off {
+	display:none;
+}
+.backToTop { 
+    text-align: right;
+    padding-top: 20px;
+    width: 480px;
+}
+.backToTop.settings {
+    width: 100%;
+}
+.backToTop a:visited { color:#CC0000 }
+
+.profileItem {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 130px;
+		white-space:nowrap;
+}
+
+.sbd3200 #desc1 {top: -460px; left: 90px;}
+.sbd3200 #desc2 {top: -380px; left: 90px;}
+.sbd3200 #desc3 {top: -330px; left: 90px;}
+.sbd3200 #desc4 {top: -250px; left: 90px;}
+.sbd3200 #desc5 {top: -193px; left: 90px;}
+.sbd3200 #desc6 {top: -123px; left: 90px;}
+.sbd3200 #desc7 {top: -123px; left: 190px;  width:120px;}
+.sbd3200 #desc8 {top: -60px;	left: 90px;}
+.sbd3200 #desc9 {top: -330px;	left: 10px;}
+.sbd3200 #desc10 {top: -330px;	left: 120px;}
+
+
+.sbd3100 #desc1 {top: -460px; left: 90px;}
+.sbd3100 #desc2 {top: -380px; left: 90px;}
+.sbd3100 #desc3 {top: -330px; left: 90px;}
+.sbd3100 #desc4 {top: -250px; left: 90px;}
+.sbd3100 #desc5 {top: -193px; left: 90px;}
+.sbd3100 #desc6 {top: -123px; left: 190px; width:120px;}
+.sbd3100 #desc7 {top: -123px; left: 90px;}
+.sbd3100 #desc8 {top: -60px; left: 90px;}
+
+@media only screen and (max-width: 480px) {
+	.instructions {display:none;}
+	.bubble {border:none; max-width:80%;}
+	.sbd3200 #desc1 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc2 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc3 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc4 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc5 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc6 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc7 {top: 0px; left:10px; display:block;}
+	.sbd3200 #desc8 {top: 0px; left:10px; display:block;}
+	
+	.sbd3100 #desc1 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc2 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc3 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc4 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc5 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc6 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc7 {top: 0px; left:10px; display:block;}
+	.sbd3100 #desc8 {top: 0px; left:10px; display:block;}
+	
+	.device-properties { width: 100%; }
+	#tempInput a { padding-left:0 ; padding-right: 0; }
+	#tempInput input[type="text"] { width: 1.5em; }
+	.didYouKnow { width:270px; margin:0 0 0 0.25em; }
+    .backToTop { width: 100%; }
+	
+	.washDryer img { left: -19px; position: relative; }
+	.dryerText { left: 50px; }
+	.washerText { left: 10px; }
+	
+	.profileItem {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 80px;
+	white-space:pre-wrap;
+}
+}

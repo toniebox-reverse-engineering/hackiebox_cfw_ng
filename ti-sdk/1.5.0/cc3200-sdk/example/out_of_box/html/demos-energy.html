@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/com.TI.numericStepper.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+$(function() {
+	var Device_Temperature = $('#Device_Temperature_out'),
+		lastInput = 50,
+		lastState = '_OFF',
+		lastTemp;
+
+	function dampenTempChange(oldTemp, newTemp) {
+		var maxIncrement = 1,
+			incrementPercent = 0.75,
+			tempChange = (parseInt(newTemp) - oldTemp)*(incrementPercent);
+		if ((tempChange > 0) && (tempChange > maxIncrement)) { 
+			tempChange = maxIncrement;
+		} else if ((tempChange < 0) && (tempChange < (-1)*maxIncrement)) { 
+			tempChange = (-1)*maxIncrement;
+		}
+		return tempChange;
+	}
+
+	function initDemoPolling() {
+		var demoPolling = new com.TI.tokenPoller({
+				"paramPage": "param_demos.html", 
+				"refreshRate": 500,	// every half second
+				"valueMap": [{
+				"paramId": "Device_Temperature",
+					"outputSuccess": function(output) {
+						// set the temp if there isn't one
+						if (!lastTemp) {
+							lastTemp = parseInt(output);
+						} else {
+							// if there was an existing temperature, make sure we 
+							// dampen the difference.
+							// The board temperature sensor is quite accurate.
+							lastTemp += dampenTempChange(lastTemp, output);
+						}
+
+						// make sure we have a nice int for temperature display.
+						var temp = parseInt(lastTemp),
+							newState = '_OFF';
+
+						// update html with temperature
+						Device_Temperature.html(temp);
+												
+						if (lastInput < temp) {
+							newState = '_Blink';
+						} else if (lastInput > temp) {
+							newState = '_ON';
+						} else {
+							newState = '_OFF';
+						}
+						if (newState != lastState) {
+							lastState = newState;
+							com.TI.toggleLED(newState);
+						}
+					},
+					"outputDefault": function() {
+						Device_Temperature.html("<i>reloading</i>");
+					}
+				}]
+			});
+	}
+
+	$('#tempInput').TINumericStepper({
+		"defaultValue":		lastInput,
+		"max":				150,
+		"min":	 			0,
+		"onUpdate": 		function(val){
+			lastInput = val;
+		}
+	});
+	
+	initDemoPolling();
+
+	// need to set demo tab 
+	$("#demos").addClass("active");
+});
+</script>
+<title>Overview</title>
+</head>
+<body>
+<div class="header">
+	<div class="ti-logo"></div>
+    <div class="page-title"></div>
+    <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+    <div class="status-bar"> Current Status: <em>Offline</em></div> <!-- toggle class "online" to change status - use js to change status message (later) -->
+</div>
+<div class="tabs">
+<ul>
+	<li class="" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+	<li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+    <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+    <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+    <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+<li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+</ul>
+</div>
+<div class="content">
+	<div class="demoLink automation" onclick="window.open('demos-sprinkler.html', '_self');"></div><div class="demoLink appliances" onclick="window.open('demos-appliances.html', '_self');"></div><div class="demoLink safety" onclick="window.open('demos-security.html', '_self');"></div><div class="demoLink smartEnergy active" onclick="window.open('demos-energy.html', '_self');"></div>
+	<br style="clear:both;" />
+
+	<h2>Smart Energy</h2>
+	 <p>Click/tap the arrows to change the desired temperature. Current temperature is displayed below". If the current temperature is higher, the red LED will blink. If the current temperature is lower, the red LED will stay on.</p>
+	<p for="slider-0"><strong>Desired Temperature (F):</strong></p>
+	<div id="tempInput"></div>
+	<p><strong>Current Temperature:</strong> <span id="Device_Temperature_out"><i>reloading</i></span></p>
+	<br />
+	<p style="font-weight:normal">
+	A large portion of the electricity  spent every month can be traced to the HVAC. If the user can control the  thermostat from the cloud even when he/she is not home, then the HVAC can be  more efficient in cooling/heating the house while saving money on electricity.
+	  <br />
+	  <br />
+	  By sending the temperature  information (from the sensors on the LaunchPad) to the user (the display), the  user can then monitor and control the temperature effortlessly (by moving the  bar).
+	<p style="font-weight:normal">&nbsp;</p>
+	<div class="didYouKnow">
+	<span>Did you know?</span>
+	<p>The integrated ARM&reg; Cortex&trade; M4 runs TCP/IP and security protocols on-chip. No Wi-Fi expertise needed to get connected! </p>
+	</div>
+	<div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="ARM"
+                deviceId="Cortex M.CC3200"
+            />
+        </when>
+    </applicability>
+
+    <project
+        title="Webserver Library"
+        name="webserver"
+        toolChain="TI"
+        connection=""
+        device="Cortex M.CC3200"
+        ignoreDefaultDeviceSettings="true"
+        references=""
+        linkerBuildOptions=""
+        postBuildStep=""
+		outputType="staticLibrary"
+		artifactExtension="a"
+        description="Webserver library">
+		
+		<configuration name="Release" 
+		compilerBuildOptions="
+		-I${CG_TOOL_ROOT}/include
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/oslib/
+		-I${CC3200_SDK_ROOT}/inc/
+		-I${CC3200_SDK_ROOT}/simplelink
+		-I${CC3200_SDK_ROOT}/netapps
+		-I${CC3200_SDK_ROOT}/simplelink/
+		-I${CC3200_SDK_ROOT}/simplelink/include
+		-I${CC3200_SDK_ROOT}/simplelink/source
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/provisioninglib
+		-mv7M4 
+		-me 
+		--float_support=none 
+		-Ooff 
+		--define=cc3200
+		--define=NOTERM
+		--define=__CCS__
+		--define=SL_PLATFORM_MULTI_THREADED
+		--gcc 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number 
+		--gen_func_subsections=on" />
+
+        <property name="buildProfile" value="release"/>
+		<pathVariable name="CC3200_SDK_ROOT" path="../../../../" scope="project" />
+		
+        <file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpAuth.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpCore.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpDebug.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpDynamic.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpSocket.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpStatic.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/HttpString.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/WebSockHandler.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/base64.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/SHA1.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/netapps/http/server/strlib.c" openOnCreation="false" action="link">
+        </file>
+       	
+    </project>
+</projectSpec>

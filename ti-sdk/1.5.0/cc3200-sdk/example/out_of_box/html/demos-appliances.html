@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+$(function() {
+    var Device_Temperature = $('#Device_Temperature_out'),
+        Device_Accelerometer = $('#Device_Accelerometer_out'),
+        demoPolling = new com.TI.tokenPoller({
+            "paramPage": "param_demos.html", 
+            "refreshRate": 200,
+            "valueMap": [{
+            "paramId": "Device_Temperature",
+                "outputSuccess": function(output) {
+                    Device_Temperature.html(output);
+                },
+                "outputDefault": function() {
+                    Device_Temperature.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "Device_Accelerometer",
+                "outputSuccess": function(output) {
+                    Device_Accelerometer.html(output);
+                },
+                "outputDefault": function() {
+                    Device_Accelerometer.html("<i>reloading</i>");
+                }
+            }]
+        });
+});
+</script>
+<title>Overview</title>
+</head>
+<body>
+<div class="header">
+	<div class="ti-logo"></div>
+    <div class="page-title"></div>
+    <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+    <div class="status-bar"> Current Status: <em>Offline</em></div> <!-- toggle class "online" to change status - use js to change status message (later) -->
+</div>
+<div class="tabs">
+    <ul>
+    	<li class="" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+    	<li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+        <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+        <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+        <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+        <li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+    </ul>
+</div>
+<div class="content">
+    <div class="demoLink automation" onclick="window.open('demos-sprinkler.html', '_self');"></div><div class="demoLink appliances active" onclick="window.open('demos-appliances.html', '_self');"></div><div class="demoLink safety" onclick="window.open('demos-security.html', '_self');"></div><div class="demoLink smartEnergy" onclick="window.open('demos-energy.html', '_self');"></div>
+    <div class="demo">
+    	<h2>Home Appliances</h2>
+        <p style="font-weight:normal;">The box on the left below displays the temperature. The box on the right displays the status of the dryer. Pick up the LaunchPad to see the dryer "start", setting down the LaunchPad to see the dryer "stop".</p>
+        <div class="washDryer">
+            <div class="washerText">Water Temp:<br /><span id="Device_Temperature_out"><i>reloading</i></span></div>&nbsp;&nbsp;&nbsp;<div class="dryerText">Dryer:<br /><span id="Device_Accelerometer_out"><i>reloading</i></span></div>
+            <br style="clear:both;" /><br>
+            <img src="images/demo-washerDryer.jpg" name="washerDryerImage" width="300" height="210" id="washerDryerImage" />
+        </div>
+    </div>
+    <p>Imagine getting your washer and  dryer status on your mobile device no matter where you are!</p>
+    <p>In this demo, the temperature is  read out from the washer (temperature sensor on the LP) and sent  wirelessly  via SimpleLink CC3200 to your  mobile device (first display shown).</p>
+    <p>When the LaunchPad is shaken, it  simulates the dryer spinning. The message &ldquo;dryer started&rdquo; is sent  to your mobile device (second display shown).</p>
+    <div class="didYouKnow">
+        <span>Did you know?</span>
+        <p>CC3200  has a rich peripheral set including SPI,  UART, I2C, I2S, SDMMC, 4Channel ADC, 4 PWMs and built-in power management are included. </p>
+    </div>
+    <div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

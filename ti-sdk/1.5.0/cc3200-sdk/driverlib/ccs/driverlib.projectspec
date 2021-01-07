@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="ARM"
+                deviceId="Cortex M.CC3200"
+            />
+        </when>
+    </applicability>
+
+    <project
+        title="DriverLib Library"
+        name="driverlib"
+        toolChain="TI"
+        connection=""
+        device="Cortex M.CC3200"
+        ignoreDefaultDeviceSettings="true"
+        references=""
+        linkerBuildOptions=""
+        postBuildStep=""
+		outputType="staticLibrary"
+		artifactExtension="a"
+        description="DriverLib library">
+		
+		<configuration name="Release" 
+		compilerBuildOptions="
+		-I${CG_TOOL_ROOT}/include
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/inc/
+		-I${CC3200_SDK_ROOT}/
+		-mv7M4 
+		-me 
+		--float_support=none 
+		-Ooff 
+		--define=cc3200
+		--define=ccs
+		--define=DRIVERLIB_APPS		
+		--gcc 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number 
+		--gen_func_subsections=on" />
+
+        <property name="buildProfile" value="release"/>
+		<pathVariable name="CC3200_SDK_ROOT" path="../../" scope="project" />
+		
+        <file path="${CC3200_SDK_ROOT}/driverlib/adc.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/aes.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/camera.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/cpu.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/crc.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/des.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/flash.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/gpio.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/hwspinlock.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/i2c.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/i2s.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/interrupt.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/pin.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/prcm.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/sdhost.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/shamd5.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/spi.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/systick.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/timer.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/uart.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/udma.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/utils.c" openOnCreation="false" action="link">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/driverlib/wdt.c" openOnCreation="false" action="link">
+        </file>
+		 		
+    </project>
+</projectSpec>

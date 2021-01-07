@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/jquery.rwdImageMaps.min.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+function swapClass (whichBubble, classString) {
+	//document.getElementsByClassName('bubble').style.display = "none";
+	document.getElementById(whichBubble).setAttribute("class", classString);	
+}
+$(document).ready(function(e) {
+    $('img[usemap]').rwdImageMaps();
+});
+</script>
+<title>Overview</title>
+</head>
+<body class="sbd3200">
+<a name="top"></a>
+<div class="header">
+  <div class="ti-logo"></div>
+  <div class="page-title"></div>
+  <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+  <div class="status-bar"> Current Status: <em>Offline</em></div>
+  <!-- toggle class "online" to change status - use js to change status message (later) --> 
+</div>
+<div class="tabs">
+  <ul>
+    <li class="" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+    <li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+    <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+    <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+    <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+    <li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+  </ul>
+</div>
+<div class="content">
+  <ul>
+    <li><a href="#SWArchitecture">SW Architecture</a></li>
+    <li><a href="#HWArchitecture">HW Architecture</a></li>
+    <li><a href="#OtherResources">Other Resources</a></li>
+  </ul>
+  <br />
+  <a name="SWArchitecture"></a> <span class="hilight-text">SW Architecture</span><br />
+  <div class="instructions">Rollover the image below to see more information</div>
+  <div class="sbdImage"> <img src="images/sw-sbd.gif" usemap="#SWMap" border="0" />
+    <map name="SWMap" id="SWMap">
+      <area shape="rect" coords="7,17,474,78" href="#a1" onmouseover="swapClass('desc1', 'bubble active');" onmouseout="swapClass('desc1', 'bubble off');" />
+      <area shape="rect" coords="66,116,410,154" href="#a2" onmouseover="swapClass('desc2', 'bubble active');" onmouseout="swapClass('desc2', 'bubble off');" />
+      <area shape="rect" coords="67,165,409,206" href="#a3" onmouseover="swapClass('desc3', 'bubble active');" onmouseout="swapClass('desc3', 'bubble off');" />
+      <area shape="rect" coords="9,109,49,208" href="#a9" onmouseover="swapClass('desc9', 'bubble active');" onmouseout="swapClass('desc9', 'bubble off');"/>
+      <area shape="rect" coords="431,108,474,210" href="#a10" onmouseover="swapClass('desc10', 'bubble active');" onmouseout="swapClass('desc10', 'bubble off');"/>
+      <area shape="rect" coords="66,244,411,285" href="#a4" onmouseover="swapClass('desc4', 'bubble active');" onmouseout="swapClass('desc4', 'bubble off');" />
+      <area shape="rect" coords="68,301,196,344" href="#a5" onmouseover="swapClass('desc5', 'bubble active');" onmouseout="swapClass('desc5', 'bubble off');" />
+      <area shape="rect" coords="250,320,413,411" href="#a6" onmouseover="swapClass('desc6', 'bubble active');" onmouseout="swapClass('desc6', 'bubble off');" />
+      <area shape="rect" coords="64,368,238,410" href="#a7" onmouseover="swapClass('desc7', 'bubble active');" onmouseout="swapClass('desc7', 'bubble off');" />
+      <area shape="rect" coords="67,436,415,481" href="#a8" onmouseover="swapClass('desc8', 'bubble active');" onmouseout="swapClass('desc8', 'bubble off');" />
+    </map>
+    <div id="desc1" class="bubble off"><a name="a1" id="a1"></a> <span><strong>Customer Application</strong> - easy development for applications such as: home automation and security, connected home, smart energy, industrial automation, and many more </span> </div>
+    <div id="desc2" class="bubble off"><a name="a2" id="a2"></a> <span><strong>Simplelink driver</strong> – Common between CC3100 and CC3200 </span> </div>
+    <div id="desc3" class="bubble off"><a name="a3" id="a3"></a> <span><strong>SPI driver</strong> – 4-wire bidirectional communications interface that converts data between parallel and serial. Interface between CM4 and NWP </span> </div>
+    <div id="desc4" class="bubble off"><a name="a4" id="a4"></a> <span><strong>Host Interface</strong> – Wide range of VIO (1.8-3.6V), SPI, UART (3100 only) driver </span> </div>
+    <div id="desc5" class="bubble off"><a name="a5" id="a5"></a> <span><strong>Network apps</strong> – ARP, ICMP, DHCP, DNS mDNS, http server</span> </div>
+    <div id="desc6" class="bubble off"><a name="a6" id="a6"></a> <span><strong>SimpleLink connection manager</strong> – WLAN profiles and security management </span> </div>
+    <div id="desc7" class="bubble off"><a name="a7" id="a7"></a> <span><strong>TCP/IP stack</strong> – IPv4 </span> </div>
+    <div id="desc8" class="bubble off"><a name="a8" id="a8"></a> <span><strong>WLAN MAC &amp; PHY</strong> – 2.4GHz radio + physical layer</span> </div>
+    <div id="desc9" class="bubble off"><a name="a9" id="a9"></a> <span><strong>OS</strong> – Can work with Free RTOS or TI RTOS, also no OS</span> </div>
+    <div id="desc10" class="bubble off"><a name="a10" id="a10"></a> <span><strong>Peripheral Drivers</strong> – camera, audio</span> </div>
+  </div>
+  <div class="backToTop"><a href="#top">Back to top</a></div>
+  <br />
+  <br />
+  <a name="HWArchitecture"></a>
+  <span class="hilight-text">HW Architecture</span><br />
+  <img src="images/hw-sbd.gif" class="hwdiagram" /><br />
+  <div class="backToTop"><a href="#top">Back to top</a></div>
+  <br />
+  <a name="OtherResources"></a>
+  <span class="hilight-text">Other Resources</span>
+  <ul>
+    <li><a href="http://www.ti.com/cc3200wiki-oob">CC3100/3200 wiki page</a></li>
+    <li><a href="http://www.ti.com/cc3200tools-oob">Developer's Tools download</a></li>
+    <li><a href="http://www.ti.com/wirelesshelp">TI online E2E support</a></li>
+  </ul>
+    <span class="hilight-text">To use the above links, please ensure that you are online</span>
+  <div class="backToTop"><a href="#top">Back to top</a></div>
+  <div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CC3xxx>
+   <Version>
+      <Platform>CC31xx Simple Link device</Platform>
+      <SoftwareMajor>1</SoftwareMajor>
+      <SoftwareMinor>0</SoftwareMinor>
+      <Software_sub_Minor>0</Software_sub_Minor>
+   </Version>
+   <Filename name="/sys/mcuimg.bin">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/antenna_selection.html">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/main.html">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/param_status.html">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/images/sig1.jpg">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/images/sig2.jpg">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/images/sig3.jpg">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/images/sig4.jpg">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+   <Filename name="www/js/jquery-1.8.3.min.js">
+      <MAX>0x0</MAX>
+      <RW>0x0</RW>
+      <RO>0x0</RO>
+   </Filename>
+</CC3xxx>

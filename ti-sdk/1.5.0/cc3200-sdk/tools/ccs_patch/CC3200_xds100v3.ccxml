@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configurations XML_version="1.2" id="configurations_0">
+<configuration XML_version="1.2" id="Texas Instruments XDS100v3 USB Emulator_0">
+        <instance XML_version="1.2" desc="Texas Instruments XDS100v3 USB Emulator_0" href="connections/TIXDS100v3_Dot7_Connection.xml" id="Texas Instruments XDS100v3 USB Emulator_0" xml="TIXDS100v3_Dot7_Connection.xml" xmlpath="connections"/>
+        <connection XML_version="1.2" id="Texas Instruments XDS100v3 USB Emulator_0">
+            <instance XML_version="1.2" href="drivers/tixds100v2icepick_c.xml" id="drivers" xml="tixds100v2icepick_c.xml" xmlpath="drivers"/>
+            <instance XML_version="1.2" href="drivers/tixds100v2cs_dap.xml" id="drivers" xml="tixds100v2cs_dap.xml" xmlpath="drivers"/>
+            <instance XML_version="1.2" href="drivers/tixds100v2cortexM.xml" id="drivers" xml="tixds100v2cortexM.xml" xmlpath="drivers"/>
+            <platform XML_version="1.2" id="platform_0">
+                <instance XML_version="1.2" desc="IcePick_C_0" href="routers/icepick_c.xml" id="IcePick_C_0" xml="icepick_c.xml" xmlpath="routers"/>
+                <router HW_revision="1.0" XML_version="1.2" description="ICEPick_C Router" id="IcePick_C_0" isa="ICEPICK_C">
+                    <subpath id="subpath_0">
+                        <instance XML_version="1.2" desc="CS_DAP_0" href="routers/cs_dap.xml" id="CS_DAP_0" xml="cs_dap.xml" xmlpath="routers"/>
+                        <router HW_revision="1.0" XML_version="1.2" description="CS_DAP Router" id="CS_DAP_0" isa="CS_DAP">
+                            <subpath id="subpath_1">
+                                <instance XML_version="1.2" desc="Cortex_M4_0" href="cpus/cortex_m4.xml" id="Cortex_M4_0" xml="cortex_m4.xml" xmlpath="cpus"/>
+                            <cpu HW_revision="1.0" XML_version="1.2" description="Cortex_M4 CPU" id="Cortex_M4_0" isa="Cortex_M4">
+                                    <property Type="numericfield" Value="0x02000000" id="Access Port Designator"/>
+                                </cpu>
+                            </subpath>
+                        </router>
+                    </subpath>
+                </router>
+            </platform>
+        </connection>
+    </configuration>
+</configurations>

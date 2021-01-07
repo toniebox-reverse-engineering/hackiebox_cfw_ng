@@ -1,0 +1,84 @@
+#******************************************************************************
+#
+# Makefile - Rules for building the FreeRTOS Library.
+#
+#  Copyright (C) 2014 Texas Instruments Incorporated - http:#www.ti.com/
+#
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#
+#    Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#    Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the
+#    distribution.
+#
+#    Neither the name of Texas Instruments Incorporated nor the names of
+#    its contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+#  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+#  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+#  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+#  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#*****************************************************************************
+###### CHANGE LOCATION TO YOUR CODEGEN TOOLS INSTALLATION DIR. UNIX PATH (no backslashes) #######
+CODEGEN_INSTALLATION_DIR = C:/cygwin
+
+CC =  "$(CODEGEN_INSTALLATION_DIR)/bin/arm-none-eabi-gcc"
+
+LNK = "$(CODEGEN_INSTALLATION_DIR)/bin/arm-none-eabi-gcc"
+
+AR = "$(CODEGEN_INSTALLATION_DIR)/bin/arm-none-eabi-ar"
+
+OBJCOPY = "$(CODEGEN_INSTALLATION_DIR)/bin/arm-none-eabi-objcopy"
+
+XDCTOOLS_INSTALLATION_DIR := C:/ti/xdctools_3_32_00_06_core
+
+# The following is ignored if xdctools has the JRE
+export XDCTOOLS_JAVA_HOME := C:/ti/xdctools_3_32_00_06_core/jre
+
+TIRTOS_INSTALLATION_DIR := c:/ti/tirtos_cc32xx_2_15_00_17
+
+
+BIOS_INSTALLATION_DIR  ?= C:/ti/tirtos_cc32xx_2_15_00_17/products/bios_6_45_00_20/packages
+UIA_INSTALLATION_DIR   ?= C:/ti/tirtos_cc32xx_2_15_00_17/products/uia_2_00_02_39/packages
+IPC_INSTALLATION_DIR   ?= 
+NDK_INSTALLATION_DIR   ?= 
+
+XDCPATH = $(TIRTOS_INSTALLATION_DIR)/packages;$(UIA_INSTALLATION_DIR);$(IPC_INSTALLATION_DIR);$(NDK_INSTALLATION_DIR);$(BIOS_INSTALLATION_DIR);
+
+CCWARE_INSTALLATION_DIR ?= ../..
+
+###################### SHOULD NOT MODIFY BELOW THIS LINE ############################
+export XDCPATH
+
+XDCTARGET = gnu.targets.arm.M4
+
+PLATFORM = ti.platforms.simplelink:CC3200
+
+CFLAGS =  -mcpu=cortex-m4 -march=armv7e-m -mthumb -mfloat-abi=soft -Dgcc -DUSE_TIRTOS -DCCWARE -DSL_FULL -DSL_PLATFORM_MULTI_THREADED -I$(CCWARE_INSTALLATION_DIR) -I$(CCWARE_INSTALLATION_DIR)/inc -I$(CCWARE_INSTALLATION_DIR)/driverlib -I$(CCWARE_INSTALLATION_DIR)/oslib -I$(CCWARE_INSTALLATION_DIR)/simplelink -I$(CCWARE_INSTALLATION_DIR)/simplelink/Include -I$(CCWARE_INSTALLATION_DIR)/oslib -ffunction-sections -fdata-sections -g -gstrict-dwarf -Wall
+
+LFLAGS =  -mcpu=cortex-m4 -march=armv7e-m -mthumb -mfloat-abi=soft -nostartfiles -static -Wl,-Map,$(NAME).map -Wl,--gc-sections -Wl,-T,cc3200.lds -Wl,-T,$(OTHERPROJECT)/linker.cmd -ldriver -lsimplelink -ltirtos -lgcc -lc -lm -lrdimon -L$(CCWARE_INSTALLATION_DIR)/driverlib/gcc/exe -L$(CCWARE_INSTALLATION_DIR)/simplelink/gcc/exe -L$(CCWARE_INSTALLATION_DIR)/os_lib/gcc
+
+ifeq ("$(SHELL)","sh.exe")
+#For Windows
+        RMDIR  = rmdir /S /Q
+        remove = del $(subst /,\,$1)
+else
+#For Linux
+        RMDIR  = rm -rf
+        remove = rm -f $(subst /,\,$1)
+endif

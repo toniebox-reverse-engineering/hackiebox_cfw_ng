@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+$(function() {
+	var deviceType = "__SL_G_V.D",
+		len = deviceType.length,
+		deviceTypeEnd = deviceType.substring(len-2,len),
+		cc3200Vals = ['10','11','13'];
+	if ($.inArray(deviceTypeEnd, cc3200Vals) > -1) {
+		$('span.deviceName').html('CC3200');
+	} else {
+		$('span.deviceName').html('CC3100');
+	}
+});
+</script>
+<title>Overview</title>
+</head>
+<body>
+<div class="header">
+	<div class="ti-logo"></div>
+    <div class="page-title"></div>
+    <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+    <div class="status-bar"> Current Status: <em>Offline</em></div> 
+</div>
+<div class="tabs">
+<ul>
+	<li class="active" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+	<li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+    <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+    <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+    <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+<li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+</ul>
+</div>
+<div class="content">
+<p class="hilight-text">Congratulations! You are now connected to the SimpleLink <span class="deviceName">CC3200</span></p>
+<p>The CC3100/3200  products are packed with  new features that allow you to easily create Internet applications, establish a  secure Wi-Fi and Internet connection and enable battery-operated  devices.  TI provides various kits and software  tools, reference designs, sample applications, development documentation and E2E  community  support.<br />
+  <br />
+  
+</p>
+<a href="overview.html">CC3200</a><br />
+It is a  wireless microcontroller (MCU) that features  an on-chip ARM® Cortex™-M4, plus on-chip power  management to boost power efficiency. The  development kit is a  LaunchPad and  comes with a  temperature sensor, two LEDs, and an accelerometer. <br />
+<br />
+<br />
+<b>Key Features of CC3200</b>
+<ul><li>An ARM® Cortex™-M4 MCU with the CC3100 Wi-Fi core integrated on a single chip</li>
+<li>80MHz with up to 250KB available RAM dedicated for customer applications and external serial flash </li>
+<li>Peripheral set includes parallel camera, I2S audio, SDMMC, ADC, SPI, UART, I2C, and PWMs.</li>
+<li>Dedicated MCU crypto engines such as AES, 3DES, SHA, MD5 and CRC </li>
+<li>802.11 b/g/n, Station, Access Point, and Wi-Fi Direct roles with fully integrated radio, baseband, and MAC</li>
+<li>Integrated TCP/IP stacks and industry standard API</li>
+<li>Additional Wi-Fi crypto engine with 256-bit encryption, personal and enterprise security enable your application safely connecting to the cloud </li>
+<li>Low power radio with advanced low power modes enabling battery-operated Wi-Fi</li>
+<li>Simple Wi-Fi connection with TI’s SmartConfig™ technology</li></ul>
+
+<br />
+<br />
+<strong><a href="demos.html">Let's get started.</a></strong>
+  <div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

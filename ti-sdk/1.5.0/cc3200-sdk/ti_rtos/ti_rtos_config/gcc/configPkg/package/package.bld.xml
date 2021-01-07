@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<!--  This file conforms to the DTD xdc/bld/build.dtd -->
+<package name="configPkg" version="" producerId="undefined">
+    <units>
+    </units>
+    <sources>
+        <srcFile name="package/cfg/app_pm4g.c"/>
+    </sources>
+    <configscripts>
+        <srcFile name="D:/git/a0132167_cc3200_sdk_1.2.0/source-1p2-rahul/ti_rtos/ti_rtos_config/app.cfg"/>
+    </configscripts>
+    <makefiles>
+        <srcFile name="package.mak" src="package.bld"/>
+        <srcFile name="package/package.xdc.dep" src="package.xdc"/>
+        <srcFile name="package/cfg/app_pm4g.mak" src="package.bld"/>
+        <srcFile name="package/cfg/app_pm4g.om4g.dep" src="package/cfg/app_pm4g.c"/>
+        <srcFile name="package/cfg/app_pm4g.dep" src="package/cfg/app_pm4g.cfg"/>
+        <srcFile name="package/cfg/app.xm4g.mak" src="package.bld"/>
+        <srcFile name="package/rel/configPkg.tar.dep" src="package/rel/configPkg.xdc.inc"/>
+    </makefiles>
+    <targets>
+        <target name="gnu.targets.arm.M4"
+            version="gnu.targets.arm.M4{1,0,4.9,3"
+            rawVersion="4.9.3"
+            platform="ti.platforms.tiva:TM4C1294NCPDT"
+            isa="v7M4"
+            suffix="m4g"
+            rootDir="C:/cygwin"
+            os="undefined"
+            rts="gnu.targets.arm.rtsv7M">
+            <model endian="little"
+                codeModel="thumb2"
+                dataModel="undefined"/>
+        </target>
+    </targets>
+    <libraries>
+    </libraries>
+    <configurations>
+    <configuration name="app"
+        pname="app.pm4g"
+        target="gnu.targets.arm.M4"
+        platform="ti.platforms.simplelink:CC3200"
+        profile="release"
+        isPartial="false"
+        xCfgScript="package/cfg/app_pm4g.cfg"
+        xCfgPrefix="package/cfg/app_pm4g"
+        cfgScript="D:/git/a0132167_cc3200_sdk_1.2.0/source-1p2-rahul/ti_rtos/ti_rtos_config/app.cfg"
+        cfgArgs="null"
+        />
+    </configurations>
+    <executables>
+    <executable name="app"
+        pname="app.xm4g"
+        target="gnu.targets.arm.M4"
+        platform="ti.platforms.simplelink:CC3200"
+        profile="release"
+        xCfgScript="package/cfg/app_pm4g.cfg"
+        xCfgPrefix="package/cfg/app_pm4g"
+        cfgScript="D:/git/a0132167_cc3200_sdk_1.2.0/source-1p2-rahul/ti_rtos/ti_rtos_config/app.cfg"
+        cfgArgs="null"
+        />
+    </executables>
+    <tests>
+    <test exeName="app.xm4g"
+        args=""
+        groupName="app.xm4g"
+        refOutput="undefined"
+        refExitCode="0"
+        execArgs=""
+        />
+    </tests>
+    <releases relDir="package/rel/">
+    <release name="configPkg"
+        pname="configPkg.tar"
+        label="default"
+    >
+        <file name="package/package.bld.xml"/>
+        <file name="package/build.cfg"/>
+        <file name="package/package.xdc.inc"/>
+    </release>
+    </releases>
+    <repositories>
+    </repositories>
+</package>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="ARM"
+                deviceId="Cortex M.CC3200"
+            />
+        </when>
+    </applicability>
+
+    <project
+        title="Middleware Library"
+        name="middleware"
+        toolChain="TI"
+        connection=""
+        device="Cortex M.CC3200"
+        ignoreDefaultDeviceSettings="true"
+        references=""
+        linkerBuildOptions=""
+        postBuildStep=""
+		outputType="staticLibrary"
+		artifactExtension="a"
+        description="SimpleLink Middleware library">
+		
+		<configuration name="Release" 
+		compilerBuildOptions="
+		-I${CG_TOOL_ROOT}/include
+		-I${CC3200_SDK_ROOT}/middleware/driver/hal/
+		-I${CC3200_SDK_ROOT}/middleware/framework/pm/
+		-I${CC3200_SDK_ROOT}/middleware/framework/timer/
+		-I${CC3200_SDK_ROOT}/middleware/soc/
+		-I${CC3200_SDK_ROOT}/driverlib/
+		-I${CC3200_SDK_ROOT}/oslib/
+		-I${CC3200_SDK_ROOT}/inc/
+		-mv7M4 
+		-me 
+		--float_support=none 
+		-Ooff 
+		--define=ccs 
+		--define=cc3200
+		--gcc 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number 
+		--gen_func_subsections=on" />
+
+        <property name="buildProfile" value="release"/>
+		<pathVariable name="CC3200_SDK_ROOT" path="../.." scope="project" />
+		
+        <file path="${CC3200_SDK_ROOT}/middleware/soc/cc_io_park.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/framework/pm/cc_pm.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/soc/cc_pm_ops.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/framework/timer/cc_timer.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/dma_hal.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/gpio_hal.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/hw_timer32.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/interrupt_hal.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/rtc_hal.c" openOnCreation="false" action="link">
+        </file>		
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/spi_drv.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/spi_hal.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/uart_drv.c" openOnCreation="false" action="link">
+        </file>
+        <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/uart_hal.c" openOnCreation="false" action="link">
+        </file>
+		 <file path="${CC3200_SDK_ROOT}/middleware/driver/hal/util64.c" openOnCreation="false" action="link">
+        </file>
+		
+    </project>
+</projectSpec>

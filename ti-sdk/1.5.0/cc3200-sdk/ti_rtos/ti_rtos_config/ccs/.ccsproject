@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?ccsproject version="1.0"?>
+<projectOptions>
+	<deviceVariant value="Cortex M.LM4F120H5QR"/>
+	<deviceFamily value="TMS470"/>
+	<deviceEndianness value="little"/>
+	<codegenToolVersion value="5.0.3"/>
+	<isElfFormat value="true"/>
+	<templateProperties value="id=org.eclipse.rtsc.project.templates.EmptyRtscConfiguration,buildProfile=release,"/>
+	<isTargetManual value="false"/>
+</projectOptions>

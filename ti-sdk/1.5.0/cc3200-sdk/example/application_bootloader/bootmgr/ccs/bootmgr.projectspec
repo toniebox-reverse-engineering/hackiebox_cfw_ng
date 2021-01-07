@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectSpec>
+    <applicability>
+        <when>
+            <context
+                deviceFamily="TMS470"
+                deviceId="Cortex M.CC3200"
+            />
+        </when>
+    </applicability>
+    <project
+        title="bootmgr"
+        name="bootmgr"
+        toolChain="TI"
+        connection="Stellaris_ICDI_Connection.xml"
+        device="CC3200"
+        ignoreDefaultDeviceSettings="true"
+        linkerBuildOptions="-m${ProjName}.map --stack_size=0x280 --heap_size=0x0 -llibc.a -i${CG_TOOL_ROOT}/lib -i${CG_TOOL_ROOT}/include -l${CC3200_SDK_ROOT}/driverlib/ccs/Release/driverlib.a -l${CC3200_SDK_ROOT}/simplelink/ccs/NON_OS/simplelink_opt.a --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info=${ProjName}_linkInfo.xml --rom_model"
+        postBuildStep="${CCS_INSTALL_ROOT}/utils/tiobj2bin/tiobj2bin ${BuildArtifactFileName} ${BuildArtifactFileBaseName}.bin ${CG_TOOL_ROOT}/bin/armofd ${CG_TOOL_ROOT}/bin/armhex ${CCS_INSTALL_ROOT}/utils/tiobj2bin/mkhex4bin;${CC3200_SDK_ROOT}/example/application_bootloader/bootmgr/ccs/bootgen.exe ${CC3200_SDK_ROOT}/example/application_bootloader/relocator/ccs/Release/relocator.bin  ${BuildArtifactFileBaseName}.bin application_bootloader.bin"
+        description="bootmgr application">
+		
+		<configuration name="Normal_Boot" 
+		compilerBuildOptions="
+		-mv7M4 
+		--code_state=16 
+		--float_support=none 
+		--abi=eabi 
+		-me 
+		-O3 
+		--opt_for_speed=0 
+		-I${CC3200_SDK_ROOT}/ 
+		-I${CG_TOOL_ROOT}/include 
+		-I${CC3200_SDK_ROOT}/driverlib/ 
+		-I${CC3200_SDK_ROOT}/inc/ 
+		-I${CC3200_SDK_ROOT}/example/common/ 
+		-I${CC3200_SDK_ROOT}/oslib/ 
+		-I${CC3200_SDK_ROOT}/simplelink/ 
+		-I${CC3200_SDK_ROOT}/simplelink/include 
+		-I${CC3200_SDK_ROOT}/simplelink/source 
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/provisioninglib 
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/flc 
+		-g 
+		--define=ccs 
+		--define=cc3200 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number" />
+		
+		<configuration name="Fast_Boot" 
+		compilerBuildOptions="
+		--define=FAST_BOOT 
+		-mv7M4 
+		--code_state=16 
+		--float_support=none 
+		--abi=eabi 
+		-me 
+		-O3 
+		--opt_for_speed=0 
+		-I${CC3200_SDK_ROOT}/ 
+		-I${CG_TOOL_ROOT}/include 
+		-I${CC3200_SDK_ROOT}/driverlib/ 
+		-I${CC3200_SDK_ROOT}/inc/ 
+		-I${CC3200_SDK_ROOT}/example/common/ 
+		-I${CC3200_SDK_ROOT}/oslib/ 
+		-I${CC3200_SDK_ROOT}/simplelink/ 
+		-I${CC3200_SDK_ROOT}/simplelink/include 
+		-I${CC3200_SDK_ROOT}/simplelink/source 
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/provisioninglib 
+		-I${CC3200_SDK_ROOT}/simplelink_extlib/flc 
+		-g 
+		--define=ccs 
+		--define=cc3200 
+		--diag_warning=225 
+		--diag_wrap=off 
+		--display_error_number" />
+
+        <property name="buildProfile" value="release"/>
+
+        <pathVariable name="CC3200_SDK_ROOT" path="../../../.." scope="project" />
+		<pathVariable name="CC3200_EXAMPLE_ROOT" path="../" scope="project" />
+
+        <file path="${CC3200_EXAMPLE_ROOT}/main.c" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+		<file path="${CC3200_EXAMPLE_ROOT}/udma_if.c" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+		<file path="${CC3200_EXAMPLE_ROOT}/udma_if.h" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+		<file path="${CC3200_EXAMPLE_ROOT}/bootmgr.h" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+		<file path="bootgen.exe" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+		<file path="../startup_ccs.c"  openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+		<file path="${CC3200_SDK_ROOT}/example/common/network_common.c"  openOnCreation="false" excludeFromBuild="false" action="link">
+        </file>
+		<file path="${CC3200_EXAMPLE_ROOT}/filesystem.h" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+        <file path="bootmgr.cmd" openOnCreation="false" excludeFromBuild="false" action="copy" applicableConfigurations="Normal_Boot">
+        </file>
+		<file path="bootmgr_fastboot.cmd" openOnCreation="false" excludeFromBuild="false" action="copy" applicableConfigurations="Fast_Boot">
+        </file>
+        <file path="../../README.html" openOnCreation="false" excludeFromBuild="false" action="copy">
+        </file>
+    </project>
+</projectSpec>
+

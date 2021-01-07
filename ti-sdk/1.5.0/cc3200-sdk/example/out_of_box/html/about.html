@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+$(function() {
+    var System_Up_Time = $('#System_Up_Time'),
+        NWP_Version = $('#NWP_Version'),
+        MAC_Version = $('#MAC_Version'),
+        PHY_Version = $('#PHY_Version'),
+        HW_Version = $('#HW_Version'),
+        STA_IP_Address = $('#STA_IP_Address'),
+        STA_Subnet_Mask = $('#STA_Subnet_Mask'),
+        STA_Default_Gateway = $('#STA_Default_Gateway'),
+        MAC_Address = $('#MAC_Address'),
+        STA_DHCP_State = $('#STA_DHCP_State'),
+        STA_DHCP_Disable_State = $('#STA_DHCP_Disable_State'),
+        STA_DHCP_Enable_State = $('#STA_DHCP_Enable_State'),
+        STA_Connected_to_channel = $('#STA_Connected_to_channel'),
+        STA_connected_to_SSID = $('#STA_connected_to_SSID'),
+        aboutPolling = new com.TI.tokenPoller({
+            "paramPage": "param_about.html", 
+            "refreshRate": 1 * 1000,    // every second
+            "valueMap": [{
+            "paramId": "System_Up_Time",
+                "outputSuccess": function(output) {
+                    System_Up_Time.html(output);
+                },
+                "outputDefault": function() {
+                    System_Up_Time.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "NWP_Version",
+                "outputSuccess": function(output) {
+                    NWP_Version.html(output);
+                },
+                "outputDefault": function() {
+                    NWP_Version.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "MAC_Version",
+                "outputSuccess": function(output) {
+                    MAC_Version.html(output);
+                },
+                "outputDefault": function() {
+                    MAC_Version.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "PHY_Version",
+                "outputSuccess": function(output) {
+                    PHY_Version.html(output);
+                },
+                "outputDefault": function() {
+                    PHY_Version.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "HW_Version",
+                "outputSuccess": function(output) {
+                    HW_Version.html(output);
+                },
+                "outputDefault": function() {
+                    HW_Version.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_IP_Address",
+                "outputSuccess": function(output) {
+                    STA_IP_Address.html(output);
+                },
+                "outputDefault": function() {
+                    STA_IP_Address.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_Subnet_Mask",
+                "outputSuccess": function(output) {
+                    STA_Subnet_Mask.html(output);
+                },
+                "outputDefault": function() {
+                    STA_Subnet_Mask.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_Default_Gateway",
+                "outputSuccess": function(output) {
+                    STA_Default_Gateway.html(output);
+                },
+                "outputDefault": function() {
+                    STA_Default_Gateway.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "MAC_Address",
+                "outputSuccess": function(output) {
+                    MAC_Address.html(output);
+                },
+                "outputDefault": function() {
+                    MAC_Address.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_DHCP_State",
+                "outputSuccess": function(output) {
+                    STA_DHCP_State.html(output);
+                },
+                "outputDefault": function() {
+                    STA_DHCP_State.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_DHCP_Disable_State",
+                "outputSuccess": function(output) {
+                    STA_DHCP_Disable_State.html(output);
+                },
+                "outputDefault": function() {
+                    STA_DHCP_Disable_State.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_DHCP_Enable_State",
+                "outputSuccess": function(output) {
+                    STA_DHCP_Enable_State.html(output);
+                },
+                "outputDefault": function() {
+                    STA_DHCP_Enable_State.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_Connected_to_channel",
+                "outputSuccess": function(output) {
+                    STA_Connected_to_channel.html(output);
+                },
+                "outputDefault": function() {
+                    STA_Connected_to_channel.html("<i>reloading</i>");
+                }
+            },
+            {
+            "paramId": "STA_connected_to_SSID",
+                "outputSuccess": function(output) {
+                    STA_connected_to_SSID.html(output);
+                },
+                "outputDefault": function() {
+                    STA_connected_to_SSID.html("<i>reloading</i>");
+                }
+            }]
+        });
+});
+</script>
+<title>Overview</title>
+</head>
+<body>
+<div class="header">
+	<div class="ti-logo"></div>
+
+    <div class="page-title"></div>
+    <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+    <div class="status-bar"> Current Status: <em>Offline</em></div> <!-- toggle class "online" to change status - use js to change status message (later) -->
+</div>
+<div class="tabs">
+<ul>
+	<li class="" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+	<li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+    <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+    <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+    <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+<li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+</ul>
+</div>
+<div class="content">
+<div class="device-properties">
+        <table>
+            <tr>
+                <td colspan="2" class="tbl-header top">Versions</td>
+            </tr>
+            <tr><td>NWP Version:</td><td id="NWP_Version"><i>reloading</i></td></tr>
+            <tr><td>MAC Version:</td><td id="MAC_Version"><i>reloading</i></td></tr>
+            <tr><td>PHY Version:</td><td id="PHY_Version"><i>reloading</i></td></tr>
+            <tr><td>HW Version:</td><td id="HW_Version"><i>reloading</i></td></tr>
+        <tr><td colspan="2"></td></tr>
+        <tr><td colspan="2"></td></tr>
+            <tr>
+                <td colspan="2" class="tbl-header">LAN</td>
+            </tr>
+            <tr><td>MAC Address:</td><td id="MAC_Address"><i>reloading</i></td></tr>
+            <tr><td>DHCP State:</td><td id="STA_DHCP_State"><i>reloading</i></td></tr>
+            <tr><td>IP Address:</td><td id="STA_IP_Address"><i>reloading</i></td></tr>
+            <tr><td>Subnet Mask:</td><td id="STA_Subnet_Mask"><i>reloading</i></td></tr>
+            <tr><td>Default Gateway:</td><td id="STA_Default_Gateway"><i>reloading</i></td></tr>            
+        <tr><td colspan="2"></td></tr>
+        <tr><td colspan="2"></td></tr>
+        <tr>
+                <td colspan="2" class="tbl-header">Wi-Fi AP Parameters</td>
+            </tr>
+            <tr><td>Channel No:</td><td id="STA_Connected_to_channel"><i>reloading</i></td></tr>
+            <tr><td>SSID:</td><td id="STA_connected_to_SSID"><i>reloading</i></td></tr>            
+        <tr><td colspan="2"></td></tr>
+         <tr><td colspan="2"></td></tr>
+                    <tr>
+                <td colspan="2" class="tbl-header">System</td>
+            </tr>
+            <tr><td>System Up Time:</td><td id="System_Up_Time"><i>reloading</i></td></tr>
+        </table>
+    </div>
+    <div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

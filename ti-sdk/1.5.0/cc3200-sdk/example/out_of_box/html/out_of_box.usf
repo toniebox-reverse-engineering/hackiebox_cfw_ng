@@ -1,0 +1,25 @@
+#Wed May 01 10:03:50 CDT 2019
+interface=CC31x Flash Connections
+CFG_GRP_ID|DHCP_Server=false
+CFG_GRP_ID|Station=false
+com=54
+CFG_GRP_ID|mDNS_Client=false
+CFG_GRP_ID|Device_Role=false
+CFG_GRP_ID|Profiles=false
+CFG_GRP_ID|AP=false
+CFG_GRP_ID|Profile7=false
+CFG_GRP_ID|Profile6=false
+CFG_GRP_ID|Profile5=false
+CFG_GRP_ID|Profile4=false
+CFG_GRP_ID|Profile3=false
+CFG_GRP_ID|mDNSClient5=false
+CFG_GRP_ID|Profile2=false
+device=CC31x Flash Devices
+CFG_GRP_ID|mDNSClient4=false
+CFG_GRP_ID|Profile1=false
+CFG_GRP_ID|mDNSClient3=false
+CFG_GRP_ID|mDNSClient2=false
+CFG_GRP_ID|mDNSClient1=false
+CFG_GRP_ID|P2P=false
+CFG_GRP_ID|HTTP_Server=false
+CFG_GRP_ID|Smart_Config=false

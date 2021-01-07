@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="css/style.css" >
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/com.TI.tokenPoller.js"></script>
+<script src="js/page-actions.js"></script>
+<script type="text/javascript">
+$(function() {
+	var sprinklerSwitch = $('#sprinklerSwitch'),
+		switchBtn = $('#switchImage'),
+		sprinkler = $('#sprinkler'),
+		spriklerRunning = false,
+		imageOn = false,
+		sprinklerToggle = setInterval(function() {
+			if (spriklerRunning) {
+				if (imageOn) {
+					sprinkler.attr('src',"images/demo-sprinkler-off.jpg");	
+					imageOn = false;
+				} else {
+					sprinkler.attr('src',"images/demo-sprinkler-on.jpg");	
+					imageOn = true;
+				}
+			}
+		}, 300);
+	sprinklerSwitch.click(function(){
+		if (switchBtn.hasClass('on')) {
+			switchBtn.removeClass('on');
+			com.TI.toggleLED('_OFF');
+			spriklerRunning = false;
+			sprinkler.attr('src',"images/demo-sprinkler-off.jpg");	
+			imageOn = false;
+		} else {
+			switchBtn.addClass('on');
+			com.TI.toggleLED('_Blink');
+			spriklerRunning = true;
+			imageOn = true;
+		}
+	});
+});
+</script>
+<title>Overview</title>
+</head>
+<body>
+<div class="header">
+  <div class="ti-logo"></div>
+  <div class="page-title">
+    
+  </div>
+  <div class="red-bar">SimpleLink&trade; Wi-Fi&reg; Family</div>
+  <div class="status-bar"> Current Status: <em>Offline</em></div>
+  <!-- toggle class "online" to change status - use js to change status message (later) --> 
+</div>
+<div class="tabs">
+  <ul>
+    <li class="" id="welcome"><a href="index.html"><span>Welcome</span></a></li>
+    <li class="" id="overview"><a href="overview.html"><span>Overview</span></a></li>
+    <li class="" id="about"><a href="about.html"><span>About</span></a></li>
+    <li class="" id="setup"><a href="setup.html"><span>Setup</span></a></li>
+    <li class="" id="portal"><a href="portal.html"><span>Developer's Portal</span></a></li>
+    <li class="" id="demos"><a href="demos.html"><span>Demos</span></a></li>
+  </ul>
+</div>
+<div class="content">
+  
+    <div class="demoLink automation active" onclick="window.open('demos-sprinkler.html', '_self');"></div>
+    <div class="demoLink appliances" onclick="window.open('demos-appliances.html', '_self');"></div>
+    <div class="demoLink safety" onclick="window.open('demos-security.html', '_self');"></div>
+    <div class="demoLink smartEnergy" onclick="window.open('demos-energy.html', '_self');"></div>
+  	<br style="clear:both" />
+  
+    <h2>Home Automation</h2>
+	<p>Toggle switch ON to see the red LED on the LaunchPad blink, toggle switch OFF to turn off the red LED.</p>
+    <div class="switchControl" id="sprinklerSwitch">
+		<div class="sprinklerOn">On</div>
+		<div id="switchImage"></div>
+		<div class="sprinklerOff">Off</div>
+	</div>
+    <img src="images/demo-sprinkler-off.jpg" id="sprinkler" style="max-width:325px;width:80%;height:342px\0/IE8+9;" />
+  
+  <p>It's raining outside and you forgot to turn off the sprinkler. No problem. This demo shows you how SimpleLink CC3200 can be used to control the sprinkler system via the cloud.<br /><br />Simply click on the On/Off buttons you see on your screen, you will see the sprinkler turn on and off. You can also see the LED lights flashing on and off.</p>
+  <div class="didYouKnow">
+	<span>Did you know?</span>
+	<p>CC3200 has low-power consumption due to its innovative one-chip architecture. The Wi-Fi sensors can run on 2xAA batteries for over 1 year! </p>
+  </div>
+  <div class="footer"><a href="http://www.ti.com/privacy">Privacy  Policy</a> | <a href="http://www.ti.com/termsofuse">Terms of Use</a></div>
+</div>
+</body>
+</html>

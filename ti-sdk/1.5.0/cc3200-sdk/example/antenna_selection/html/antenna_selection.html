@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<!--[if lte IE 9 ]> <html class="ie"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html> <!--<![endif]-->
+
+<head>
+<link rel="stylesheet" type="text/css" href="simple_link.css">
+<script src="js/jquery-1.8.3.min.js"></script>
+<script type="text/javascript">
+
+	var _count	= 0;
+	var _flag = 0;
+_tmr = setInterval(get_status,5000);
+
+function get_status()
+{
+
+if(_flag == 1)
+{
+
+_flag = 0;
+
+	// helper function for getting token values
+	function getTokenValue(paramPage, tokenId, successFn, failFn) {
+		$.ajax({
+				"type": "GET",
+				"url": paramPage,
+				"cache": false,
+				"dataType": "html"
+			})
+			// define callback for get request success
+			.done(function(getdata, status, xhr) {
+				successFn($(getdata).filter('#'+tokenId).text());
+			})
+			.fail(function(jqxhr, settings, exception) {
+				failFn();
+			});
+			
+	}
+
+
+		getTokenValue('param_status.html', 'Device_Status', 
+					// successFn callback, val is the token value
+					function(val) {
+						if (val == "TRUE") {
+							_flag = 0;
+							alert ("Successfully Connected to AP!!");
+							location.reload();
+							
+							
+						} else {
+							if (val == "FALSE") 
+							{				
+
+								alert ("Connection to AP Failed or Taking too long, Check Security Key and Retry");
+								location.reload();								
+							}
+							else
+							{
+								alert ("Rechecking Status..");
+								if(_count>2)
+								{
+									alert ("AP Connection Status Check Failed - Reconnect and Refresh the page");
+									_flag = 0;
+								}
+								else
+								{
+									_flag = 1;
+								}
+							}
+						}
+					},
+					// failFn callback
+					function() {
+					if(_count<3)
+					{
+						alert ("Oops..It Seems Connection to Device AP is lost, Reconnect and wait for Notification");
+						_flag = 1;
+						
+					}
+					else
+					{
+							alert ("AP Connection Status Check Failed - Reconnect and Refresh the page");
+						
+					}
+					});
+	_count++;				
+}
+}
+
+function on_submit()
+{
+	var whichAnt = 1;
+	if($(':radio[id=Antenna2]').is(':checked'))
+	whichAnt = 2;
+	
+	alert ('Connecting With Antenna  '+whichAnt+' .. Wait for Status' );
+	_count=0;
+	_flag = 1;
+		
+}
+
+
+
+function SwitchAP()
+{
+	alert ("Switching to Station Mode..Connection to the Device AP will be Lost!!");		
+}
+
+$(document).ready(function() {
+   $(':radio[id=Antenna2]').change(function(){
+       $(':radio[id=Ant2SSID1]').prop('checked',true);
+   });
+      $(':radio[id=Antenna1]').change(function(){
+       $(':radio[id=Ant1SSID1]').prop('checked',true);
+   });
+   $(':radio[id=Ant2SSID1]').change(function(){
+       $(':radio[id=Antenna2]').prop('checked',true);
+   });
+   $(':radio[id=Ant1SSID1]').change(function(){
+       $(':radio[id=Antenna1]').prop('checked',true);
+   });
+});
+
+</script>
+
+</head>
+
+<body class="in-frame">
+
+<table border="0"  width="100%" cellpadding="3" cellspacing="0">
+
+<tr>  
+<td class="page-title" >
+	WiFi Connectivity Profiles Settings </td>
+<td class = "page-title alert"> __SL_G_S.I </td>	
+</tr>
+
+<form method="POST" name="SimpleLink Configuration" action = "nothing" onsubmit="on_submit()")>  
+<tr>
+  <td class = "empty-line" colspan=2></td>
+ </tr>
+ 
+<tr>
+  <td class="frame-title" colspan=2 > 
+     Add Profile </td>
+</tr>
+
+<tr>
+  <td class = "empty-l-in-box" colspan=2></td>
+</tr>
+
+<tr>
+	<td class="label" dir=LTR> Antenna 1: </td>
+	<td class="user-input" id = "ant1" dir=LTR><input type="radio" id = "Antenna1" name="__SL_P_U.D" value ="1" checked >   Antenna 1 </input>
+									<input type="radio" id = "Antenna2" name="__SL_P_U.D" value ="2" >   Antenna 2 </input><br>
+									<input type="radio" id = "Ant1SSID1" name="__SL_P_USD" value ="__SL_G_US1" checked>   __SL_G_US1 </input>
+								    <img src="__SL_G_UR1"  name="signal1" id="signal1" /><br>
+								   <input type="radio" id = "Ant1SSID1" name="__SL_P_USD" value ="__SL_G_US2" >   __SL_G_US2 </input>
+								   <img src="__SL_G_UR2" name="signal2" id="signal2" /><br>							   
+								   <input type="radio" id = "Ant1SSID1" name="__SL_P_USD" value ="__SL_G_US3" >   __SL_G_US3 </input>
+								   <img src="__SL_G_UR3" name="signal3" id="signal3" /><br>									   
+								   <input type="radio" id = "Ant1SSID1" name="__SL_P_USD" value ="__SL_G_US4" >   __SL_G_US4 </input>
+								   <img src="__SL_G_UR4" name="signal4" id="signal4" /><br>	
+								   <input type="radio" id = "Ant1SSID1" name="__SL_P_USD" value ="__SL_G_US5" >   __SL_G_US5 </input>
+								   <img src="__SL_G_UR5" name="signal5" id="signal5" /><br><br></td>
+</tr>
+<tr>
+	<td class="label" dir=LTR> Antenna 2: </td>
+	<td class="user-input" id = "ant2" dir=LTR>
+									<input type="radio" id = "Ant2SSID1" name="__SL_P_USD" value ="__SL_G_USA" >   __SL_G_USA </input>
+								    <img src="__SL_G_URA" name="siga2s1" id="siga2s1" /><br>
+								   <input type="radio" id = "Ant2SSID1" name="__SL_P_USD" value ="__SL_G_USB" >   __SL_G_USB </input>
+								   <img src="__SL_G_URB" name="siga2s2" id="siga2s2" /><br>							   
+								   <input type="radio" id = "Ant2SSID1" name="__SL_P_USD" value ="__SL_G_USC" >   __SL_G_USC </input>
+								   <img src="__SL_G_URC" name="siga2s3" id="siga2s3" /><br>									   
+								   <input type="radio" id = "Ant2SSID1" name="__SL_P_USD" value ="__SL_G_USD" >   __SL_G_USD </input>
+								   <img src="__SL_G_URD" name="siga2s4" id="siga2s4" /><br>	
+								   <input type="radio" id = "Ant2SSID1" name="__SL_P_USD" value ="__SL_G_USE" >   __SL_G_USE </input>
+								   <img src="__SL_G_URE" name="siga2s5" id="siga2s5" /><br></td>
+</tr>
+ 
+ 
+<tr>
+	<td class="label"> Security Type: </td>
+	<td class="user-input"><input type="radio" name="__SL_P_USE" value="0" checked />Open
+								   <input type="radio" name="__SL_P_USE" value="1" />WEP
+								   <input type="radio" name="__SL_P_USE" value="2" />WPA								   
+</tr>
+<tr>
+	<td class="label"> Security Key: </td>
+	<td class="user-input"><input type="text" maxlength="64" name="__SL_P_USF" />  Hexadecimal digits - any combination of 0-9, a-f and A-F</td>
+</tr>
+<tr>
+	<td class="label"> Profile Priority: </td>
+	<td class="user-input"><input type="text" maxlength="1" name="__SL_P_USG" />  Enter a value 0-7 (0 = highest)</td>
+</tr>
+
+<tr>
+  <td class="empty-l-in-box" colspan=2></td>
+ </tr>
+ 
+<tr>
+	<td class="in-a-box" colspan=2  align=center><input type="submit" name="__SL_P_USC" value="Add" /></td>
+</tr>
+
+<tr>
+  <td class="in-a-box" colspan=2 align=center> Connection with the Access Point will be validated</td>
+ </tr>
+
+<tr>
+  <td class = "empty-l-in-box" colspan=2></td>
+</tr>
+ 
+<tr >
+  <td class = "border-l-top" colspan=2 >
+  </td>
+</tr>
+	 
+
+</table>
+	 
+</body>
+</html>

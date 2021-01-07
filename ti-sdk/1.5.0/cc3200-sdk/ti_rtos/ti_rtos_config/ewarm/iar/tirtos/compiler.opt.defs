@@ -1,0 +1,1 @@
+    -Dxdc_target_types__="iar/targets/arm/std.h" -Dxdc_target_name__=M4 -Dxdc_cfg__xheader__="\"app/package/cfg/app_prm4.h\""
