@@ -1,0 +1,4 @@
+SDKVERSION=1.5.0
+SDKROOT=${ROOT}/ti-sdk/${SDKVERSION}/cc3200-sdk
+
+include ${SDKROOT}/tools/gcc_scripts/makedefs
