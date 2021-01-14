@@ -42,6 +42,12 @@
 ROOT=../..
 
 #
+# Set optimization level and linkscript
+#
+#OPT_LEVEL=0
+#ADD_LINK_SCRIPT=
+
+#
 # Include the common make definitions.
 #
 include ${ROOT}/ti-sdk/makeCommon
