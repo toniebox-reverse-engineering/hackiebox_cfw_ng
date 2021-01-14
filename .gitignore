@@ -1,3 +1,7 @@
+*.a
+*.o
 exe/
 obj/
+obj_nonos_opt/
+obj_os_opt/
 /_tmp/
