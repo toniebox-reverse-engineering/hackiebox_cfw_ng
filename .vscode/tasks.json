@@ -1,0 +1,100 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Relocator: make all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/relocator"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Relocator: make clean all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/relocator"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Relocator: make clean",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/relocator"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+
+        {
+            "label": "Bootmanager: make all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Bootmanager: make clean all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Bootmanager: make clean",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
