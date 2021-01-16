@@ -44,13 +44,13 @@ ROOT=../..
 #
 # Set optimization level and linkscript
 #
-#OPT_LEVEL=0
+OPT_LEVEL=0
 #ADD_LINK_SCRIPT=
 
 #
 # Include the common make definitions.
 #
-include ${ROOT}/ti-sdk/makeCommon
+include ${ROOT}/common/make/makeCommon
 
 #
 # Where to find source files that do not live in this directory.

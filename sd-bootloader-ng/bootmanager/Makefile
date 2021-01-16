@@ -43,13 +43,13 @@ ROOT=../..
 #
 # Set optimization level and linkscript
 #
-OPT_LEVEL=g
-ADD_LINK_SCRIPT=${PWD}/bootgen.sh
+OPT_LEVEL=0
+ADD_LINK_SCRIPT=${PWD}/concatBootmanagerRelocator.sh
 
 #
 # Include the common make definitions.
 #
-include ${ROOT}/ti-sdk/makeCommon
+include ${ROOT}/common/make/makeCommon
 
 #
 # Where to find source files that do not live in this directory.

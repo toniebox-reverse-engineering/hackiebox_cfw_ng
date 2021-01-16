@@ -43,7 +43,7 @@
 #
 #******************************************************************************
 ifndef OPT_LEVEL
-OPT_LEVEL=s
+OPT_LEVEL=g
 endif
 
 #******************************************************************************
@@ -89,13 +89,15 @@ ifeq (${COMPILER}, gcc)
 # Get the prefix for the tools to use.  Use arm-stellaris-eabi if it exists,
 # otherwise fall back to arm-none-eabi.
 #
-PREFIX:=${shell type arm-stellaris-eabi-gcc > /dev/null 2>&1 && \
-         echo arm-stellaris-eabi || echo arm-none-eabi}
+#PREFIX:=${shell type arm-stellaris-eabi-gcc > /dev/null 2>&1 && echo arm-stellaris-eabi || echo arm-none-eabi}
+PREFIX=arm-none-eabi
 
 #
 # The command for calling the compiler.
 #
-CC=${PREFIX}-gcc
+#CC=${PREFIX}-gcc
+CC_VERSION=10-2020-q4-major
+CC=${ROOT}/arm-sdk/${CC_VERSION}/bin/${PREFIX}-gcc
 
 #
 # The location of the C compiler

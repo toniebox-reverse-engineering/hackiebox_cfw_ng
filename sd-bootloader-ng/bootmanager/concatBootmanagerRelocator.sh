@@ -52,7 +52,7 @@ dd if=/dev/zero of=__tmp.bin ibs=1 count=256 conv=notrunc >/dev/null 2>&1
 dd if=$RELOCATOR/relocator.bin of=__tmp.bin ibs=1 conv=notrunc >/dev/null 2>&1
 
 # Concatenate re-locator and boot-manager
-cat __tmp.bin $BOOTMGR/bootmgr.bin > exe/application_bootloader.bin
+cat __tmp.bin $BOOTMGR/bootmgr.bin > exe/bootmgr.relocator.bin
 
 # Remove tmp file
 rm -f __tmp.bin

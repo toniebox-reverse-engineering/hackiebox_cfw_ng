@@ -63,6 +63,8 @@
 #include "flc.h"
 #include "bootmgr.h"
 
+#include "utils.h"
+
 #ifdef FAST_BOOT
 #include "filesystem.h"
 #endif
@@ -95,12 +97,7 @@ static tBoolean bIsNwpStarted;
 
 //*****************************************************************************
 // Vector Table
-#if defined(ccs) || defined(gcc)
 extern void (* const g_pfnVectors[])(void);
-#endif
-#if defined(ewarm)
-extern uVectorEntry __vector_table;
-#endif
 
 
 //*****************************************************************************
@@ -173,13 +170,7 @@ BoardInit(void)
   //
   // Set vector table base
   //
-#if defined(ccs) || defined(gcc)
-    MAP_IntVTableBaseSet((unsigned long)&g_pfnVectors[0]);
-#endif
-
-#if defined(ewarm)
-    MAP_IntVTableBaseSet((unsigned long)&__vector_table);
-#endif
+  MAP_IntVTableBaseSet((unsigned long)&g_pfnVectors[0]);
 
   //
   // Enable Processor Interrupts
@@ -726,6 +717,37 @@ static int CreateDefaultBootInfo(sBootInfo_t *psBootInfo)
 }
 #endif
 
+#define HAL_FCPU_MHZ                        80U
+#define HAL_FCPU_HZ                         (1000000U * HAL_FCPU_MHZ)
+#define HAL_SYSTICK_PERIOD_US               1000U
+#define UTILS_DELAY_US_TO_COUNT(us)         (((us) * HAL_FCPU_MHZ) / 6)
+
+#define TONIEBOX_GREEN_LED_PRCM                     PRCM_GPIOA3
+#define TONIEBOX_BIG_EAR_PRCM                       PRCM_GPIOA0
+#define TONIEBOX_SMALL_EAR_PRCM                     PRCM_GPIOA0
+#define TONIEBOX_GREEN_LED_PORT                     GPIOA3_BASE
+#define TONIEBOX_BIG_EAR_PORT                       GPIOA0_BASE
+#define TONIEBOX_SMALL_EAR_PORT                     GPIOA0_BASE
+#define TONIEBOX_SD_PORT                            GPIOA0_BASE
+
+#define TONIEBOX_GREEN_LED_GPIO                     pin_GP25
+#define TONIEBOX_GREEN_LED_PIN_NUM                  PIN_21      // GP25/SOP2
+#define TONIEBOX_BIG_EAR_PIN_NUM                    PIN_57      // GP02
+#define TONIEBOX_SMALL_EAR_PIN_NUM                  PIN_59      // GP04
+#define TONIEBOX_GREEN_LED_PORT_PIN                 GPIO_PIN_1
+#define TONIEBOX_BIG_EAR_PORT_PIN                   GPIO_PIN_2
+#define TONIEBOX_SMALL_EAR_PORT_PIN                 GPIO_PIN_4
+#define TONIEBOX_SD_PORT_PIN                        GPIO_PIN_3
+
+static void prebootmgr_blink(int times, int wait_us);
+static void prebootmgr_blink(int times, int wait_us) {
+    for (int i=0; i<times; i++) {
+        MAP_GPIOPinWrite(TONIEBOX_GREEN_LED_PORT, TONIEBOX_GREEN_LED_PORT_PIN, 0xFF);
+        UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
+        MAP_GPIOPinWrite(TONIEBOX_GREEN_LED_PORT, TONIEBOX_GREEN_LED_PORT_PIN, 0);
+        UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
+    }
+}
 //*****************************************************************************
 //
 //! Main function
@@ -745,6 +767,7 @@ int main()
   //
   BoardInit();
 
+/*
   //
   // Initialize the DMA
   //
@@ -897,7 +920,7 @@ int main()
   // Load and execute the image base on boot info.
   //
   ImageLoader(&sBootInfo);
-
+*/
   //
   // Infinite loop
   //
