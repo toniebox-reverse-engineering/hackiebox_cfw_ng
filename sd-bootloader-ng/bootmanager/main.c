@@ -473,6 +473,12 @@ static int CreateDefaultBootInfo(sBootInfo_t *psBootInfo)
   return -1;
 }
 
+#define COLOR_GREEN 1
+#define COLOR_BLUE 2
+#define COLOR_RED 4
+#define COLOR_CYAN 3
+
+
 #define HAL_FCPU_MHZ 80U
 #define HAL_FCPU_HZ (1000000U * HAL_FCPU_MHZ)
 #define HAL_SYSTICK_PERIOD_US 1000U
@@ -519,19 +525,35 @@ static void LedBlueOff() {
   MAP_GPIOPinWrite(LED_BLUE_PORT, LED_BLUE_PORT_MASK, 0x00);
 }
 
-static void prebootmgr_blink(int times, int wait_us);
-static void prebootmgr_blink(int times, int wait_us)
+static void LedOn(uint8_t color) {
+  if (color & COLOR_GREEN) {
+    LedGreenOn();
+  } if (color & COLOR_BLUE) {
+    LedBlueOn();
+  }
+}
+static void LedOff(uint8_t color) {
+  if (color & COLOR_GREEN) {
+    LedGreenOff();
+  } if (color & COLOR_BLUE) {
+    LedBlueOff();
+  }
+}
+
+static void prebootmgr_blink_color(int times, int wait_us, uint8_t color)
 {
   for (int i = 0; i < times; i++)
   {
-    LedBlueOn();
-    LedGreenOn();
+    LedOn(color);
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
-    LedBlueOff();
-    LedGreenOff();
+    LedOff(color);
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
   }
 }
+static void prebootmgr_blink(int times, int wait_us) {
+  prebootmgr_blink_color(times, wait_us, COLOR_GREEN);
+}
+
 static void BoardInitCustom(void)
 {
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA0 (Ear Buttons / SD Power / Power)
@@ -590,7 +612,7 @@ static void Selector(void) {
 
   while (EarBigPressed()) {
     if (EarSmallPressed()) {
-        if (counter < 3) {
+        if (counter < 9) {
           counter +=1;
         } else {
           counter = 0;
@@ -614,7 +636,13 @@ static void Selector(void) {
             UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
         }
     }
-    prebootmgr_blink(counter+1, 100);
+    if (counter < 3) {
+      prebootmgr_blink_color((counter+1)-0, 100, COLOR_GREEN);
+    } else if (counter < 6) {
+      prebootmgr_blink_color((counter+1)-3, 100, COLOR_BLUE);
+    } else /*if (counter < 9)*/ {
+      prebootmgr_blink_color((counter+1)-6, 100, COLOR_CYAN);
+    }
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
   }
 }
@@ -641,7 +669,8 @@ int main()
 
   Selector();
 
-  prebootmgr_blink(3, 33);
+  prebootmgr_blink_color(3, 33, COLOR_GREEN);
+  prebootmgr_blink_color(3, 33, COLOR_BLUE);
 
   /*
   //
