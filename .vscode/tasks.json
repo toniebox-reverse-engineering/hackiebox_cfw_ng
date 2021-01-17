@@ -16,7 +16,11 @@
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         },
         {
             "label": "Relocator: make clean all",
@@ -32,7 +36,11 @@
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         },
         {
             "label": "Relocator: make clean",
@@ -47,7 +55,11 @@
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         },
 
         {
@@ -63,7 +75,11 @@
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         },
         {
             "label": "Bootmanager: make clean all",
@@ -79,7 +95,11 @@
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         },
         {
             "label": "Bootmanager: make clean",
@@ -94,7 +114,11 @@
             "group": "build",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         }
     ]
 }
