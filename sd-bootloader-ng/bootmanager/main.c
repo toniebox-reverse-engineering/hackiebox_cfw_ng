@@ -1,34 +1,34 @@
 //*****************************************************************************
 //
-// Copyright (C) 2014 Texas Instruments Incorporated - http://www.ti.com/ 
-// 
-// 
-//  Redistribution and use in source and binary forms, with or without 
-//  modification, are permitted provided that the following conditions 
+// Copyright (C) 2014 Texas Instruments Incorporated - http://www.ti.com/
+//
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
 //  are met:
 //
-//    Redistributions of source code must retain the above copyright 
+//    Redistributions of source code must retain the above copyright
 //    notice, this list of conditions and the following disclaimer.
 //
 //    Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the 
-//    documentation and/or other materials provided with the   
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the
 //    distribution.
 //
 //    Neither the name of Texas Instruments Incorporated nor the names of
 //    its contributors may be used to endorse or promote products derived
 //    from this software without specific prior written permission.
 //
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-//  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+//  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 //  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-//  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
-//  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-//  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+//  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+//  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+//  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 //  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 //  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //*****************************************************************************
@@ -48,6 +48,9 @@
 //
 //****************************************************************************
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "hw_ints.h"
 #include "hw_types.h"
 #include "hw_memmap.h"
@@ -66,48 +69,32 @@
 
 #include "utils.h"
 
-#ifdef FAST_BOOT
-#include "filesystem.h"
-#endif
-
-
+#include "lib/FatFs/ff.h"
+#include "lib/FatFs/diskio.h"
 
 //*****************************************************************************
 // Local Variables
 //*****************************************************************************
 static long lFileHandle;
-static int  iRetVal;
+static int iRetVal;
 static SlFsFileInfo_t pFsFileInfo;
-#ifdef FAST_BOOT
-static SlFsFileInfo2_t pFsFileInfo2;
-#endif
 
-#ifndef FAST_BOOT
 static unsigned long ulFactoryImgToken;
-#endif
 
 static unsigned long ulUserImg1Token;
 static unsigned long ulUserImg2Token;
 static unsigned long ulBootInfoToken;
 static unsigned long ulBootInfoCreateFlag;
-#ifdef FAST_BOOT
-static tBoolean bIsNwpStarted;
-#endif
-
-
 
 //*****************************************************************************
 // Vector Table
-extern void (* const g_pfnVectors[])(void);
-
+extern void (*const g_pfnVectors[])(void);
 
 //*****************************************************************************
 // WLAN Event handler callback hookup function
 //*****************************************************************************
 void SimpleLinkWlanEventHandler(SlWlanEvent_t *pWlanEvent)
 {
-
-
 }
 
 //*****************************************************************************
@@ -121,7 +108,6 @@ void SimpleLinkWlanEventHandler(SlWlanEvent_t *pWlanEvent)
 //*****************************************************************************
 void SimpleLinkGeneralEventHandler(SlDeviceEvent_t *pDevEvent)
 {
-
 }
 
 //*****************************************************************************
@@ -130,7 +116,6 @@ void SimpleLinkGeneralEventHandler(SlDeviceEvent_t *pDevEvent)
 void SimpleLinkHttpServerCallback(SlHttpServerEvent_t *pHttpEvent,
                                   SlHttpServerResponse_t *pHttpResponse)
 {
-
 }
 
 //*****************************************************************************
@@ -138,7 +123,6 @@ void SimpleLinkHttpServerCallback(SlHttpServerEvent_t *pHttpEvent,
 //*****************************************************************************
 void SimpleLinkNetAppEventHandler(SlNetAppEvent_t *pNetAppEvent)
 {
-
 }
 
 //*****************************************************************************
@@ -152,7 +136,6 @@ void SimpleLinkNetAppEventHandler(SlNetAppEvent_t *pNetAppEvent)
 //*****************************************************************************
 void SimpleLinkSockEventHandler(SlSockEvent_t *pSock)
 {
-
 }
 
 //*****************************************************************************
@@ -165,7 +148,7 @@ void SimpleLinkSockEventHandler(SlSockEvent_t *pSock)
 //
 //*****************************************************************************
 static void
-BoardInit(void)
+BoardInitBase(void)
 {
 
   //
@@ -198,7 +181,6 @@ BoardInit(void)
 //! \return None.
 //
 //*****************************************************************************
-#ifndef ccs
 void Run(unsigned long ulBaseLoc)
 {
 
@@ -206,7 +188,7 @@ void Run(unsigned long ulBaseLoc)
   // Set the SP
   //
   __asm("	ldr    sp,[r0]\n"
-	"	add    r0,r0,#4");
+        "	add    r0,r0,#4"); //Get address of ResetISR from .intvecs
 
   //
   // Jump to entry code
@@ -214,18 +196,6 @@ void Run(unsigned long ulBaseLoc)
   __asm("	ldr    r1,[r0]\n"
         "	bx     r1");
 }
-#else
-__asm("    .sect \".text:Run\"\n"
-      "    .clink\n"
-      "    .thumbfunc Run\n"
-      "    .thumb\n"
-      "Run:\n"
-      "    ldr    sp,[r0]\n"
-      "    add    r0,r0,#4\n"
-      "    ldr    r1,[r0]\n"
-      "    bx     r1");
-#endif
-
 
 //*****************************************************************************
 //
@@ -239,7 +209,6 @@ __asm("    .sect \".text:Run\"\n"
 //! \return None.
 //
 //*****************************************************************************
-#ifndef FAST_BOOT
 void LoadAndExecute(unsigned char *ImgName, unsigned long ulToken)
 {
 
@@ -247,28 +216,28 @@ void LoadAndExecute(unsigned char *ImgName, unsigned long ulToken)
   // Open the file for reading
   //
   iRetVal = sl_FsOpen(ImgName, FS_MODE_OPEN_READ,
-                        &ulToken, &lFileHandle);
+                      &ulToken, &lFileHandle);
   //
   // Check if successfully opened
   //
-  if( 0 == iRetVal )
+  if (0 == iRetVal)
   {
     //
     // Get the file size using File Info structure
     //
-    iRetVal = sl_FsGetInfo(ImgName, ulToken,&pFsFileInfo);
+    iRetVal = sl_FsGetInfo(ImgName, ulToken, &pFsFileInfo);
 
     //
     // Check for failure
     //
-    if( 0 == iRetVal )
+    if (0 == iRetVal)
     {
 
       //
       // Read the application into SRAM
       //
-      iRetVal = sl_FsRead(lFileHandle,0, (unsigned char *)APP_IMG_SRAM_OFFSET,
-                 pFsFileInfo.FileLen );
+      iRetVal = sl_FsRead(lFileHandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET,
+                          pFsFileInfo.FileLen);
 
       //
       // Stop the network services
@@ -282,88 +251,6 @@ void LoadAndExecute(unsigned char *ImgName, unsigned long ulToken)
     }
   }
 }
-#else
-void LoadAndExecute(unsigned char *ImgName, unsigned long ulToken)
-{
-
-  if( true == bIsNwpStarted )
-  {
-    //
-    // Open the file for reading
-    //
-    iRetVal = sl_FsOpen(ImgName, FS_MODE_OPEN_READ,
-                          &ulToken, &lFileHandle);
-    //
-    // Check if successfully opened
-    //
-    if( 0 == iRetVal )
-    {
-      //
-      // Get the file size using File Info structure
-      //
-      iRetVal = sl_FsGetInfo(ImgName, ulToken,&pFsFileInfo);
-
-      //
-      // Check for failure
-      //
-      if( 0 == iRetVal )
-      {
-        //
-        // Read the application into SRAM
-        //
-        iRetVal = sl_FsRead(lFileHandle,0, (unsigned char *)APP_IMG_SRAM_OFFSET,
-                   pFsFileInfo.FileLen );
-
-        //
-        // Stop the network services
-        //
-        sl_Stop(30);
-
-        //
-        // Execute the application.
-        //
-        Run(APP_IMG_SRAM_OFFSET);
-      }
-    }
-  }
-  else
-  {
-    //
-    // Open the file for reading
-    //
-    lFileHandle = fs_Open(1,ImgName,
-                    _FS_MODE_OPEN_READ,&ulToken); 
-    //
-    // Check if successfully opened
-    //
-    if((lFileHandle > 0) )
-    {
-      //
-      // Get the file size using File Info structure
-      //
-      iRetVal = fs_GetFileInfo(1,ImgName,&ulToken,&pFsFileInfo2);
-
-      //
-      // Check for failure
-      //
-      if( 0 == iRetVal )
-      {
-
-        //
-        // Read the application into SRAM
-        //
-        iRetVal = fs_Read(lFileHandle, 0, (char *)APP_IMG_SRAM_OFFSET, 
-                         pFsFileInfo2.Size);
-
-        //
-        // Execute the application.
-        //
-        Run(APP_IMG_SRAM_OFFSET);
-      }
-    }
-  }
-}
-#endif
 
 //*****************************************************************************
 //
@@ -376,38 +263,34 @@ void LoadAndExecute(unsigned char *ImgName, unsigned long ulToken)
 //! \return Return 0 on success, -1 otherwise.
 //
 //*****************************************************************************
-#ifndef FAST_BOOT
 static long BootInfoWrite(sBootInfo_t *psBootInfo)
 {
   long lFileHandle;
   unsigned long ulToken;
 
-
-  
   //
   // Open the boot info file for write
   //
-  if( 0 == sl_FsOpen((unsigned char *)IMG_BOOT_INFO, FS_MODE_OPEN_WRITE,
-                      &ulToken, &lFileHandle) )
+  if (0 == sl_FsOpen((unsigned char *)IMG_BOOT_INFO, FS_MODE_OPEN_WRITE,
+                     &ulToken, &lFileHandle))
   {
     //
     // Write the boot info
     //
-    if( 0 < sl_FsWrite(lFileHandle,0, (unsigned char *)psBootInfo,
-                         sizeof(sBootInfo_t)) )
+    if (0 < sl_FsWrite(lFileHandle, 0, (unsigned char *)psBootInfo,
+                       sizeof(sBootInfo_t)))
     {
 
-    //
-    // Close the file
-    //
-    sl_FsClose(lFileHandle, 0, 0, 0);
+      //
+      // Close the file
+      //
+      sl_FsClose(lFileHandle, 0, 0, 0);
 
-    //
-    // Return success
-    //
-    return 0;
-   }
-
+      //
+      // Return success
+      //
+      return 0;
+    }
   }
 
   //
@@ -415,71 +298,6 @@ static long BootInfoWrite(sBootInfo_t *psBootInfo)
   //
   return -1;
 }
-#else
-static long BootInfoWrite(sBootInfo_t *psBootInfo, tBoolean bCreate)
-{
-  long lFileHandle;
-  unsigned long ulToken;
-  long lRet = -1;
-  
-  //
-  // Start slhost to get NVMEM service
-  //
-  sl_Start(NULL, NULL, NULL);
-
-  //
-  // Mark NWP service as statred
-  //
-  bIsNwpStarted = true;
-
-  if(bCreate)
-  {
-    //
-    // Create a new boot info file
-    //
-    lRet = sl_FsOpen((unsigned char *)IMG_BOOT_INFO,
-                        FS_MODE_OPEN_CREATE(2*sizeof(sBootInfo_t),
-                                            ulBootInfoCreateFlag),
-                                            &ulBootInfoToken,
-                                            &lFileHandle);
-  }
-  else
-  {
-     lRet = sl_FsOpen((unsigned char *)IMG_BOOT_INFO, FS_MODE_OPEN_WRITE,
-                      &ulToken, &lFileHandle);
-  }
-    
-  //
-  // Open the boot info file for write
-  //
-  if( 0 == lRet )
-  {
-    //
-    // Write the boot info
-    //
-    if( 0 < sl_FsWrite(lFileHandle,0, (unsigned char *)psBootInfo,
-                         sizeof(sBootInfo_t)) )
-    {
-
-    //
-    // Close the file
-    //
-    sl_FsClose(lFileHandle, 0, 0, 0);
-
-    //
-    // Set success
-    //
-    lRet = 0;
-   }
-
-  }
-
-  //
-  // Return failure
-  //
-  return lRet;
-}
-#endif
 
 //*****************************************************************************
 //
@@ -507,59 +325,59 @@ static void ImageLoader(sBootInfo_t *psBootInfo)
   //
   // Boot image based on image status and active image configuration
   //
-  if( IMG_STATUS_NOTEST == ulImgStatus )
+  if (IMG_STATUS_NOTEST == ulImgStatus)
   {
 
     //
     // Since no test image boot the acive image.
     //
-    switch(ucActiveImg)
+    switch (ucActiveImg)
     {
 
     case IMG_ACT_USER1:
-      LoadAndExecute((unsigned char *)IMG_USER_1,ulUserImg1Token);
+      LoadAndExecute((unsigned char *)IMG_USER_1, ulUserImg1Token);
       break;
 
     case IMG_ACT_USER2:
-      LoadAndExecute((unsigned char *)IMG_USER_2,ulUserImg2Token);
+      LoadAndExecute((unsigned char *)IMG_USER_2, ulUserImg2Token);
       break;
-      
+
 #ifndef FAST_BOOT
     default:
-      LoadAndExecute((unsigned char *)IMG_FACTORY_DEFAULT,ulFactoryImgToken);
+      LoadAndExecute((unsigned char *)IMG_FACTORY_DEFAULT, ulFactoryImgToken);
       break;
 #endif
     }
   }
-  else if( IMG_STATUS_TESTREADY == ulImgStatus )
+  else if (IMG_STATUS_TESTREADY == ulImgStatus)
   {
     //
     // Some image waiting to be tested; Change the status to testing
     // in boot info file
     //
     psBootInfo->ulImgStatus = IMG_STATUS_TESTING;
-    
+
 #ifndef FAST_BOOT
     BootInfoWrite(psBootInfo);
 #else
-    BootInfoWrite(psBootInfo,false);
+    BootInfoWrite(psBootInfo, false);
 #endif
 
     //
     // Boot the test image ( the non-active image )
     //
-    switch(ucActiveImg)
+    switch (ucActiveImg)
     {
 
     case IMG_ACT_USER1:
-      LoadAndExecute((unsigned char *)IMG_USER_2,ulUserImg2Token);
+      LoadAndExecute((unsigned char *)IMG_USER_2, ulUserImg2Token);
       break;
 
     default:
-      LoadAndExecute((unsigned char *)IMG_USER_1,ulUserImg1Token);
+      LoadAndExecute((unsigned char *)IMG_USER_1, ulUserImg1Token);
     }
   }
-  else if( IMG_STATUS_TESTING == ulImgStatus )
+  else if (IMG_STATUS_TESTING == ulImgStatus)
   {
 
     //
@@ -567,30 +385,30 @@ static void ImageLoader(sBootInfo_t *psBootInfo)
     // Change the status to no test
     //
     psBootInfo->ulImgStatus = IMG_STATUS_NOTEST;
-    
+
 #ifndef FAST_BOOT
     BootInfoWrite(psBootInfo);
 #else
-    BootInfoWrite(psBootInfo,false);
+    BootInfoWrite(psBootInfo, false);
 #endif
 
     //
     // Boot the active image.
     //
-    switch(ucActiveImg)
+    switch (ucActiveImg)
     {
 
     case IMG_ACT_USER1:
-      LoadAndExecute((unsigned char *)IMG_USER_1,ulUserImg1Token);
+      LoadAndExecute((unsigned char *)IMG_USER_1, ulUserImg1Token);
       break;
 
     case IMG_ACT_USER2:
-      LoadAndExecute((unsigned char *)IMG_USER_2,ulUserImg2Token);
+      LoadAndExecute((unsigned char *)IMG_USER_2, ulUserImg2Token);
       break;
-      
+
 #ifndef FAST_BOOT
     default:
-      LoadAndExecute((unsigned char *)IMG_FACTORY_DEFAULT,ulFactoryImgToken);
+      LoadAndExecute((unsigned char *)IMG_FACTORY_DEFAULT, ulFactoryImgToken);
       break;
 #endif
     }
@@ -599,41 +417,9 @@ static void ImageLoader(sBootInfo_t *psBootInfo)
   //
   // Boot info might be corrupted go into infinite loop
   //
-  while(1)
+  while (1)
   {
-
   }
-
-}
-
-
-//*****************************************************************************
-//
-//! Checks if the device is secure
-//!
-//! This function checks if the device is a secure device or not.
-//!
-//! \return Returns \b true if device is secure, \b false otherwise
-//
-//*****************************************************************************
-static inline tBoolean IsSecureMCU()
-{
-  unsigned long ulChipId;
-
-  ulChipId =(HWREG(GPRCM_BASE + GPRCM_O_GPRCM_EFUSE_READ_REG2) >> 16) & 0x1F;
-
-  if((ulChipId != DEVICE_IS_CC3101RS) &&(ulChipId != DEVICE_IS_CC3101S))
-  {
-    //
-    // Return non-Secure
-    //
-    return false;
-  }
-
-  //
-  // Return secure
-  //
-  return true;
 }
 
 
@@ -652,103 +438,187 @@ static inline tBoolean IsSecureMCU()
 //! \retunr Returns 0 on success, -1 otherwise.
 //
 //*****************************************************************************
-#ifndef FAST_BOOT
 static int CreateDefaultBootInfo(sBootInfo_t *psBootInfo)
 {
 
-    //
-    // Set the status to no test
-    //
-    psBootInfo->ulImgStatus = IMG_STATUS_NOTEST;
+  //
+  // Set the status to no test
+  //
+  psBootInfo->ulImgStatus = IMG_STATUS_NOTEST;
 
-    //
-    // Check if factor default image exists
-    //
-    iRetVal = sl_FsGetInfo((unsigned char *)IMG_FACTORY_DEFAULT, 0,&pFsFileInfo);
-    if(iRetVal == 0)
-    {
-      psBootInfo->ucActiveImg = IMG_ACT_FACTORY;
-      return 0;
-    }
+  //
+  // Check if factor default image exists
+  //
+  iRetVal = sl_FsGetInfo((unsigned char *)IMG_FACTORY_DEFAULT, 0, &pFsFileInfo);
+  if (iRetVal == 0)
+  {
+    psBootInfo->ucActiveImg = IMG_ACT_FACTORY;
+    return 0;
+  }
 
-    iRetVal = sl_FsGetInfo((unsigned char *)IMG_USER_1, 0,&pFsFileInfo);
-    if(iRetVal == 0)
-    {
-      psBootInfo->ucActiveImg = IMG_ACT_USER1;
-      return 0;
-    }
+  iRetVal = sl_FsGetInfo((unsigned char *)IMG_USER_1, 0, &pFsFileInfo);
+  if (iRetVal == 0)
+  {
+    psBootInfo->ucActiveImg = IMG_ACT_USER1;
+    return 0;
+  }
 
-    iRetVal = sl_FsGetInfo((unsigned char *)IMG_USER_2, 0,&pFsFileInfo);
-    if(iRetVal == 0)
-    {
-      psBootInfo->ucActiveImg = IMG_ACT_USER2;
-      return 0;
-    }
+  iRetVal = sl_FsGetInfo((unsigned char *)IMG_USER_2, 0, &pFsFileInfo);
+  if (iRetVal == 0)
+  {
+    psBootInfo->ucActiveImg = IMG_ACT_USER2;
+    return 0;
+  }
 
-    return -1;
+  return -1;
 }
-#else
-static int CreateDefaultBootInfo(sBootInfo_t *psBootInfo)
-{
 
-    //
-    // Set the status to no test
-    //
-    psBootInfo->ulImgStatus = IMG_STATUS_NOTEST;
+#define HAL_FCPU_MHZ 80U
+#define HAL_FCPU_HZ (1000000U * HAL_FCPU_MHZ)
+#define HAL_SYSTICK_PERIOD_US 1000U
+#define UTILS_DELAY_US_TO_COUNT(us) (((us)*HAL_FCPU_MHZ) / 6)
+
+#define APP_IMG_SRAM_OFFSET 0x20004000
+
+#define EAR_BIG_PRCM PRCM_GPIOA0
+#define EAR_SMALL_PRCM PRCM_GPIOA0
+
+#define LED_GREEN_PORT GPIOA3_BASE
+#define LED_BLUE_PORT GPIOA3_BASE
+#define EAR_BIG_PORT GPIOA0_BASE
+#define EAR_SMALL_PORT GPIOA0_BASE
+#define POWER_SD_PORT GPIOA0_BASE
+#define POWER_PORT GPIOA0_BASE
+
+//#define LED_GREEN_GPIO pin_GP25
+#define LED_GREEN_PIN_NUM PIN_21 // GP25/SOP2
+#define LED_BLUE_PIN_NUM PIN_17 //GP24
+#define EAR_BIG_PIN_NUM PIN_57   // GP02
+#define EAR_SMALL_PIN_NUM PIN_59 // GP04
+#define POWER_SD_PIN_NUM PIN_58 //GP03
+#define POWER_PIN_NUM PIN_61 //GP06
+
+#define LED_GREEN_PORT_MASK GPIO_PIN_1
+#define LED_BLUE_PORT_MASK GPIO_PIN_0
+#define EAR_BIG_PORT_MASK GPIO_PIN_2
+#define EAR_SMALL_PORT_MASK GPIO_PIN_4
+#define POWER_SD_PORT_MASK GPIO_PIN_3
+#define POWER_PORT_MASK GPIO_PIN_6
 
 
-    iRetVal = fs_GetFileInfo(1, (unsigned char *)IMG_USER_1, 0, &pFsFileInfo2);
-   
-    if(iRetVal == 0)
-    {
-      psBootInfo->ucActiveImg = IMG_ACT_USER1;
-      return 0;
-    }
-    
-    iRetVal = fs_GetFileInfo(1, (unsigned char *)IMG_USER_2, 0, &pFsFileInfo2);
-    
-    
-    if(iRetVal == 0)
-    {
-      psBootInfo->ucActiveImg = IMG_ACT_USER2;
-      return 0;
-    }
-
-    return -1;
+static void LedGreenOn() {
+  MAP_GPIOPinWrite(LED_GREEN_PORT, LED_GREEN_PORT_MASK, LED_GREEN_PORT_MASK);
 }
-#endif
-
-#define HAL_FCPU_MHZ                        80U
-#define HAL_FCPU_HZ                         (1000000U * HAL_FCPU_MHZ)
-#define HAL_SYSTICK_PERIOD_US               1000U
-#define UTILS_DELAY_US_TO_COUNT(us)         (((us) * HAL_FCPU_MHZ) / 6)
-
-#define TONIEBOX_GREEN_LED_PRCM                     PRCM_GPIOA3
-#define TONIEBOX_BIG_EAR_PRCM                       PRCM_GPIOA0
-#define TONIEBOX_SMALL_EAR_PRCM                     PRCM_GPIOA0
-#define TONIEBOX_GREEN_LED_PORT                     GPIOA3_BASE
-#define TONIEBOX_BIG_EAR_PORT                       GPIOA0_BASE
-#define TONIEBOX_SMALL_EAR_PORT                     GPIOA0_BASE
-#define TONIEBOX_SD_PORT                            GPIOA0_BASE
-
-#define TONIEBOX_GREEN_LED_GPIO                     pin_GP25
-#define TONIEBOX_GREEN_LED_PIN_NUM                  PIN_21      // GP25/SOP2
-#define TONIEBOX_BIG_EAR_PIN_NUM                    PIN_57      // GP02
-#define TONIEBOX_SMALL_EAR_PIN_NUM                  PIN_59      // GP04
-#define TONIEBOX_GREEN_LED_PORT_PIN                 GPIO_PIN_1
-#define TONIEBOX_BIG_EAR_PORT_PIN                   GPIO_PIN_2
-#define TONIEBOX_SMALL_EAR_PORT_PIN                 GPIO_PIN_4
-#define TONIEBOX_SD_PORT_PIN                        GPIO_PIN_3
+static void LedGreenOff() {
+  MAP_GPIOPinWrite(LED_GREEN_PORT, LED_GREEN_PORT_MASK, 0x00);
+}
+static void LedBlueOn() {
+  MAP_GPIOPinWrite(LED_BLUE_PORT, LED_BLUE_PORT_MASK, LED_BLUE_PORT_MASK);
+}
+static void LedBlueOff() {
+  MAP_GPIOPinWrite(LED_BLUE_PORT, LED_BLUE_PORT_MASK, 0x00);
+}
 
 static void prebootmgr_blink(int times, int wait_us);
-static void prebootmgr_blink(int times, int wait_us) {
-    for (int i=0; i<times; i++) {
-        MAP_GPIOPinWrite(TONIEBOX_GREEN_LED_PORT, TONIEBOX_GREEN_LED_PORT_PIN, 0xFF);
-        UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
-        MAP_GPIOPinWrite(TONIEBOX_GREEN_LED_PORT, TONIEBOX_GREEN_LED_PORT_PIN, 0);
-        UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
-    }
+static void prebootmgr_blink(int times, int wait_us)
+{
+  for (int i = 0; i < times; i++)
+  {
+    LedBlueOn();
+    LedGreenOn();
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
+    LedBlueOff();
+    LedGreenOff();
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
+  }
 }
+static void BoardInitCustom(void)
+{
+  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA0 (Ear Buttons / SD Power / Power)
+  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
+
+  //Green LED
+  MAP_PinTypeGPIO(LED_GREEN_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(LED_GREEN_PORT, LED_GREEN_PORT_MASK, GPIO_DIR_MODE_OUT);
+  //Blue LED
+  MAP_PinTypeGPIO(LED_BLUE_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(LED_BLUE_PORT, LED_BLUE_PORT_MASK, GPIO_DIR_MODE_OUT);
+
+  //Big Ear
+  MAP_PinTypeGPIO(EAR_BIG_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(EAR_BIG_PORT, EAR_BIG_PORT_MASK, GPIO_DIR_MODE_IN);
+  //Small Ear
+  MAP_PinTypeGPIO(EAR_SMALL_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(EAR_SMALL_PORT, EAR_SMALL_PORT_MASK, GPIO_DIR_MODE_IN);
+
+  //Power other peripherals
+  MAP_PinTypeGPIO(POWER_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(POWER_PORT, POWER_PORT_MASK, GPIO_DIR_MODE_OUT);
+  MAP_GPIOPinWrite(POWER_PORT, POWER_PORT_MASK, POWER_PORT_MASK);
+
+  //Power SD
+  MAP_PinTypeGPIO(POWER_SD_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(POWER_SD_PORT, POWER_SD_PORT_MASK, GPIO_DIR_MODE_OUT);
+  MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, 0x00); //SIC! 
+
+  sl_Start(NULL, NULL, NULL);
+}
+static void BoardDeinitCustom(void)
+{
+  sl_Stop(30);
+  //Power off SD
+  MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, POWER_SD_PORT_MASK); //SIC! 
+  //Power off other peripherals
+  MAP_GPIOPinWrite(POWER_PORT, POWER_PORT_MASK, 0x00);
+}
+
+static bool EarSmallPressed(void) {
+  return !(EAR_SMALL_PORT_MASK & MAP_GPIOPinRead(EAR_SMALL_PORT, EAR_SMALL_PORT_MASK));
+}
+static bool EarBigPressed(void) {
+  return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
+}
+
+static void Selector(void) {
+  int8_t counter = 0;
+
+  LedGreenOn();
+  while (EarSmallPressed()) {
+      UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
+  }
+  LedGreenOff();
+
+  while (EarBigPressed()) {
+    if (EarSmallPressed()) {
+        if (counter < 3) {
+          counter +=1;
+        } else {
+          counter = 0;
+        }
+      /*
+        switch (psBootInfo->ActiveImg) {
+            case IMG_ACT_UPDATE1:
+                psBootInfo->ActiveImg = IMG_ACT_UPDATE2;
+                break;                
+            case IMG_ACT_UPDATE2:
+                psBootInfo->ActiveImg = IMG_ACT_UPDATE3;
+                break;            
+            case IMG_ACT_UPDATE3:
+                psBootInfo->ActiveImg = IMG_ACT_FACTORY;
+                break;
+            default:
+                psBootInfo->ActiveImg = IMG_ACT_UPDATE1;
+                break;
+            }*/
+        while (EarSmallPressed()) {
+            UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
+        }
+    }
+    prebootmgr_blink(counter+1, 100);
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  }
+}
+
 //*****************************************************************************
 //
 //! Main function
@@ -766,27 +636,18 @@ int main()
   //
   // Board Initialization
   //
-  BoardInit();
+  BoardInitBase();
+  BoardInitCustom();
 
-  MAP_PRCMPeripheralClkEnable(TONIEBOX_GREEN_LED_PRCM, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK);
-  MAP_PinTypeGPIO(TONIEBOX_GREEN_LED_PIN_NUM, PIN_MODE_0, false);
-  MAP_GPIODirModeSet(TONIEBOX_GREEN_LED_PORT, TONIEBOX_GREEN_LED_PORT_PIN, GPIO_DIR_MODE_OUT);
+  Selector();
 
-  while(1) {
-    prebootmgr_blink(3, 500);
-    prebootmgr_blink(3, 250);
-  }
+  prebootmgr_blink(3, 33);
 
-/*
+  /*
   //
   // Initialize the DMA
   //
   UDMAInit();
-
-#ifdef FAST_BOOT
-  bIsNwpStarted = false;
-#endif
-  
   //
   // Default configuration
   //
@@ -798,32 +659,12 @@ int main()
   //
   ulBootInfoCreateFlag  = _FS_FILE_OPEN_FLAG_COMMIT|_FS_FILE_PUBLIC_WRITE;
 
-
-  //
-  // Check if its a secure MCU
-  //
-  if ( IsSecureMCU() )
-  {
-#ifndef FAST_BOOT    
-    ulFactoryImgToken     = FACTORY_IMG_TOKEN;
-#endif
-    ulUserImg1Token       = USER_IMG_1_TOKEN;
-    ulUserImg2Token       = USER_IMG_2_TOKEN;
-    ulBootInfoToken       = USER_BOOT_INFO_TOKEN;
-    ulBootInfoCreateFlag  = _FS_FILE_OPEN_FLAG_COMMIT|_FS_FILE_OPEN_FLAG_SECURE|
-                            _FS_FILE_OPEN_FLAG_NO_SIGNATURE_TEST|
-                            _FS_FILE_PUBLIC_WRITE|_FS_FILE_OPEN_FLAG_VENDOR;
-  }
-
-
-#ifndef FAST_BOOT  
   //
   // Start slhost to get NVMEM service
   //
   sl_Start(NULL, NULL, NULL);
 
-  
-  //
+    //
   // Open Boot info file for reading
   //
   iRetVal = sl_FsOpen((unsigned char *)IMG_BOOT_INFO,
@@ -883,49 +724,7 @@ int main()
   // Close boot info function
   //
   sl_FsClose(lFileHandle, 0, 0, 0);
-  
-#else
-  
-  //
-  // Open Boot info file for reading
-  //
-  lFileHandle = fs_Open(1, (unsigned char *)IMG_BOOT_INFO,
-                    _FS_MODE_OPEN_READ, &ulBootInfoToken);
-  
-  //
-  // If successful, load the boot info
-  // else create a new file with default boot info.
-  //
-  if( lFileHandle > 0 )
-  {
     
-    iRetVal = fs_Read(lFileHandle, 0, (char *)&sBootInfo, sizeof(sBootInfo_t));
-    
-    //
-    // Close boot info function
-    //
-    fs_Close(0,lFileHandle, NULL );
-
-  }
-  else
-  {
-
-    //
-    // Create a default boot info
-    //
-    if( 0 == CreateDefaultBootInfo(&sBootInfo) )
-    {
-    
-      //
-      // Save the bootinfo
-      //
-      BootInfoWrite(&sBootInfo,true);
-    }
-    
-  }
- 
-#endif
-  
   //
   // Load and execute the image base on boot info.
   //
@@ -934,9 +733,7 @@ int main()
   //
   // Infinite loop
   //
-  while(1)
+  while (1)
   {
-
   }
 }
-
