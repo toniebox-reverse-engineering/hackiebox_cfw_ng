@@ -59,6 +59,7 @@
 #include "simplelink.h"
 #include "interrupt.h"
 #include "gpio.h"
+#include "pin.h"
 #include "udma_if.h"
 #include "flc.h"
 #include "bootmgr.h"
@@ -766,6 +767,15 @@ int main()
   // Board Initialization
   //
   BoardInit();
+
+  MAP_PRCMPeripheralClkEnable(TONIEBOX_GREEN_LED_PRCM, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK);
+  MAP_PinTypeGPIO(TONIEBOX_GREEN_LED_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(TONIEBOX_GREEN_LED_PORT, TONIEBOX_GREEN_LED_PORT_PIN, GPIO_DIR_MODE_OUT);
+
+  while(1) {
+    prebootmgr_blink(3, 500);
+    prebootmgr_blink(3, 250);
+  }
 
 /*
   //
