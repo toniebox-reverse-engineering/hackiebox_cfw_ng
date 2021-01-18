@@ -35,6 +35,8 @@
 #
 #*****************************************************************************
 
+#VERBOSE=x
+
 #
 # The base directory.
 #
@@ -43,7 +45,7 @@ ROOT=../..
 #
 # Set optimization level and linkscript
 #
-OPT_LEVEL=0
+#OPT_LEVEL=s
 ADD_LINK_SCRIPT=${PWD}/concatBootmanagerRelocator.sh
 
 #
@@ -57,6 +59,8 @@ include ${ROOT}/common/make/makeCommon
 #VPATH=..
 VPATH+=${SDKROOT}/example/common
 
+VPATH+=lib/FatFs
+
 #
 # Where to find header files that do not live in the source directory.
 #
@@ -69,6 +73,8 @@ IPATH+=${SDKROOT}/simplelink/source
 IPATH+=${SDKROOT}/simplelink/include
 IPATH+=${SDKROOT}/simplelink_extlib/flc
 IPATH+=${SDKROOT}/simplelink_extlib/provisioninglib
+
+IPATH+=lib/FatFs
 
 #
 # The default rule, which causes the driver library to be built.
@@ -102,6 +108,10 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/network_common.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/startup_${COMPILER}.o
 ${BINDIR}/bootmgr.axf: ${SDKROOT}/simplelink/${COMPILER}/${BINDIR}/libsimplelink_nonos_opt.a
 ${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/${BINDIR}/libdriver.a
+
+${BINDIR}/bootmgr.axf: ${OBJDIR}/ff.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/diskio.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
 SCATTERgcc_bootmgr=bootmgr.ld
 ENTRY_bootmgr=ResetISR
 

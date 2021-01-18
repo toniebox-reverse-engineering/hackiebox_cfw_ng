@@ -68,9 +68,61 @@
 #include "bootmgr.h"
 
 #include "utils.h"
+//#include "sdhost.h"
 
-#include "lib/FatFs/ff.h"
-#include "lib/FatFs/diskio.h"
+#include "ff.h"
+#include "diskio.h"
+
+static FATFS fatfs;
+
+
+#define IMG_OFW_ID_1 0
+#define IMG_OFW_ID_2 1
+#define IMG_OFW_ID_3 2
+#define IMG_CFW_ID_1 3
+#define IMG_CFW_ID_2 4
+#define IMG_CFW_ID_3 5
+#define IMG_ADD_ID_1 6
+#define IMG_ADD_ID_2 7
+#define IMG_ADD_ID_3 8
+
+#define IMG_SD_PATH "/revvox/boot/ng-CCCN.bin"
+#define IMG_SD_PATH_REPL1_LEN 16
+#define IMG_SD_PATH_REPL2_LEN 19
+#define IMG_OFW_NAME "ofw"
+#define IMG_CFW_NAME "cfw"
+#define IMG_ADD_NAME "add"
+
+#define IMG_MAX_COUNT 9
+typedef struct sImageInfo
+{
+  bool fileExists;
+  bool checkHash;
+} sImageInfo;
+static sImageInfo aImageInfo[IMG_MAX_COUNT];
+
+static char* GetImagePathById(uint8_t number) {
+  char* imagePath;
+  char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
+  char* name;
+
+  if (number < 3) {
+    name = IMG_OFW_NAME;
+  } else if (number < 6) {
+    name = IMG_CFW_NAME;
+  } else /*if (number < 9)*/ {
+    name = IMG_ADD_NAME;
+  }
+
+  imagePath = IMG_SD_PATH;
+  for (uint8_t i=0; i<3; i++)
+  {
+    imagePath[IMG_SD_PATH_REPL1_LEN+i] = name[i];
+  }
+  imagePath[IMG_SD_PATH_REPL2_LEN] = id;
+
+  return imagePath;
+}
 
 //*****************************************************************************
 // Local Variables
@@ -554,6 +606,37 @@ static void prebootmgr_blink(int times, int wait_us) {
   prebootmgr_blink_color(times, wait_us, COLOR_GREEN);
 }
 
+static void SdInit(void)
+{
+  //Power SD
+  MAP_PinTypeGPIO(POWER_SD_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(POWER_SD_PORT, POWER_SD_PORT_MASK, GPIO_DIR_MODE_OUT);
+  
+  MAP_PinTypeSDHost(PIN_64, PIN_MODE_6); //SDHost_D0
+  MAP_PinTypeSDHost(PIN_01, PIN_MODE_6); //SDHost_CLK
+  MAP_PinTypeSDHost(PIN_02, PIN_MODE_6); //SDHost_CMD
+
+  MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, 0x00); //SIC! 
+
+  // Set the SD card clock as output pin
+  MAP_PinDirModeSet(PIN_01, PIN_DIR_MODE_OUT);
+  // Enable Pull up on data
+  MAP_PinConfigSet(PIN_64, PIN_STRENGTH_4MA, PIN_TYPE_STD_PU);
+  // Enable Pull up on CMD
+  MAP_PinConfigSet(PIN_02, PIN_STRENGTH_4MA, PIN_TYPE_STD_PU);
+
+  // Enable SD peripheral clock
+  MAP_PRCMPeripheralClkEnable(PRCM_SDHOST, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK);
+	// Reset MMCHS
+	MAP_PRCMPeripheralReset(PRCM_SDHOST);
+	// Configure MMCHS
+	MAP_SDHostInit(SDHOST_BASE);
+	// Configure card clock
+	MAP_SDHostSetExpClk(SDHOST_BASE, MAP_PRCMPeripheralClockGet(PRCM_SDHOST), 15000000);
+  MAP_SDHostBlockSizeSet(SDHOST_BASE, 512); //SD_SECTOR_SIZE
+  
+}
+
 static void BoardInitCustom(void)
 {
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA0 (Ear Buttons / SD Power / Power)
@@ -577,11 +660,8 @@ static void BoardInitCustom(void)
   MAP_PinTypeGPIO(POWER_PIN_NUM, PIN_MODE_0, false);
   MAP_GPIODirModeSet(POWER_PORT, POWER_PORT_MASK, GPIO_DIR_MODE_OUT);
   MAP_GPIOPinWrite(POWER_PORT, POWER_PORT_MASK, POWER_PORT_MASK);
-
-  //Power SD
-  MAP_PinTypeGPIO(POWER_SD_PIN_NUM, PIN_MODE_0, false);
-  MAP_GPIODirModeSet(POWER_SD_PORT, POWER_SD_PORT_MASK, GPIO_DIR_MODE_OUT);
-  MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, 0x00); //SIC! 
+  
+  SdInit();
 
   sl_Start(NULL, NULL, NULL);
 }
@@ -601,8 +681,17 @@ static bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
 }
 
-static void Selector(void) {
-  int8_t counter = 0;
+static uint8_t Selector(uint8_t startNumber) {
+  int8_t counter = startNumber;
+
+  while (!aImageInfo[counter].fileExists)
+  {
+    if (counter < 9) {
+      counter +=1;
+    } else {
+      counter = 0;
+    }
+  }
 
   LedGreenOn();
   while (EarSmallPressed()) {
@@ -612,11 +701,15 @@ static void Selector(void) {
 
   while (EarBigPressed()) {
     if (EarSmallPressed()) {
-        if (counter < 9) {
-          counter +=1;
-        } else {
-          counter = 0;
-        }
+        do
+        {
+          if (counter < 9) {
+            counter +=1;
+          } else {
+            counter = 0;
+          }
+        } while (!aImageInfo[counter].fileExists);
+        
       /*
         switch (psBootInfo->ActiveImg) {
             case IMG_ACT_UPDATE1:
@@ -645,6 +738,27 @@ static void Selector(void) {
     }
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
   }
+  return counter;
+}
+
+
+static bool SdImageExists(uint8_t number) {
+  char* image = GetImagePathById(number);
+  FIL ffile;
+  if (f_open(&ffile, image, FA_READ) == FR_OK) {
+      f_close(&ffile); 
+      return true;
+  }
+  return false;
+}
+static bool CheckSdImages() {
+  bool hasValidImage = false;
+  for (uint8_t i=0; i<IMG_MAX_COUNT; i++)
+  {
+    aImageInfo[i].fileExists = SdImageExists(i);
+    hasValidImage |= aImageInfo[i].fileExists;
+  }
+  return hasValidImage;
 }
 
 //*****************************************************************************
@@ -667,7 +781,48 @@ int main()
   BoardInitBase();
   BoardInitCustom();
 
-  Selector();
+  UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
+  uint8_t ffs_result = f_mount(&fatfs, "0", 1);
+  if (ffs_result != FR_OK)
+  {
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+    prebootmgr_blink(2, 500);
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+    prebootmgr_blink(ffs_result, 1000);
+  }
+
+  if (CheckSdImages()) {
+    uint8_t imageNumber = Selector(0);
+    char* image = GetImagePathById(imageNumber);
+
+    FIL ffile;
+    uint8_t ffs_result;
+
+    ffs_result = f_open(&ffile, image, FA_READ);
+    if (ffs_result == FR_OK) {
+        uint32_t filesize = f_size(&ffile);
+        ffs_result = f_read(&ffile, (unsigned char *)APP_IMG_SRAM_OFFSET, filesize, &filesize);
+        if (ffs_result == FR_OK) {
+          f_close(&ffile); 
+          BoardDeinitCustom();
+          Run(APP_IMG_SRAM_OFFSET);
+        } else {
+            UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+            prebootmgr_blink(4, 500);
+            UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+            prebootmgr_blink(ffs_result, 1000);
+        }
+    } else {
+        UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+        prebootmgr_blink(3, 500);
+        UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+        prebootmgr_blink(ffs_result, 1000);
+    }
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+  } else {
+    //TODO: Flash Fallback
+  }
+
 
   prebootmgr_blink_color(3, 33, COLOR_GREEN);
   prebootmgr_blink_color(3, 33, COLOR_BLUE);
