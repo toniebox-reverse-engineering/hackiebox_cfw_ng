@@ -75,6 +75,7 @@ IPATH+=${SDKROOT}/simplelink_extlib/flc
 IPATH+=${SDKROOT}/simplelink_extlib/provisioninglib
 
 IPATH+=lib/FatFs
+IPATH+=lib/jsmn
 
 #
 # The default rule, which causes the driver library to be built.
@@ -112,6 +113,7 @@ ${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/${BINDIR}/libdriver.a
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ff.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/diskio.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
+
 SCATTERgcc_bootmgr=bootmgr.ld
 ENTRY_bootmgr=ResetISR
 
