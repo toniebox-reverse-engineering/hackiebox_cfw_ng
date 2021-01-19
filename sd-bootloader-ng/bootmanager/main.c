@@ -110,8 +110,9 @@ typedef struct sImageInfo
 } sImageInfo;
 static sImageInfo aImageInfo[IMG_MAX_COUNT];
 
+char* imagePath; //TODO!
 static char* GetImagePathById(uint8_t number) {
-  char* imagePath;
+  //char* imagePath;
   char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
   char* name;
 
@@ -821,76 +822,75 @@ int main()
       char activeImageName[4];
       uint8_t selectedImgNum = 0;
 
-      if (f_open(&ffile, CFG_SD_PATH, FA_READ) == FR_OK) {
+      ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
+      if (ffs_result == FR_OK) {
+        uint32_t filesize = f_size(&ffile);
+        if (filesize>0x4000)
+          filesize = 0x4000;
+        char* pCfg = (char*)CFG_SRAM_OFFSET;
+        ffs_result = f_read(&ffile, pCfg, filesize, &filesize);
         if (ffs_result == FR_OK) {
-          uint32_t filesize = f_size(&ffile);
-          if (filesize>0x4000)
-            filesize = 0x4000;
-          char* pCfg = (char*)CFG_SRAM_OFFSET;
-          ffs_result = f_read(&ffile, pCfg, filesize, &filesize);
-          if (ffs_result == FR_OK) {
-            f_close(&ffile); 
-            pCfg[filesize] = '\0';
+          f_close(&ffile); 
+          pCfg[filesize] = '\0';
 
-            jsmn_parser parser;
-            jsmn_init(&parser);
-            jsmntok_t tokens[32];
-            int jp_result = jsmn_parse(&parser, pCfg, strlen(pCfg), tokens, 32);
+          jsmn_parser parser;
+          jsmn_init(&parser);
+          jsmntok_t tokens[32];
+          int jp_result = jsmn_parse(&parser, pCfg, strlen(pCfg), tokens, 32);
 
-            char buffer[32];
-            if (jp_result > 1) {
-              if (tokens[0].type == JSMN_OBJECT) {
-                uint8_t tid = 1;
+          char buffer[32];
+          if (jp_result > 1) {
+            if (tokens[0].type == JSMN_OBJECT) {
+              uint8_t tid = 1;
 
-                if (tokens[tid].type == JSMN_STRING) {
-                  uint8_t len = tokens[tid].end-tokens[tid].start;
-                  strncpy(buffer, &pCfg[tokens[tid].start], len);
-                  buffer[len] = '\0';
-                  if (strcmp(buffer, "general") == 0) {
+              if (tokens[tid].type == JSMN_STRING) {
+                uint8_t len = tokens[tid].end-tokens[tid].start;
+                strncpy(buffer, &pCfg[tokens[tid].start], len);
+                buffer[len] = '\0';
+                if (strcmp(buffer, "general") == 0) {
+                  tid++;
+                  if (tokens[tid].type == JSMN_OBJECT) {
                     tid++;
-                    if (tokens[tid].type == JSMN_OBJECT) {
-                      tid++;
-                      if (tokens[tid].type == JSMN_STRING) {
-                        len = tokens[tid].end-tokens[tid].start;
-                        strncpy(buffer, &pCfg[tokens[tid].start], len);
-                        buffer[len] = '\0';
-                        if (strcmp(buffer, "activeImg") == 0) {
-                          tid++;
-                          if (tokens[tid].type == JSMN_STRING) {
-                            selectedImgNum = GetImageNumber(&pCfg[tokens[tid].start]);
+                    if (tokens[tid].type == JSMN_STRING) {
+                      len = tokens[tid].end-tokens[tid].start;
+                      strncpy(buffer, &pCfg[tokens[tid].start], len);
+                      buffer[len] = '\0';
+                      if (strcmp(buffer, "activeImg") == 0) {
+                        tid++;
+                        if (tokens[tid].type == JSMN_STRING) {
+                          selectedImgNum = GetImageNumber(&pCfg[tokens[tid].start]);
+                        }
+                      }
+                    }
+                  }
+                } else if (strncmp(buffer, "ofw", 3) == 0
+                    || strncmp(buffer, "cfw", 3)
+                    || strncmp(buffer, "add", 3))
+                {
+                  tid++;
+                  uint8_t imageNumber = GetImageNumber(&pCfg[tokens[tid].start]);
+                  
+                  if (tokens[tid].type == JSMN_OBJECT) {
+                    tid++;
+                    if (tokens[tid].type == JSMN_STRING) {
+                      len = tokens[tid].end-tokens[tid].start;
+                      strncpy(buffer, &pCfg[tokens[tid].start], len);
+                      buffer[len] = '\0';
+                      if (strcmp(buffer, "sha256") == 0) {
+                        tid++;
+                        if (tokens[tid].type == JSMN_PRIMITIVE) {
+                          if (pCfg[tokens[tid].start] == 'f') {
+                            aImageInfo[imageNumber].checkHash = false;
+                          } else {
+                            aImageInfo[imageNumber].checkHash = true;
                           }
                         }
                       }
                     }
-                  } else if (strncmp(buffer, "ofw", 3) == 0
-                      || strncmp(buffer, "cfw", 3)
-                      || strncmp(buffer, "add", 3))
-                  {
-                    tid++;
-                    uint8_t imageNumber = GetImageNumber(&pCfg[tokens[tid].start]);
-                    
-                    if (tokens[tid].type == JSMN_OBJECT) {
-                      tid++;
-                      if (tokens[tid].type == JSMN_STRING) {
-                        len = tokens[tid].end-tokens[tid].start;
-                        strncpy(buffer, &pCfg[tokens[tid].start], len);
-                        buffer[len] = '\0';
-                        if (strcmp(buffer, "sha256") == 0) {
-                          tid++;
-                          if (tokens[tid].type == JSMN_PRIMITIVE) {
-                            if (pCfg[tokens[tid].start] == 'f') {
-                              aImageInfo[imageNumber].checkHash = false;
-                            } else {
-                              aImageInfo[imageNumber].checkHash = true;
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }   
-                }
-              }              
-            }
+                  }
+                }   
+              }
+            }              
           }
         }
       }
@@ -902,11 +902,13 @@ int main()
       ffs_result = f_open(&ffile, image, FA_READ);
       if (ffs_result == FR_OK) {
           uint32_t filesize = f_size(&ffile);
-          ffs_result = f_read(&ffile, (unsigned char *)APP_IMG_SRAM_OFFSET, filesize, &filesize);
+
+          unsigned long* pImgRun = (unsigned long *)APP_IMG_SRAM_OFFSET;
+          ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
           if (ffs_result == FR_OK) {
             f_close(&ffile); 
             BoardDeinitCustom();
-            Run(APP_IMG_SRAM_OFFSET);
+            Run(pImgRun);
           } else {
               UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
               prebootmgr_blink(4, 500);
