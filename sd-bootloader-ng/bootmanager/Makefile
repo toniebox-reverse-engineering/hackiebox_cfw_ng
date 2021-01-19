@@ -45,7 +45,7 @@ ROOT=../..
 #
 # Set optimization level and linkscript
 #
-#OPT_LEVEL=s
+OPT_LEVEL=0
 ADD_LINK_SCRIPT=${PWD}/concatBootmanagerRelocator.sh
 
 #
