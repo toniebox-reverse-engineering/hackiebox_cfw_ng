@@ -825,11 +825,14 @@ int main()
       ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
       if (ffs_result == FR_OK) {
         uint32_t filesize = f_size(&ffile);
-        if (filesize>0x4000)
-          filesize = 0x4000;
+        if (filesize>0x3000) //Maximum 0x3000, 12kB for JSON should be enough
+          filesize = 0x3000;
+        
         char* pCfg = (char*)CFG_SRAM_OFFSET;
+
         ffs_result = f_read(&ffile, pCfg, filesize, &filesize);
-        if (ffs_result == FR_OK) {
+        if (ffs_result == FR_OK)
+        {
           f_close(&ffile); 
           pCfg[filesize] = '\0';
 
