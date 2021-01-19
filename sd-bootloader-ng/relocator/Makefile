@@ -44,7 +44,7 @@ ROOT=../..
 #
 # Set optimization level and linkscript
 #
-OPT_LEVEL=0
+OPT_LEVEL=1
 #ADD_LINK_SCRIPT=
 
 #
