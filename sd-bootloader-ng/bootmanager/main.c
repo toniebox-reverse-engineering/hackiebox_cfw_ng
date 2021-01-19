@@ -86,6 +86,7 @@ static FATFS fatfs;
 #define IMG_ADD_ID_2 7
 #define IMG_ADD_ID_3 8
 
+#define IMG_FLASH_PATH "/sys/pre-img.bin"
 #define IMG_SD_PATH "/revvox/boot/ng-CCCN.bin"
 #define IMG_SD_PATH_REPL1_LEN 16
 #define IMG_SD_PATH_REPL2_LEN 19
@@ -783,45 +784,70 @@ int main()
 
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
   uint8_t ffs_result = f_mount(&fatfs, "0", 1);
-  if (ffs_result != FR_OK)
+  if (ffs_result == FR_OK)
   {
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-    prebootmgr_blink(2, 500);
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-    prebootmgr_blink(ffs_result, 1000);
-  }
+    if (CheckSdImages()) {
+      uint8_t imageNumber = Selector(0);
+      char* image = GetImagePathById(imageNumber);
 
-  if (CheckSdImages()) {
-    uint8_t imageNumber = Selector(0);
-    char* image = GetImagePathById(imageNumber);
+      FIL ffile;
+      uint8_t ffs_result;
 
-    FIL ffile;
-    uint8_t ffs_result;
-
-    ffs_result = f_open(&ffile, image, FA_READ);
-    if (ffs_result == FR_OK) {
-        uint32_t filesize = f_size(&ffile);
-        ffs_result = f_read(&ffile, (unsigned char *)APP_IMG_SRAM_OFFSET, filesize, &filesize);
-        if (ffs_result == FR_OK) {
-          f_close(&ffile); 
-          BoardDeinitCustom();
-          Run(APP_IMG_SRAM_OFFSET);
-        } else {
-            UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-            prebootmgr_blink(4, 500);
-            UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-            prebootmgr_blink(ffs_result, 1000);
-        }
+      ffs_result = f_open(&ffile, image, FA_READ);
+      if (ffs_result == FR_OK) {
+          uint32_t filesize = f_size(&ffile);
+          ffs_result = f_read(&ffile, (unsigned char *)APP_IMG_SRAM_OFFSET, filesize, &filesize);
+          if (ffs_result == FR_OK) {
+            f_close(&ffile); 
+            BoardDeinitCustom();
+            Run(APP_IMG_SRAM_OFFSET);
+          } else {
+              UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+              prebootmgr_blink(4, 500);
+              UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+              prebootmgr_blink(ffs_result, 1000);
+          }
+      } else {
+          UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+          prebootmgr_blink(3, 500);
+          UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+          prebootmgr_blink(ffs_result, 1000);
+      }
     } else {
-        UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-        prebootmgr_blink(3, 500);
-        UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-        prebootmgr_blink(ffs_result, 1000);
+      //TODO: No bootable files on sd found
     }
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-  } else {
-    //TODO: Flash Fallback
   }
+
+  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  prebootmgr_blink(2, 500);
+  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  prebootmgr_blink(ffs_result, 1000);
+
+  SlFsFileInfo_t pFsFileInfo;
+  _i32 fhandle;
+  if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+      if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
+          if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
+              sl_FsClose(fhandle, 0, 0, 0);
+              BoardDeinitCustom();
+              Run(APP_IMG_SRAM_OFFSET);
+          }
+      }
+  }
+
+  
+  while (true)
+  {
+    prebootmgr_blink(3, 33);
+    prebootmgr_blink(3, 66);
+    prebootmgr_blink(3, 33);
+
+    __asm volatile(" dsb \n"
+                   " isb \n"
+                   " wfi \n");
+  }
+  
 
 
   prebootmgr_blink_color(3, 33, COLOR_GREEN);
