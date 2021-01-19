@@ -75,6 +75,7 @@
 
 static FATFS fatfs;
 
+#include "jsmn.h"
 
 #define IMG_OFW_ID_1 0
 #define IMG_OFW_ID_2 1
@@ -86,13 +87,20 @@ static FATFS fatfs;
 #define IMG_ADD_ID_2 7
 #define IMG_ADD_ID_3 8
 
+#define SD_PATH_BASE "/revvox/boot/"
+#define SD_PATH_BASE_LEN 13
+#define IMG_SD_NAME "ng-CCCN.bin"
+
 #define IMG_FLASH_PATH "/sys/pre-img.bin"
-#define IMG_SD_PATH "/revvox/boot/ng-CCCN.bin"
-#define IMG_SD_PATH_REPL1_LEN 16
-#define IMG_SD_PATH_REPL2_LEN 19
+#define IMG_SD_PATH SD_PATH_BASE IMG_SD_NAME
+#define IMG_SD_NAME_REPL1_POS 3
+#define IMG_SD_NAME_REPL2_POS 6
+#define IMG_SD_PATH_REPL1_POS SD_PATH_BASE_LEN + IMG_SD_NAME_REPL1_POS
+#define IMG_SD_PATH_REPL2_POS SD_PATH_BASE_LEN + IMG_SD_NAME_REPL2_POS
 #define IMG_OFW_NAME "ofw"
 #define IMG_CFW_NAME "cfw"
 #define IMG_ADD_NAME "add"
+#define CFG_SD_PATH "/revvox/boot/ngCfg.json"
 
 #define IMG_MAX_COUNT 9
 typedef struct sImageInfo
@@ -118,9 +126,9 @@ static char* GetImagePathById(uint8_t number) {
   imagePath = IMG_SD_PATH;
   for (uint8_t i=0; i<3; i++)
   {
-    imagePath[IMG_SD_PATH_REPL1_LEN+i] = name[i];
+    imagePath[IMG_SD_PATH_REPL1_POS+i] = name[i];
   }
-  imagePath[IMG_SD_PATH_REPL2_LEN] = id;
+  imagePath[IMG_SD_PATH_REPL2_POS] = id;
 
   return imagePath;
 }
@@ -538,6 +546,7 @@ static int CreateDefaultBootInfo(sBootInfo_t *psBootInfo)
 #define UTILS_DELAY_US_TO_COUNT(us) (((us)*HAL_FCPU_MHZ) / 6)
 
 #define APP_IMG_SRAM_OFFSET 0x20004000
+#define CFG_SRAM_OFFSET 0x20000000
 
 #define EAR_BIG_PRCM PRCM_GPIOA0
 #define EAR_SMALL_PRCM PRCM_GPIOA0
@@ -762,6 +771,26 @@ static bool CheckSdImages() {
   return hasValidImage;
 }
 
+static uint8_t GetImageNumber(char* imageId)
+{
+  uint8_t factor = 0;
+  uint8_t id = 0;
+  if (strncmp(imageId, IMG_OFW_NAME, 3) == 0)
+  {
+    factor = 0;
+  } else if (strncmp(imageId, IMG_CFW_NAME, 3) == 0)
+  {
+    factor = 1;
+  } else if (strncmp(imageId, IMG_CFW_NAME, 3) == 0)
+  {
+    factor = 2;
+  }
+  id = (char)(imageId[3] - 0x31);
+  if (id>=0 && id<3) {
+    return id + 3*factor;
+  }
+  return 0;
+}
 //*****************************************************************************
 //
 //! Main function
@@ -775,6 +804,8 @@ int main()
 {
 
   sBootInfo_t sBootInfo;
+  FIL ffile;
+  uint8_t ffs_result;
 
   //
   // Board Initialization
@@ -783,15 +814,90 @@ int main()
   BoardInitCustom();
 
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
-  uint8_t ffs_result = f_mount(&fatfs, "0", 1);
+  ffs_result = f_mount(&fatfs, "0", 1);
   if (ffs_result == FR_OK)
   {
     if (CheckSdImages()) {
-      uint8_t imageNumber = Selector(0);
-      char* image = GetImagePathById(imageNumber);
+      char activeImageName[4];
+      uint8_t selectedImgNum = 0;
 
-      FIL ffile;
-      uint8_t ffs_result;
+      if (f_open(&ffile, CFG_SD_PATH, FA_READ) == FR_OK) {
+        if (ffs_result == FR_OK) {
+          uint32_t filesize = f_size(&ffile);
+          if (filesize>0x4000)
+            filesize = 0x4000;
+          char* pCfg = (char*)CFG_SRAM_OFFSET;
+          ffs_result = f_read(&ffile, pCfg, filesize, &filesize);
+          if (ffs_result == FR_OK) {
+            f_close(&ffile); 
+            pCfg[filesize] = '\0';
+
+            jsmn_parser parser;
+            jsmn_init(&parser);
+            jsmntok_t tokens[32];
+            int jp_result = jsmn_parse(&parser, pCfg, strlen(pCfg), tokens, 32);
+
+            char buffer[32];
+            if (jp_result > 1) {
+              if (tokens[0].type == JSMN_OBJECT) {
+                uint8_t tid = 1;
+
+                if (tokens[tid].type == JSMN_STRING) {
+                  uint8_t len = tokens[tid].end-tokens[tid].start;
+                  strncpy(buffer, &pCfg[tokens[tid].start], len);
+                  buffer[len] = '\0';
+                  if (strcmp(buffer, "general") == 0) {
+                    tid++;
+                    if (tokens[tid].type == JSMN_OBJECT) {
+                      tid++;
+                      if (tokens[tid].type == JSMN_STRING) {
+                        len = tokens[tid].end-tokens[tid].start;
+                        strncpy(buffer, &pCfg[tokens[tid].start], len);
+                        buffer[len] = '\0';
+                        if (strcmp(buffer, "activeImg") == 0) {
+                          tid++;
+                          if (tokens[tid].type == JSMN_STRING) {
+                            selectedImgNum = GetImageNumber(&pCfg[tokens[tid].start]);
+                          }
+                        }
+                      }
+                    }
+                  } else if (strncmp(buffer, "ofw", 3) == 0
+                      || strncmp(buffer, "cfw", 3)
+                      || strncmp(buffer, "add", 3))
+                  {
+                    tid++;
+                    uint8_t imageNumber = GetImageNumber(&pCfg[tokens[tid].start]);
+                    
+                    if (tokens[tid].type == JSMN_OBJECT) {
+                      tid++;
+                      if (tokens[tid].type == JSMN_STRING) {
+                        len = tokens[tid].end-tokens[tid].start;
+                        strncpy(buffer, &pCfg[tokens[tid].start], len);
+                        buffer[len] = '\0';
+                        if (strcmp(buffer, "sha256") == 0) {
+                          tid++;
+                          if (tokens[tid].type == JSMN_PRIMITIVE) {
+                            if (pCfg[tokens[tid].start] == 'f') {
+                              aImageInfo[imageNumber].checkHash = false;
+                            } else {
+                              aImageInfo[imageNumber].checkHash = true;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }   
+                }
+              }              
+            }
+          }
+        }
+      }
+
+      selectedImgNum = Selector(selectedImgNum);
+      char* image = GetImagePathById(selectedImgNum);
+
 
       ffs_result = f_open(&ffile, image, FA_READ);
       if (ffs_result == FR_OK) {
