@@ -43,7 +43,8 @@ MEMORY
 {
     SRAM (rwx) : ORIGIN = 0x20038000, LENGTH = 0x8000
     APPTARGET (rwx) : ORIGIN = 0x20004000, LENGTH = 0x34000
-    SRAM2 (rwx) : ORIGIN = 0x20000000, LENGTH = 0x4000
+    SRAM2 (rwx) : ORIGIN = 0x20003000, LENGTH = 0x1000
+    DYNMEM (rwx) : ORIGIN = 0x20000000, LENGTH = 0x3000
 }
 
 SECTIONS
@@ -86,7 +87,7 @@ SECTIONS
         *(.bss*)
         *(COMMON)
         _ebss = .;
-    } > SRAM
+    } > SRAM2
 	
 	.heap :
     {
