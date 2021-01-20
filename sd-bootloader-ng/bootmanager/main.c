@@ -133,72 +133,11 @@ static char* GetImagePathById(uint8_t number) {
 
   return imagePath;
 }
-
-//*****************************************************************************
-// Local Variables
-//*****************************************************************************
-static long lFileHandle;
-static int iRetVal;
-static SlFsFileInfo_t pFsFileInfo;
-
-static unsigned long ulFactoryImgToken;
-
-static unsigned long ulUserImg1Token;
-static unsigned long ulUserImg2Token;
-static unsigned long ulBootInfoToken;
-static unsigned long ulBootInfoCreateFlag;
-
 //*****************************************************************************
 // Vector Table
 extern void (*const g_pfnVectors[])(void);
 
-//*****************************************************************************
-// WLAN Event handler callback hookup function
-//*****************************************************************************
-void SimpleLinkWlanEventHandler(SlWlanEvent_t *pWlanEvent)
-{
-}
 
-//*****************************************************************************
-//
-//! \brief This function handles General Events
-//!
-//! \param[in]     pDevEvent - Pointer to General Event Info
-//!
-//! \return None
-//!
-//*****************************************************************************
-void SimpleLinkGeneralEventHandler(SlDeviceEvent_t *pDevEvent)
-{
-}
-
-//*****************************************************************************
-// HTTP Server callback hookup function
-//*****************************************************************************
-void SimpleLinkHttpServerCallback(SlHttpServerEvent_t *pHttpEvent,
-                                  SlHttpServerResponse_t *pHttpResponse)
-{
-}
-
-//*****************************************************************************
-// Net APP Event callback hookup function
-//*****************************************************************************
-void SimpleLinkNetAppEventHandler(SlNetAppEvent_t *pNetAppEvent)
-{
-}
-
-//*****************************************************************************
-//
-//! This function handles socket events indication
-//!
-//! \param[in]      pSock - Pointer to Socket Event Info
-//!
-//! \return None
-//!
-//*****************************************************************************
-void SimpleLinkSockEventHandler(SlSockEvent_t *pSock)
-{
-}
 
 //*****************************************************************************
 //
@@ -257,282 +196,6 @@ void Run(unsigned long ulBaseLoc)
   //
   __asm("	ldr    r1,[r0]\n"
         "	bx     r1");
-}
-
-//*****************************************************************************
-//
-//! Load the application from sFlash and execute
-//!
-//! \param ImgName is the name of the application image on sFlash
-//! \param ulToken is the token for reading file (relevant on secure devices only)
-//!
-//! This function loads the specified application from sFlash and executes it.
-//!
-//! \return None.
-//
-//*****************************************************************************
-void LoadAndExecute(unsigned char *ImgName, unsigned long ulToken)
-{
-
-  //
-  // Open the file for reading
-  //
-  iRetVal = sl_FsOpen(ImgName, FS_MODE_OPEN_READ,
-                      &ulToken, &lFileHandle);
-  //
-  // Check if successfully opened
-  //
-  if (0 == iRetVal)
-  {
-    //
-    // Get the file size using File Info structure
-    //
-    iRetVal = sl_FsGetInfo(ImgName, ulToken, &pFsFileInfo);
-
-    //
-    // Check for failure
-    //
-    if (0 == iRetVal)
-    {
-
-      //
-      // Read the application into SRAM
-      //
-      iRetVal = sl_FsRead(lFileHandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET,
-                          pFsFileInfo.FileLen);
-
-      //
-      // Stop the network services
-      //
-      sl_Stop(30);
-
-      //
-      // Execute the application.
-      //
-      Run(APP_IMG_SRAM_OFFSET);
-    }
-  }
-}
-
-//*****************************************************************************
-//
-//! Writes into the boot info file.
-//!
-//! \param psBootInfo is pointer to the boot info structure.
-//!
-//! This function writes the boot info into the boot info file in the sFlash
-//!
-//! \return Return 0 on success, -1 otherwise.
-//
-//*****************************************************************************
-static long BootInfoWrite(sBootInfo_t *psBootInfo)
-{
-  long lFileHandle;
-  unsigned long ulToken;
-
-  //
-  // Open the boot info file for write
-  //
-  if (0 == sl_FsOpen((unsigned char *)IMG_BOOT_INFO, FS_MODE_OPEN_WRITE,
-                     &ulToken, &lFileHandle))
-  {
-    //
-    // Write the boot info
-    //
-    if (0 < sl_FsWrite(lFileHandle, 0, (unsigned char *)psBootInfo,
-                       sizeof(sBootInfo_t)))
-    {
-
-      //
-      // Close the file
-      //
-      sl_FsClose(lFileHandle, 0, 0, 0);
-
-      //
-      // Return success
-      //
-      return 0;
-    }
-  }
-
-  //
-  // Return failure
-  //
-  return -1;
-}
-
-//*****************************************************************************
-//
-//! Load the proper image based on information from boot info and executes it.
-//!
-//! \param psBootInfo is pointer to the boot info structure.
-//!
-//! This function loads the proper image based on information from boot info
-//! and executes it. \e psBootInfo should be properly initialized.
-//!
-//! \return None.
-//
-//*****************************************************************************
-static void ImageLoader(sBootInfo_t *psBootInfo)
-{
-  unsigned char ucActiveImg;
-  unsigned long ulImgStatus;
-
-  //
-  // Get the active image and image status
-  //
-  ucActiveImg = psBootInfo->ucActiveImg;
-  ulImgStatus = psBootInfo->ulImgStatus;
-
-  //
-  // Boot image based on image status and active image configuration
-  //
-  if (IMG_STATUS_NOTEST == ulImgStatus)
-  {
-
-    //
-    // Since no test image boot the acive image.
-    //
-    switch (ucActiveImg)
-    {
-
-    case IMG_ACT_USER1:
-      LoadAndExecute((unsigned char *)IMG_USER_1, ulUserImg1Token);
-      break;
-
-    case IMG_ACT_USER2:
-      LoadAndExecute((unsigned char *)IMG_USER_2, ulUserImg2Token);
-      break;
-
-#ifndef FAST_BOOT
-    default:
-      LoadAndExecute((unsigned char *)IMG_FACTORY_DEFAULT, ulFactoryImgToken);
-      break;
-#endif
-    }
-  }
-  else if (IMG_STATUS_TESTREADY == ulImgStatus)
-  {
-    //
-    // Some image waiting to be tested; Change the status to testing
-    // in boot info file
-    //
-    psBootInfo->ulImgStatus = IMG_STATUS_TESTING;
-
-#ifndef FAST_BOOT
-    BootInfoWrite(psBootInfo);
-#else
-    BootInfoWrite(psBootInfo, false);
-#endif
-
-    //
-    // Boot the test image ( the non-active image )
-    //
-    switch (ucActiveImg)
-    {
-
-    case IMG_ACT_USER1:
-      LoadAndExecute((unsigned char *)IMG_USER_2, ulUserImg2Token);
-      break;
-
-    default:
-      LoadAndExecute((unsigned char *)IMG_USER_1, ulUserImg1Token);
-    }
-  }
-  else if (IMG_STATUS_TESTING == ulImgStatus)
-  {
-
-    //
-    // Something went wrong while in testing.
-    // Change the status to no test
-    //
-    psBootInfo->ulImgStatus = IMG_STATUS_NOTEST;
-
-#ifndef FAST_BOOT
-    BootInfoWrite(psBootInfo);
-#else
-    BootInfoWrite(psBootInfo, false);
-#endif
-
-    //
-    // Boot the active image.
-    //
-    switch (ucActiveImg)
-    {
-
-    case IMG_ACT_USER1:
-      LoadAndExecute((unsigned char *)IMG_USER_1, ulUserImg1Token);
-      break;
-
-    case IMG_ACT_USER2:
-      LoadAndExecute((unsigned char *)IMG_USER_2, ulUserImg2Token);
-      break;
-
-#ifndef FAST_BOOT
-    default:
-      LoadAndExecute((unsigned char *)IMG_FACTORY_DEFAULT, ulFactoryImgToken);
-      break;
-#endif
-    }
-  }
-
-  //
-  // Boot info might be corrupted go into infinite loop
-  //
-  while (1)
-  {
-  }
-}
-
-
-//*****************************************************************************
-//
-//!\internal
-//!
-//! Creates default boot info structure
-//!
-//! \param psBootInfo is pointer to boot info structure to be initialized
-//!
-//! This function initializes the boot info structure \e psBootInfo based on
-//! application image(s) found on sFlash storage. The default boot image is set
-//! to one of Factory, User1 or User2 image in the same priority order.
-//!
-//! \retunr Returns 0 on success, -1 otherwise.
-//
-//*****************************************************************************
-static int CreateDefaultBootInfo(sBootInfo_t *psBootInfo)
-{
-
-  //
-  // Set the status to no test
-  //
-  psBootInfo->ulImgStatus = IMG_STATUS_NOTEST;
-
-  //
-  // Check if factor default image exists
-  //
-  iRetVal = sl_FsGetInfo((unsigned char *)IMG_FACTORY_DEFAULT, 0, &pFsFileInfo);
-  if (iRetVal == 0)
-  {
-    psBootInfo->ucActiveImg = IMG_ACT_FACTORY;
-    return 0;
-  }
-
-  iRetVal = sl_FsGetInfo((unsigned char *)IMG_USER_1, 0, &pFsFileInfo);
-  if (iRetVal == 0)
-  {
-    psBootInfo->ucActiveImg = IMG_ACT_USER1;
-    return 0;
-  }
-
-  iRetVal = sl_FsGetInfo((unsigned char *)IMG_USER_2, 0, &pFsFileInfo);
-  if (iRetVal == 0)
-  {
-    psBootInfo->ucActiveImg = IMG_ACT_USER2;
-    return 0;
-  }
-
-  return -1;
 }
 
 #define COLOR_GREEN 1
@@ -720,22 +383,6 @@ static uint8_t Selector(uint8_t startNumber) {
             counter = 0;
           }
         } while (!aImageInfo[counter].fileExists);
-        
-      /*
-        switch (psBootInfo->ActiveImg) {
-            case IMG_ACT_UPDATE1:
-                psBootInfo->ActiveImg = IMG_ACT_UPDATE2;
-                break;                
-            case IMG_ACT_UPDATE2:
-                psBootInfo->ActiveImg = IMG_ACT_UPDATE3;
-                break;            
-            case IMG_ACT_UPDATE3:
-                psBootInfo->ActiveImg = IMG_ACT_FACTORY;
-                break;
-            default:
-                psBootInfo->ActiveImg = IMG_ACT_UPDATE1;
-                break;
-            }*/
         while (EarSmallPressed()) {
             UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
         }
@@ -958,103 +605,51 @@ int main()
                    " isb \n"
                    " wfi \n");
   }
-  
+}
+//*****************************************************************************
+// WLAN Event handler callback hookup function
+//*****************************************************************************
+void SimpleLinkWlanEventHandler(SlWlanEvent_t *pWlanEvent)
+{
+}
 
+//*****************************************************************************
+//
+//! \brief This function handles General Events
+//!
+//! \param[in]     pDevEvent - Pointer to General Event Info
+//!
+//! \return None
+//!
+//*****************************************************************************
+void SimpleLinkGeneralEventHandler(SlDeviceEvent_t *pDevEvent)
+{
+}
 
-  prebootmgr_blink_color(3, 33, COLOR_GREEN);
-  prebootmgr_blink_color(3, 33, COLOR_BLUE);
+//*****************************************************************************
+// HTTP Server callback hookup function
+//*****************************************************************************
+void SimpleLinkHttpServerCallback(SlHttpServerEvent_t *pHttpEvent,
+                                  SlHttpServerResponse_t *pHttpResponse)
+{
+}
 
-  /*
-  //
-  // Initialize the DMA
-  //
-  UDMAInit();
-  //
-  // Default configuration
-  //
-  sBootInfo.ucActiveImg = IMG_ACT_FACTORY;
-  sBootInfo.ulImgStatus = IMG_STATUS_NOTEST;
+//*****************************************************************************
+// Net APP Event callback hookup function
+//*****************************************************************************
+void SimpleLinkNetAppEventHandler(SlNetAppEvent_t *pNetAppEvent)
+{
+}
 
-  //
-  // Initialize boot info file create flag
-  //
-  ulBootInfoCreateFlag  = _FS_FILE_OPEN_FLAG_COMMIT|_FS_FILE_PUBLIC_WRITE;
-
-  //
-  // Start slhost to get NVMEM service
-  //
-  sl_Start(NULL, NULL, NULL);
-
-    //
-  // Open Boot info file for reading
-  //
-  iRetVal = sl_FsOpen((unsigned char *)IMG_BOOT_INFO,
-                        FS_MODE_OPEN_READ,
-                        &ulBootInfoToken,
-                        &lFileHandle);
-  
-  
-  //
-  // If successful, load the boot info
-  // else create a new file with default boot info.
-  //
-  if( 0 == iRetVal )
-  {
-    iRetVal = sl_FsRead(lFileHandle,0,
-                         (unsigned char *)&sBootInfo,
-                         sizeof(sBootInfo_t));
-
-  }
-  else
-  {
-
-    //
-    // Create a new boot info file
-    //
-    iRetVal = sl_FsOpen((unsigned char *)IMG_BOOT_INFO,
-                        FS_MODE_OPEN_CREATE(2*sizeof(sBootInfo_t),
-                                            ulBootInfoCreateFlag),
-                                            &ulBootInfoToken,
-                                            &lFileHandle);
-
-    //
-    // Create a default boot info
-    //
-    iRetVal = CreateDefaultBootInfo(&sBootInfo);
-
-    if(iRetVal != 0)
-    {
-      //
-      // Can't boot no bootable image found
-      //
-      while(1)
-      {
-
-      }
-    }
-
-    //
-    // Write the default boot info.
-    //
-    iRetVal = sl_FsWrite(lFileHandle,0,
-                         (unsigned char *)&sBootInfo,
-                         sizeof(sBootInfo_t));
-  }
-
-  //
-  // Close boot info function
-  //
-  sl_FsClose(lFileHandle, 0, 0, 0);
-    
-  //
-  // Load and execute the image base on boot info.
-  //
-  ImageLoader(&sBootInfo);
-*/
-  //
-  // Infinite loop
-  //
-  while (1)
-  {
-  }
+//*****************************************************************************
+//
+//! This function handles socket events indication
+//!
+//! \param[in]      pSock - Pointer to Socket Event Info
+//!
+//! \return None
+//!
+//*****************************************************************************
+void SimpleLinkSockEventHandler(SlSockEvent_t *pSock)
+{
 }
