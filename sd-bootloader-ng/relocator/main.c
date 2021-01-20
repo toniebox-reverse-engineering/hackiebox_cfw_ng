@@ -96,7 +96,7 @@ void main()
 {
   unsigned long ulNdx;
 
-  for( ulNdx =0; ulNdx < 4*1024; ulNdx++)
+  for( ulNdx =0; ulNdx < 8*1024; ulNdx++)
   {
       __recloc_location[ulNdx] =  __init_location[ulNdx];
   }

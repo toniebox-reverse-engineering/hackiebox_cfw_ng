@@ -37,13 +37,12 @@
 ******************************************************************************/
 
 
-HEAP_SIZE = 0x00010000;
+HEAP_SIZE = 0x00000000;
 
 MEMORY
 {
-    /* SRAM size of 240KB for cc3200 ES 1.33 device onward */
-    SRAM (rwx) : ORIGIN = 0x20004000, LENGTH = 0x100 /*0x3C000*/
-    SRAM2(rwx) : ORIGIN = 0x20004100, LENGTH = 0x10000 /*0x3C000*/
+    SRAM (rwx) : ORIGIN = 0x20004000, LENGTH = 0x100 
+    RELOC (rwx) : ORIGIN = 0x20038000, LENGTH = 0x8000 
 }
 
 SECTIONS
@@ -90,6 +89,6 @@ SECTIONS
 	. = ALIGN(8);
 	_eheap = .;
 
-    } > SRAM2
+    }
 }
 
