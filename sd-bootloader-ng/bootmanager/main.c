@@ -396,6 +396,14 @@ static uint8_t Selector(uint8_t startNumber) {
       UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
   }
   LedGreenOff();
+  
+  LedBlueOn();
+  while (generalSettings.waitForPress)
+  {
+    if (EarBigPressed())
+      break;
+  }
+  LedBlueOff();  
 
   while (EarBigPressed()) {
     if (EarSmallPressed()) {
