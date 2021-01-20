@@ -68,7 +68,7 @@
 #include "bootmgr.h"
 
 #include "utils.h"
-//#include "sdhost.h"
+//#include "sdhost.h" //TODO: fixes some compiler warnings, even diskio.h should load it!
 
 #include "ff.h"
 #include "diskio.h"
@@ -76,6 +76,8 @@
 static FATFS fatfs;
 
 #include "jsmn_stream.h"
+
+//#define FIXED_BOOT_IMAGE
 
 #define IMG_OFW_ID_1 0
 #define IMG_OFW_ID_2 1
@@ -100,9 +102,13 @@ static FATFS fatfs;
 #define IMG_OFW_NAME "ofw"
 #define IMG_CFW_NAME "cfw"
 #define IMG_ADD_NAME "add"
-#define CFG_SD_PATH "/revvox/boot/ngCfg.json"
+#define CFG_SD_PATH SD_PATH_BASE "ngCfg.json"
+
+#define IMG_SD_BOOTLOADER_NAME "ngBootloader.bin"
+#define IMG_SD_BOOTLOADER_PATH SD_PATH_BASE IMG_SD_BOOTLOADER_NAME
 
 #define IMG_MAX_COUNT 9
+
 
 #define max(a,b)             \
 ({                           \
@@ -117,6 +123,8 @@ static FATFS fatfs;
     __typeof__ (b) _b = (b); \
     _a < _b ? _a : _b;       \
 })
+
+#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
 
 typedef struct sGeneralSettings
@@ -300,8 +308,17 @@ static void prebootmgr_blink_color(int times, int wait_us, uint8_t color)
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
   }
 }
+
 static void prebootmgr_blink(int times, int wait_us) {
   prebootmgr_blink_color(times, wait_us, COLOR_GREEN);
+}
+
+static void prebootmgr_blink_error(int times, int wait_us) {
+  #ifdef FIXED_BOOT_IMAGE
+  prebootmgr_blink_color(times, wait_us, COLOR_BLUE);
+  #else
+  prebootmgr_blink_color(times, wait_us, COLOR_GREEN);
+  #endif
 }
 
 static void SdInit(void)
@@ -379,6 +396,15 @@ static bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
 }
 
+static bool SdFileExists(char* filename) {
+  FIL ffile;
+  if (f_open(&ffile, filename, FA_READ) == FR_OK) {
+      f_close(&ffile); 
+      return true;
+  }
+  return false;
+}
+
 static uint8_t Selector(uint8_t startNumber) {
   int8_t counter = startNumber;
 
@@ -431,15 +457,9 @@ static uint8_t Selector(uint8_t startNumber) {
   return counter;
 }
 
-
 static bool SdImageExists(uint8_t number) {
   char* image = GetImagePathById(number);
-  FIL ffile;
-  if (f_open(&ffile, image, FA_READ) == FR_OK) {
-      f_close(&ffile); 
-      return true;
-  }
-  return false;
+  return SdFileExists(image);
 }
 static bool CheckSdImages() {
   bool hasValidImage = false;
@@ -472,7 +492,6 @@ static uint8_t GetImageNumber(char* imageId)
   return 0;
 }
 
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 char jsonGroupName[8];
 char jsonValueName[17];
 
@@ -583,24 +602,29 @@ int main()
   BoardInitBase();
   BoardInitCustom();
 
+  #ifndef FIXED_BOOT_IMAGE
   for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
   {
     aImageInfo[i].fileExists = false;
     aImageInfo[i].checkHash = true;
   }
-  
+  #endif
 
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
   ffs_result = f_mount(&fatfs, "0", 1);
   if (ffs_result == FR_OK)
   {
+    #ifdef FIXED_BOOT_IMAGE
+    char* image = IMG_SD_BOOTLOADER_PATH;
+    if (SdFileExists(image)) {
+    #else
     if (CheckSdImages()) {
       char activeImageName[4];
 
       ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
       if (ffs_result == FR_OK) {
         uint32_t filesize = f_size(&ffile);
-        uint16_t bytesRead = 0;
+        uint32_t bytesRead = 0;
         uint32_t allBytesRead = 0;
         if (filesize>0x3000) //Maximum 0x3000, 12kB for JSON should be enough
           filesize = 0x3000;
@@ -613,7 +637,7 @@ int main()
           if (ffs_result != FR_OK)
             break;
 
-          for (uint16_t i = 0; i < bytesRead; i++)
+          for (uint32_t i = 0; i < bytesRead; i++)
           {
             jsmn_stream_parse(&parser, buffer[i]);
           }
@@ -623,7 +647,7 @@ int main()
 
       uint8_t selectedImgNum = Selector(generalSettings.activeImage);
       char* image = GetImagePathById(selectedImgNum);
-
+    #endif
 
       ffs_result = f_open(&ffile, image, FA_READ);
       if (ffs_result == FR_OK) {
@@ -634,18 +658,18 @@ int main()
           if (ffs_result == FR_OK) {
             f_close(&ffile); 
             BoardDeinitCustom();
-            Run(pImgRun);
+            Run((unsigned long)pImgRun);
           } else {
               UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-              prebootmgr_blink(4, 500);
+              prebootmgr_blink_error(4, 500);
               UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-              prebootmgr_blink(ffs_result, 1000);
+              prebootmgr_blink_error(ffs_result, 1000);
           }
       } else {
           UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-          prebootmgr_blink(3, 500);
+          prebootmgr_blink_error(3, 500);
           UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-          prebootmgr_blink(ffs_result, 1000);
+          prebootmgr_blink_error(ffs_result, 1000);
       }
     } else {
       //TODO: No bootable files on sd found
@@ -654,9 +678,9 @@ int main()
   }
 
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-  prebootmgr_blink(2, 500);
+  prebootmgr_blink_error(2, 500);
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-  prebootmgr_blink(ffs_result, 1000);
+  prebootmgr_blink_error(ffs_result, 1000);
 
   SlFsFileInfo_t pFsFileInfo;
   _i32 fhandle;
@@ -673,9 +697,9 @@ int main()
   
   while (true)
   {
-    prebootmgr_blink(3, 33);
-    prebootmgr_blink(3, 66);
-    prebootmgr_blink(3, 33);
+    prebootmgr_blink_error(3, 33);
+    prebootmgr_blink_error(3, 66);
+    prebootmgr_blink_error(3, 33);
 
     __asm volatile(" dsb \n"
                    " isb \n"
