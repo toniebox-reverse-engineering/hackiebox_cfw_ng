@@ -1,8 +1,10 @@
 {
     "general": {
-        "activeImg": "cfw1"
+        "activeImg": "cfw1",
+        "waitForPress": false
     },
     "ofw1": {
-        "sha256": false
+        "checkHash": false
     }
 }
+

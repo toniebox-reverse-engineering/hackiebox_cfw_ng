@@ -60,6 +60,7 @@ include ${ROOT}/common/make/makeCommon
 VPATH+=${SDKROOT}/example/common
 
 VPATH+=lib/FatFs
+VPATH+=lib/jsmn-stream
 
 #
 # Where to find header files that do not live in the source directory.
@@ -76,6 +77,7 @@ IPATH+=${SDKROOT}/simplelink_extlib/provisioninglib
 
 IPATH+=lib/FatFs
 IPATH+=lib/jsmn
+IPATH+=lib/jsmn-stream
 
 #
 # The default rule, which causes the driver library to be built.
@@ -113,6 +115,7 @@ ${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/${BINDIR}/libdriver.a
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ff.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/diskio.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/jsmn_stream.o
 
 SCATTERgcc_bootmgr=bootmgr.ld
 ENTRY_bootmgr=ResetISR

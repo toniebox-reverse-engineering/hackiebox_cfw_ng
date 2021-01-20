@@ -75,7 +75,7 @@
 
 static FATFS fatfs;
 
-#include "jsmn.h"
+#include "jsmn_stream.h"
 
 #define IMG_OFW_ID_1 0
 #define IMG_OFW_ID_2 1
@@ -103,6 +103,30 @@ static FATFS fatfs;
 #define CFG_SD_PATH "/revvox/boot/ngCfg.json"
 
 #define IMG_MAX_COUNT 9
+
+#define max(a,b)             \
+({                           \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b;       \
+})
+
+#define min(a,b)             \
+({                           \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a < _b ? _a : _b;       \
+})
+
+
+typedef struct sGeneralSettings
+{
+  uint8_t activeImage;
+  bool waitForPress;
+
+} sGeneralSettings;
+static sGeneralSettings generalSettings = {0, false};
+
 typedef struct sImageInfo
 {
   bool fileExists;
@@ -439,6 +463,96 @@ static uint8_t GetImageNumber(char* imageId)
   }
   return 0;
 }
+
+#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+char jsonGroupName[8];
+char jsonValueName[17];
+
+jsmn_stream_parser parser;
+void jsmn_start_arr(void *user_arg) {
+    uint8_t test = 1;
+    /* An example of using the user arg / context pointer in a callback */
+    //printf("Array started. Parser id = %d\n", *parser_id);
+}
+void jsmn_end_arr(void *user_arg) {
+    uint8_t test = 1;
+    //printf("Array ended\n");
+}
+void jsmn_start_obj(void *user_arg) {
+    uint8_t test = 1;
+    //printf("Object started\n");
+}
+void jsmn_end_obj(void *user_arg) {
+    uint8_t test = 1;
+    //printf("Object ended\n");
+}
+void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
+
+    switch (parser.stack_height)
+    {
+    case 1:
+      strncpy(jsonGroupName, key, min(key_len, COUNT_OF(jsonGroupName)));
+      jsonGroupName[COUNT_OF(jsonGroupName)] = '\0';
+      break;
+    case 3:
+      strncpy(jsonValueName, key, min(key_len, COUNT_OF(jsonValueName)));
+      jsonValueName[COUNT_OF(jsonValueName)] = '\0';
+      break;
+    }
+}
+void jsmn_str(const char *value, size_t len, void *user_arg) {
+    if (parser.stack_height != 4)
+      return;
+
+    if (strcmp("general", jsonGroupName) == 0)
+    {
+      if (strcmp("activeImg", jsonValueName) == 0)
+      {
+        generalSettings.activeImage = GetImageNumber(value);
+      }
+    }
+    else if (strncmp(jsonGroupName, "ofw", 3) == 0
+      || strncmp(jsonGroupName, "cfw", 3)
+      || strncmp(jsonGroupName, "add", 3))
+    {
+      uint8_t imageNumber = GetImageNumber(jsonGroupName);
+
+    }
+    
+}
+void jsmn_primitive(const char *value, size_t len, void *user_arg) {
+    if (parser.stack_height != 4)
+      return;
+
+    if (strcmp("general", jsonGroupName) == 0)
+    {
+      if (strcmp("waitForPress", jsonValueName) == 0)
+      {
+        generalSettings.waitForPress = (value[0] == 't');
+      }
+    }
+    else if (strncmp(jsonGroupName, "ofw", 3) == 0
+      || strncmp(jsonGroupName, "cfw", 3)
+      || strncmp(jsonGroupName, "add", 3))
+    {
+      uint8_t imageNumber = GetImageNumber(jsonGroupName);
+      if (strcmp("sha256", jsonGroupName) == 0) 
+      {
+        aImageInfo[imageNumber].checkHash = (value[0] == 't');
+      }
+    }
+}
+
+jsmn_stream_callbacks_t cbs = {
+    jsmn_start_arr,
+    jsmn_end_arr,
+    jsmn_start_obj,
+    jsmn_end_obj,
+    jsmn_obj_key,
+    jsmn_str,
+    jsmn_primitive
+};
+
 //*****************************************************************************
 //
 //! Main function
@@ -461,91 +575,45 @@ int main()
   BoardInitBase();
   BoardInitCustom();
 
+  for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
+  {
+    aImageInfo[i].fileExists = false;
+    aImageInfo[i].checkHash = true;
+  }
+  
+
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
   ffs_result = f_mount(&fatfs, "0", 1);
   if (ffs_result == FR_OK)
   {
     if (CheckSdImages()) {
       char activeImageName[4];
-      uint8_t selectedImgNum = 0;
 
       ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
       if (ffs_result == FR_OK) {
         uint32_t filesize = f_size(&ffile);
+        uint16_t bytesRead = 0;
+        uint32_t allBytesRead = 0;
         if (filesize>0x3000) //Maximum 0x3000, 12kB for JSON should be enough
           filesize = 0x3000;
         
-        char* pCfg = (char*)CFG_SRAM_OFFSET;
-
-        ffs_result = f_read(&ffile, pCfg, filesize, &filesize);
-        if (ffs_result == FR_OK)
+        jsmn_stream_init(&parser, &cbs, NULL);
+        char buffer[128];
+        while (allBytesRead<filesize)
         {
-          f_close(&ffile); 
-          pCfg[filesize] = '\0';
+          ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
+          if (ffs_result != FR_OK)
+            break;
 
-          jsmn_parser parser;
-          jsmn_init(&parser);
-          jsmntok_t tokens[32];
-          int jp_result = jsmn_parse(&parser, pCfg, strlen(pCfg), tokens, 32);
-
-          char buffer[32];
-          if (jp_result > 1) {
-            if (tokens[0].type == JSMN_OBJECT) {
-              uint8_t tid = 1;
-
-              if (tokens[tid].type == JSMN_STRING) {
-                uint8_t len = tokens[tid].end-tokens[tid].start;
-                strncpy(buffer, &pCfg[tokens[tid].start], len);
-                buffer[len] = '\0';
-                if (strcmp(buffer, "general") == 0) {
-                  tid++;
-                  if (tokens[tid].type == JSMN_OBJECT) {
-                    tid++;
-                    if (tokens[tid].type == JSMN_STRING) {
-                      len = tokens[tid].end-tokens[tid].start;
-                      strncpy(buffer, &pCfg[tokens[tid].start], len);
-                      buffer[len] = '\0';
-                      if (strcmp(buffer, "activeImg") == 0) {
-                        tid++;
-                        if (tokens[tid].type == JSMN_STRING) {
-                          selectedImgNum = GetImageNumber(&pCfg[tokens[tid].start]);
-                        }
-                      }
-                    }
-                  }
-                } else if (strncmp(buffer, "ofw", 3) == 0
-                    || strncmp(buffer, "cfw", 3)
-                    || strncmp(buffer, "add", 3))
-                {
-                  tid++;
-                  uint8_t imageNumber = GetImageNumber(&pCfg[tokens[tid].start]);
-                  
-                  if (tokens[tid].type == JSMN_OBJECT) {
-                    tid++;
-                    if (tokens[tid].type == JSMN_STRING) {
-                      len = tokens[tid].end-tokens[tid].start;
-                      strncpy(buffer, &pCfg[tokens[tid].start], len);
-                      buffer[len] = '\0';
-                      if (strcmp(buffer, "sha256") == 0) {
-                        tid++;
-                        if (tokens[tid].type == JSMN_PRIMITIVE) {
-                          if (pCfg[tokens[tid].start] == 'f') {
-                            aImageInfo[imageNumber].checkHash = false;
-                          } else {
-                            aImageInfo[imageNumber].checkHash = true;
-                          }
-                        }
-                      }
-                    }
-                  }
-                }   
-              }
-            }              
+          for (uint16_t i = 0; i < bytesRead; i++)
+          {
+            jsmn_stream_parse(&parser, buffer[i]);
           }
+          allBytesRead += bytesRead;
         }
       }
 
-      selectedImgNum = Selector(selectedImgNum);
+      uint8_t selectedImgNum = Selector(generalSettings.activeImage);
       char* image = GetImagePathById(selectedImgNum);
 
 
