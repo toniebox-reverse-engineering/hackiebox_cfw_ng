@@ -636,8 +636,6 @@ int main()
         uint32_t filesize = f_size(&ffile);
         uint32_t bytesRead = 0;
         uint32_t allBytesRead = 0;
-        if (filesize>0x3000) //Maximum 0x3000, 12kB for JSON should be enough
-          filesize = 0x3000;
         
         jsmn_stream_init(&parser, &cbs, NULL);
         char buffer[128];
