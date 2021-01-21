@@ -97,7 +97,6 @@ static FATFS fatfs;
 #define SD_PATH_BASE "/revvox/boot/"
 #define SD_PATH_BASE_LEN 13
 #define IMG_SD_NAME "ng-CCCN.bin"
-#define HASH_SD_FILEENDING "sha"
 
 #define IMG_FLASH_PATH "/sys/pre-img.bin"
 #define IMG_SD_PATH SD_PATH_BASE IMG_SD_NAME
@@ -112,6 +111,9 @@ static FATFS fatfs;
 
 #define IMG_SD_BOOTLOADER_NAME "ngBootloader.bin"
 #define IMG_SD_BOOTLOADER_PATH SD_PATH_BASE IMG_SD_BOOTLOADER_NAME
+
+#define HASH_SD_NAME "ng-CCCN.sha"
+#define HASH_SD_PATH SD_PATH_BASE HASH_SD_NAME
 
 #define IMG_MAX_COUNT 9
 
@@ -149,7 +151,7 @@ typedef struct sImageInfo
 } sImageInfo;
 static sImageInfo aImageInfo[IMG_MAX_COUNT];
 
-char* imagePath; //TODO!
+char imagePath[] = IMG_SD_PATH; //TODO!
 static char* GetImagePathById(uint8_t number) {
   //char* imagePath;
   char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
@@ -163,7 +165,6 @@ static char* GetImagePathById(uint8_t number) {
     name = IMG_ADD_NAME;
   }
 
-  imagePath = IMG_SD_PATH;
   for (uint8_t i=0; i<3; i++)
   {
     imagePath[IMG_SD_PATH_REPL1_POS+i] = name[i];
@@ -719,9 +720,10 @@ int main()
   if (CheckSdImages()) {
     readConfig();
 
-    uint8_t selectedImgNum;
     retrySelection:
-      selectedImgNum = Selector(generalSettings.activeImage);
+      generalSettings.activeImage = Selector(generalSettings.activeImage);
+      
+    uint8_t selectedImgNum = generalSettings.activeImage;
     char* image = GetImagePathById(selectedImgNum);
   #endif
 
@@ -745,8 +747,9 @@ int main()
 
             uint32_t datasize = filesize;
             if (aImageInfo[selectedImgNum].hashFile) {
-              memcpy(image+strlen(image)-3, HASH_SD_FILEENDING, 3);
-              ffs_result = f_open(&ffile, image, FA_READ);
+              char* shaFile = HASH_SD_PATH;
+              memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
+              ffs_result = f_open(&ffile, shaFile, FA_READ);
               if (ffs_result == FR_OK) {
                 ffs_result = f_read(&ffile, hashExp, 64, NULL);
                 if (ffs_result == FR_OK) {
@@ -791,8 +794,6 @@ int main()
         UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
         prebootmgr_blink_error(ffs_result, 1000);
     }
-  } else {
-    //TODO: No bootable files on sd found
   }
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
 
