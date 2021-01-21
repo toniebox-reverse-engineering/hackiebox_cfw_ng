@@ -4,25 +4,39 @@
         "waitForPress": false
     },
     "ofw1": {
+        "checkHash": true,
+        "hashFile": true
+    },
+    "ofw2": {
+        "checkHash": true,
+        "hashFile": false
+    },
+    "ofw3": {
+        "checkHash": true,
+        "hashFile": false
+    },
+    "cfw1": {
+        "checkHash": true,
+        "hashFile": true
+    },
+    "cfw2": {
+        "checkHash": true,
+        "hashFile": true
+    },
+    "cfw3": {
+        "checkHash": true,
+        "hashFile": true
+    },
+    "add1": {
         "checkHash": false,
         "hashFile": false
     },
-    "ofw2": {
-    },
-    "ofw3": {
-    },
-    "cfw1": {
-    },
-    "cfw2": {
-        "checkHash": false
-    },
-    "cfw3": {
-    },
-    "add1": {
-    },
     "add2": {
+        "checkHash": false,
+        "hashFile": false
     },
     "add3": {
+        "checkHash": false,
+        "hashFile": false
     }
 }
-

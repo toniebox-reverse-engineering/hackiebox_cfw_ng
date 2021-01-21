@@ -56,6 +56,10 @@
 #include "hw_memmap.h"
 #include "hw_gprcm.h"
 #include "hw_common_reg.h"
+#include "hw_ints.h"
+#include "hw_nvic.h"
+#include "hw_shamd5.h"
+#include "hw_dthe.h"
 #include "rom.h"
 #include "rom_map.h"
 #include "prcm.h"
@@ -66,6 +70,7 @@
 #include "udma_if.h"
 #include "flc.h"
 #include "bootmgr.h"
+#include "shamd5.h"
 
 #include "utils.h"
 //#include "sdhost.h" //TODO: fixes some compiler warnings, even diskio.h should load it!
@@ -92,6 +97,7 @@ static FATFS fatfs;
 #define SD_PATH_BASE "/revvox/boot/"
 #define SD_PATH_BASE_LEN 13
 #define IMG_SD_NAME "ng-CCCN.bin"
+#define HASH_SD_FILEENDING "sha"
 
 #define IMG_FLASH_PATH "/sys/pre-img.bin"
 #define IMG_SD_PATH SD_PATH_BASE IMG_SD_NAME
@@ -231,6 +237,7 @@ void Run(unsigned long ulBaseLoc)
         "	bx     r1");
 }
 
+#define COLOR_BLACK 0
 #define COLOR_GREEN 1
 #define COLOR_BLUE 2
 #define COLOR_RED 4
@@ -284,6 +291,18 @@ static void LedBlueOff() {
   MAP_GPIOPinWrite(LED_BLUE_PORT, LED_BLUE_PORT_MASK, 0x00);
 }
 
+static void LedSet(uint8_t color) {
+  if (color & COLOR_GREEN) {
+    LedGreenOn();
+  } else {
+    LedGreenOff();
+  }
+  if (color & COLOR_BLUE) {
+    LedBlueOn();
+  } else {
+    LedBlueOff();
+  }
+}
 static void LedOn(uint8_t color) {
   if (color & COLOR_GREEN) {
     LedGreenOn();
@@ -303,9 +322,9 @@ static void prebootmgr_blink_color(int times, int wait_us, uint8_t color)
 {
   for (int i = 0; i < times; i++)
   {
-    LedOn(color);
+    LedSet(color);
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
-    LedOff(color);
+    LedSet(COLOR_BLACK);
     UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
   }
 }
@@ -422,20 +441,29 @@ static uint8_t Selector(uint8_t startNumber) {
     }
   }
 
-  LedGreenOn();
+  LedSet(COLOR_GREEN);
   while (EarSmallPressed()) {
       UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
-  }
-  LedGreenOff();
+  }  
   
-  LedBlueOn();
+  uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
+  uint8_t curColorId = 0;
   while (generalSettings.waitForPress)
   {
+    LedSet(colors[curColorId]);
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(250 * 1000));
+    
+    if (curColorId<COUNT_OF(colors)-1) {
+      curColorId++;
+    } else {
+      curColorId = 0;
+    }
+
     if (EarBigPressed())
       break;
-  }
-  LedBlueOff();  
+  } 
 
+  LedSet(COLOR_BLACK);
   while (EarBigPressed()) {
     if (EarSmallPressed()) {
         do
@@ -519,16 +547,18 @@ void jsmn_end_obj(void *user_arg) {
     //printf("Object ended\n");
 }
 void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
-
+    uint8_t len;
     switch (parser.stack_height)
     {
     case 1:
-      strncpy(jsonGroupName, key, min(key_len, COUNT_OF(jsonGroupName)));
-      jsonGroupName[COUNT_OF(jsonGroupName)] = '\0';
+      len = min(key_len, COUNT_OF(jsonGroupName)-1);
+      strncpy(jsonGroupName, key, len);
+      jsonGroupName[min(key_len, COUNT_OF(jsonGroupName))] = '\0';
       break;
     case 3:
-      strncpy(jsonValueName, key, min(key_len, COUNT_OF(jsonValueName)));
-      jsonValueName[COUNT_OF(jsonValueName)] = '\0';
+      len = min(key_len, COUNT_OF(jsonValueName)-1);
+      strncpy(jsonValueName, key, len);
+      jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
       break;
     }
 }
@@ -568,11 +598,11 @@ void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       || strncmp(jsonGroupName, "add", 3))
     {
       uint8_t imageNumber = GetImageNumber(jsonGroupName);
-      if (strcmp("checkHash", jsonGroupName) == 0) 
+      if (strcmp("checkHash", jsonValueName) == 0) 
       {
         aImageInfo[imageNumber].checkHash = (value[0] == 't');
       }
-      else if (strcmp("hashFile", jsonGroupName) == 0) 
+      else if (strcmp("hashFile", jsonValueName) == 0) 
       {
         aImageInfo[imageNumber].hashFile = (value[0] == 't');
       }
@@ -588,6 +618,51 @@ jsmn_stream_callbacks_t cbs = {
     jsmn_str,
     jsmn_primitive
 };
+
+static void btox(char *hexstr, const char *binarr, int hexstrlen) 
+{
+    const char characters[]= "0123456789abcdef";
+    while (--hexstrlen >= 0) {
+      hexstr[hexstrlen] = characters[(binarr[hexstrlen>>1] >> ((1 - (hexstrlen&1)) << 2)) & 0xF];
+    }
+}
+static void initializeConfig() {
+  for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
+  {
+    aImageInfo[i].fileExists = false;
+    aImageInfo[i].checkHash = true;
+    aImageInfo[i].hashFile = false;
+  }
+}
+static void readConfig() {
+  //TODO ERRORS
+
+  FIL ffile;
+  uint8_t ffs_result;
+
+  ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
+  if (ffs_result == FR_OK) {
+    uint32_t filesize = f_size(&ffile);
+    uint32_t bytesRead = 0;
+    uint32_t allBytesRead = 0;
+    
+    jsmn_stream_init(&parser, &cbs, NULL);
+    char buffer[128];
+    while (allBytesRead<filesize)
+    {
+      ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
+      if (ffs_result != FR_OK)
+        break;
+
+      for (uint32_t i = 0; i < bytesRead; i++)
+      {
+        jsmn_stream_parse(&parser, buffer[i]);
+      }
+      allBytesRead += bytesRead;
+    }
+    f_close(&ffile);
+  }
+}
 
 //*****************************************************************************
 //
@@ -612,95 +687,114 @@ int main()
   BoardInitCustom();
 
   #ifndef FIXED_BOOT_IMAGE
-  for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
-  {
-    aImageInfo[i].fileExists = false;
-    aImageInfo[i].checkHash = true;
-    aImageInfo[i].hashFile = false;
-  }
+  initializeConfig();
   #endif
 
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
   ffs_result = f_mount(&fatfs, "0", 1);
-  if (ffs_result == FR_OK)
+  if (ffs_result != FR_OK)
   {
-    #ifdef FIXED_BOOT_IMAGE
-    char* image = IMG_SD_BOOTLOADER_PATH;
-    if (SdFileExists(image)) {
-    #else
-    if (CheckSdImages()) {
-      char activeImageName[4];
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+    prebootmgr_blink_error(2, 500);
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+    prebootmgr_blink_error(ffs_result, 1000);
 
-      ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
-      if (ffs_result == FR_OK) {
-        uint32_t filesize = f_size(&ffile);
-        uint32_t bytesRead = 0;
-        uint32_t allBytesRead = 0;
-        
-        jsmn_stream_init(&parser, &cbs, NULL);
-        char buffer[128];
-        while (allBytesRead<filesize)
-        {
-          ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
-          if (ffs_result != FR_OK)
-            break;
-
-          for (uint32_t i = 0; i < bytesRead; i++)
-          {
-            jsmn_stream_parse(&parser, buffer[i]);
-          }
-          allBytesRead += bytesRead;
+    SlFsFileInfo_t pFsFileInfo;
+    _i32 fhandle;
+    if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+        if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
+            if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
+                sl_FsClose(fhandle, 0, 0, 0);
+                BoardDeinitCustom();
+                Run(APP_IMG_SRAM_OFFSET);
+            }
         }
-      }
-
-      uint8_t selectedImgNum = Selector(generalSettings.activeImage);
-      char* image = GetImagePathById(selectedImgNum);
-    #endif
-
-      ffs_result = f_open(&ffile, image, FA_READ);
-      if (ffs_result == FR_OK) {
-          uint32_t filesize = f_size(&ffile);
-
-          unsigned long* pImgRun = (unsigned long *)APP_IMG_SRAM_OFFSET;
-          ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
-          if (ffs_result == FR_OK) {
-            f_close(&ffile); 
-            BoardDeinitCustom();
-            Run((unsigned long)pImgRun);
-          } else {
-              UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-              prebootmgr_blink_error(4, 500);
-              UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-              prebootmgr_blink_error(ffs_result, 1000);
-          }
-      } else {
-          UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-          prebootmgr_blink_error(3, 500);
-          UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-          prebootmgr_blink_error(ffs_result, 1000);
-      }
-    } else {
-      //TODO: No bootable files on sd found
     }
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
   }
 
-  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-  prebootmgr_blink_error(2, 500);
-  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-  prebootmgr_blink_error(ffs_result, 1000);
+  #ifdef FIXED_BOOT_IMAGE
+  char* image = IMG_SD_BOOTLOADER_PATH;
+  if (SdFileExists(image)) {
+  #else
+  if (CheckSdImages()) {
+    readConfig();
 
-  SlFsFileInfo_t pFsFileInfo;
-  _i32 fhandle;
-  if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
-      if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
-          if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
-              sl_FsClose(fhandle, 0, 0, 0);
-              BoardDeinitCustom();
-              Run(APP_IMG_SRAM_OFFSET);
+    uint8_t selectedImgNum;
+    retrySelection:
+      selectedImgNum = Selector(generalSettings.activeImage);
+    char* image = GetImagePathById(selectedImgNum);
+  #endif
+
+    ffs_result = f_open(&ffile, image, FA_READ);
+    if (ffs_result == FR_OK) {
+        uint32_t filesize = f_size(&ffile);
+
+        char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
+        ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
+        if (ffs_result == FR_OK) {
+          f_close(&ffile);
+
+          #ifndef FIXED_BOOT_IMAGE
+          if (aImageInfo[selectedImgNum].checkHash) {
+            char hashExp[65];
+            char hashAct[65];
+            uint8_t hashActRaw[32];
+
+            hashExp[64] = '\0';
+            hashAct[64] = '\0';
+
+            uint32_t datasize = filesize;
+            if (aImageInfo[selectedImgNum].hashFile) {
+              memcpy(image+strlen(image)-3, HASH_SD_FILEENDING, 3);
+              ffs_result = f_open(&ffile, image, FA_READ);
+              if (ffs_result == FR_OK) {
+                ffs_result = f_read(&ffile, hashExp, 64, NULL);
+                if (ffs_result == FR_OK) {
+
+                } else {
+                  //TODO
+                }
+              } else {
+                //TODO
+              }
+            } else {
+              datasize -= 64; //sha256 ist 64bytes long.
+              memcpy(hashExp, (char*)(pImgRun + datasize), 64);
+            }
+
+            MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
+            MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, datasize, hashActRaw);
+            btox(hashAct, hashActRaw, 64);
+
+            if (strncmp(hashAct, hashExp, 64) != 0) {
+              //ERROR
+
+              prebootmgr_blink_error(10, 50);
+              
+              generalSettings.waitForPress = true;
+              goto retrySelection;
+            }
           }
-      }
+          #endif
+
+          BoardDeinitCustom();
+          Run((unsigned long)pImgRun);
+        } else {
+            UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+            prebootmgr_blink_error(4, 500);
+            UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+            prebootmgr_blink_error(ffs_result, 1000);
+        }
+    } else {
+        UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+        prebootmgr_blink_error(3, 500);
+        UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+        prebootmgr_blink_error(ffs_result, 1000);
+    }
+  } else {
+    //TODO: No bootable files on sd found
   }
+  UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
 
   
   while (true)
