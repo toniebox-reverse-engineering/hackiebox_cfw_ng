@@ -60,6 +60,7 @@
 #include "hw_nvic.h"
 #include "hw_shamd5.h"
 #include "hw_dthe.h"
+#include "hw_adc.h"
 #include "rom.h"
 #include "rom_map.h"
 #include "prcm.h"
@@ -71,6 +72,7 @@
 #include "flc.h"
 #include "bootmgr.h"
 #include "shamd5.h"
+#include "adc.h"
 
 #include "utils.h"
 //#include "sdhost.h" //TODO: fixes some compiler warnings, even diskio.h should load it!
@@ -148,6 +150,7 @@ typedef struct sImageInfo
   bool fileExists;
   bool checkHash;
   bool hashFile;
+  bool watchdog;
 } sImageInfo;
 static sImageInfo aImageInfo[IMG_MAX_COUNT];
 
@@ -262,14 +265,17 @@ void Run(unsigned long ulBaseLoc)
 #define EAR_SMALL_PORT GPIOA0_BASE
 #define POWER_SD_PORT GPIOA0_BASE
 #define POWER_PORT GPIOA0_BASE
+#define CHARGER_PORT GPIOA2_BASE
 
 //#define LED_GREEN_GPIO pin_GP25
 #define LED_GREEN_PIN_NUM PIN_21 // GP25/SOP2
-#define LED_BLUE_PIN_NUM PIN_17 //GP24
+#define LED_BLUE_PIN_NUM PIN_17 // GP24
 #define EAR_BIG_PIN_NUM PIN_57   // GP02
 #define EAR_SMALL_PIN_NUM PIN_59 // GP04
-#define POWER_SD_PIN_NUM PIN_58 //GP03
-#define POWER_PIN_NUM PIN_61 //GP06
+#define POWER_SD_PIN_NUM PIN_58 // GP03
+#define POWER_PIN_NUM PIN_61 // GP06
+#define CHARGER_PIN_NUM PIN_08 // GP17
+#define BATTERY_LEVEL_PIN_NUM PIN_60 // GP05
 
 #define LED_GREEN_PORT_MASK GPIO_PIN_1
 #define LED_BLUE_PORT_MASK GPIO_PIN_0
@@ -277,6 +283,7 @@ void Run(unsigned long ulBaseLoc)
 #define EAR_SMALL_PORT_MASK GPIO_PIN_4
 #define POWER_SD_PORT_MASK GPIO_PIN_3
 #define POWER_PORT_MASK GPIO_PIN_6
+#define CHARGER_PORT_MASK GPIO_PIN_1
 
 
 static void LedGreenOn() {
@@ -376,6 +383,7 @@ static void SdInit(void)
 static void BoardInitCustom(void)
 {
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA0 (Ear Buttons / SD Power / Power)
+  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOAA (Charger)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
 
   //Green LED
@@ -391,6 +399,10 @@ static void BoardInitCustom(void)
   //Small Ear
   MAP_PinTypeGPIO(EAR_SMALL_PIN_NUM, PIN_MODE_0, false);
   MAP_GPIODirModeSet(EAR_SMALL_PORT, EAR_SMALL_PORT_MASK, GPIO_DIR_MODE_IN);
+
+  //Charger
+  MAP_PinTypeGPIO(CHARGER_PIN_NUM, PIN_MODE_0, false);
+  MAP_GPIODirModeSet(CHARGER_PORT, CHARGER_PORT_MASK, GPIO_DIR_MODE_IN);
 
   //Power other peripherals
   MAP_PinTypeGPIO(POWER_PIN_NUM, PIN_MODE_0, false);
@@ -607,6 +619,10 @@ void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       {
         aImageInfo[imageNumber].hashFile = (value[0] == 't');
       }
+      else if (strcmp("watchdog", jsonValueName) == 0) 
+      {
+        aImageInfo[imageNumber].watchdog = (value[0] == 't');
+      }
     }
 }
 
@@ -633,6 +649,7 @@ static void initializeConfig() {
     aImageInfo[i].fileExists = false;
     aImageInfo[i].checkHash = true;
     aImageInfo[i].hashFile = false;
+    aImageInfo[i].watchdog = false;
   }
 }
 static void readConfig() {
@@ -665,6 +682,36 @@ static void readConfig() {
   }
 }
 
+static uint16_t getBatteryLevel()
+{
+  uint16_t channel = ADC_CH_3;
+  uint16_t uiIndex = 0;
+  uint32_t ulSample;
+
+  MAP_PinTypeADC(BATTERY_LEVEL_PIN_NUM, PIN_MODE_255);
+
+	while(MAP_ADCFIFOLvlGet(ADC_BASE, channel))
+    MAP_ADCFIFORead(ADC_BASE, channel); // flush the channel's FIFO if not empty
+
+	MAP_ADCTimerConfig(ADC_BASE,2^17); // Configure ADC timer which is used to timestamp the ADC data samples
+	MAP_ADCTimerEnable(ADC_BASE); // Enable ADC timer which is used to timestamp the ADC data samples
+	MAP_ADCEnable(ADC_BASE); // Enable ADC module
+	MAP_ADCChannelEnable(ADC_BASE, channel); // Enable ADC channel
+
+  while(!MAP_ADCFIFOLvlGet(ADC_BASE, channel)) { }
+  ulSample = MAP_ADCFIFORead(ADC_BASE, channel);
+
+  MAP_ADCDisable(ADC_BASE);
+  MAP_ADCChannelDisable(ADC_BASE, channel);
+  MAP_ADCTimerDisable(ADC_BASE);
+
+	return (ulSample >> 2 ) & 0x0FFF;	
+}
+static bool isChargerConnected()
+{
+  return (CHARGER_PORT_MASK & MAP_GPIOPinRead(CHARGER_PORT, CHARGER_PORT_MASK));
+}
+
 //*****************************************************************************
 //
 //! Main function
@@ -674,6 +721,29 @@ static void readConfig() {
 //! \return None
 //
 //*****************************************************************************
+void watchdog_handler() {
+  MAP_WatchdogIntClear(WDT_BASE);
+}
+bool watchdog_start() {
+    //watchdog_feed();
+
+    MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);/*
+    MAP_WatchdogUnlock(WDT_BASE);
+    MAP_IntPrioritySet(INT_WDT, INT_PRIORITY_LVL_1);
+    MAP_WatchdogIntRegister(WDT_BASE, watchdog_handler); //TODO
+    MAP_WatchdogReloadSet(WDT_BASE, 80000000*15); //15s
+    MAP_WatchdogEnable(WDT_BASE);*/
+
+    return MAP_WatchdogRunning(WDT_BASE);
+}
+void watchdog_stop() {  /*
+    MAP_WatchdogUnlock(WDT_BASE);
+    MAP_WatchdogStallDisable(WDT_BASE);
+    MAP_WatchdogIntClear(WDT_BASE);
+    MAP_WatchdogIntUnregister(WDT_BASE);*/
+}
+
+
 int main()
 {
 
@@ -687,116 +757,122 @@ int main()
   BoardInitBase();
   BoardInitCustom();
 
+  uint16_t battery = 0;
+  bool charger = false;
+  battery = getBatteryLevel();
+  charger = isChargerConnected();
+  
+  watchdog_start();
   #ifndef FIXED_BOOT_IMAGE
   initializeConfig();
   #endif
 
   UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
+  watchdog_stop();
   ffs_result = f_mount(&fatfs, "0", 1);
-  if (ffs_result != FR_OK)
-  {
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-    prebootmgr_blink_error(2, 500);
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
-    prebootmgr_blink_error(ffs_result, 1000);
+  if (ffs_result == FR_OK)
+    {
+    #ifdef FIXED_BOOT_IMAGE
+    char* image = IMG_SD_BOOTLOADER_PATH;
+    if (SdFileExists(image)) {
+    #else
+    if (CheckSdImages()) {
+      readConfig();
 
-    SlFsFileInfo_t pFsFileInfo;
-    _i32 fhandle;
-    if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
-        if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
-            if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
-                sl_FsClose(fhandle, 0, 0, 0);
-                BoardDeinitCustom();
-                Run(APP_IMG_SRAM_OFFSET);
-            }
-        }
-    }
-  }
+      retrySelection:
+        generalSettings.activeImage = Selector(generalSettings.activeImage);
+        
+      uint8_t selectedImgNum = generalSettings.activeImage;
+      char* image = GetImagePathById(selectedImgNum);
+    #endif
 
-  #ifdef FIXED_BOOT_IMAGE
-  char* image = IMG_SD_BOOTLOADER_PATH;
-  if (SdFileExists(image)) {
-  #else
-  if (CheckSdImages()) {
-    readConfig();
+      ffs_result = f_open(&ffile, image, FA_READ);
+      if (ffs_result == FR_OK) {
+          uint32_t filesize = f_size(&ffile);
 
-    retrySelection:
-      generalSettings.activeImage = Selector(generalSettings.activeImage);
-      
-    uint8_t selectedImgNum = generalSettings.activeImage;
-    char* image = GetImagePathById(selectedImgNum);
-  #endif
+          char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
+          ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
+          if (ffs_result == FR_OK) {
+            f_close(&ffile);
 
-    ffs_result = f_open(&ffile, image, FA_READ);
-    if (ffs_result == FR_OK) {
-        uint32_t filesize = f_size(&ffile);
+            #ifndef FIXED_BOOT_IMAGE
+            if (aImageInfo[selectedImgNum].checkHash) {
+              char hashExp[65];
+              char hashAct[65];
+              uint8_t hashActRaw[32];
 
-        char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
-        ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
-        if (ffs_result == FR_OK) {
-          f_close(&ffile);
+              hashExp[64] = '\0';
+              hashAct[64] = '\0';
 
-          #ifndef FIXED_BOOT_IMAGE
-          if (aImageInfo[selectedImgNum].checkHash) {
-            char hashExp[65];
-            char hashAct[65];
-            uint8_t hashActRaw[32];
-
-            hashExp[64] = '\0';
-            hashAct[64] = '\0';
-
-            uint32_t datasize = filesize;
-            if (aImageInfo[selectedImgNum].hashFile) {
-              char* shaFile = HASH_SD_PATH;
-              memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
-              ffs_result = f_open(&ffile, shaFile, FA_READ);
-              if (ffs_result == FR_OK) {
-                ffs_result = f_read(&ffile, hashExp, 64, NULL);
+              uint32_t datasize = filesize;
+              if (aImageInfo[selectedImgNum].hashFile) {
+                char* shaFile = HASH_SD_PATH;
+                memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
+                ffs_result = f_open(&ffile, shaFile, FA_READ);
                 if (ffs_result == FR_OK) {
+                  ffs_result = f_read(&ffile, hashExp, 64, NULL);
+                  if (ffs_result == FR_OK) {
 
+                  } else {
+                    //TODO
+                  }
                 } else {
                   //TODO
                 }
               } else {
-                //TODO
+                datasize -= 64; //sha256 ist 64bytes long.
+                memcpy(hashExp, (char*)(pImgRun + datasize), 64);
               }
-            } else {
-              datasize -= 64; //sha256 ist 64bytes long.
-              memcpy(hashExp, (char*)(pImgRun + datasize), 64);
+
+              MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
+              MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, datasize, hashActRaw);
+              btox(hashAct, hashActRaw, 64);
+
+              if (strncmp(hashAct, hashExp, 64) != 0) {
+                //ERROR
+
+                prebootmgr_blink_error(10, 50);
+                
+                generalSettings.waitForPress = true;
+                goto retrySelection;
+              }
             }
+            #endif
 
-            MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
-            MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, datasize, hashActRaw);
-            btox(hashAct, hashActRaw, 64);
-
-            if (strncmp(hashAct, hashExp, 64) != 0) {
-              //ERROR
-
-              prebootmgr_blink_error(10, 50);
-              
-              generalSettings.waitForPress = true;
-              goto retrySelection;
-            }
+            BoardDeinitCustom();
+            Run((unsigned long)pImgRun);
+          } else {
+              UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+              prebootmgr_blink_error(4, 500);
+              UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+              prebootmgr_blink_error(ffs_result, 1000);
           }
-          #endif
-
-          BoardDeinitCustom();
-          Run((unsigned long)pImgRun);
-        } else {
-            UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-            prebootmgr_blink_error(4, 500);
-            UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-            prebootmgr_blink_error(ffs_result, 1000);
-        }
-    } else {
-        UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
-        prebootmgr_blink_error(3, 500);
-        UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
-        prebootmgr_blink_error(ffs_result, 1000);
+      } else {
+          UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+          prebootmgr_blink_error(3, 500);
+          UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+          prebootmgr_blink_error(ffs_result, 1000);
+      }
     }
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
   }
-  UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+  
+  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  prebootmgr_blink_error(2, 500);
+  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  prebootmgr_blink_error(ffs_result, 1000);
 
+  SlFsFileInfo_t pFsFileInfo;
+  _i32 fhandle;
+  if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+      if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
+          if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
+              sl_FsClose(fhandle, 0, 0, 0);
+              BoardDeinitCustom();
+              Run(APP_IMG_SRAM_OFFSET);
+          }
+      }
+  }
   
   while (true)
   {
