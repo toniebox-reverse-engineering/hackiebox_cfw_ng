@@ -139,6 +139,7 @@ typedef struct sImageInfo
 {
   bool fileExists;
   bool checkHash;
+  bool hashFile;
 } sImageInfo;
 static sImageInfo aImageInfo[IMG_MAX_COUNT];
 
@@ -375,6 +376,10 @@ static void BoardInitCustom(void)
   MAP_PinTypeGPIO(POWER_PIN_NUM, PIN_MODE_0, false);
   MAP_GPIODirModeSet(POWER_PORT, POWER_PORT_MASK, GPIO_DIR_MODE_OUT);
   MAP_GPIOPinWrite(POWER_PORT, POWER_PORT_MASK, POWER_PORT_MASK);
+
+  //Init SHAMD5
+  MAP_PRCMPeripheralClkEnable(PRCM_DTHE, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK);
+  MAP_PRCMPeripheralReset(PRCM_DTHE);
   
   SdInit();
 
@@ -563,9 +568,13 @@ void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       || strncmp(jsonGroupName, "add", 3))
     {
       uint8_t imageNumber = GetImageNumber(jsonGroupName);
-      if (strcmp("sha256", jsonGroupName) == 0) 
+      if (strcmp("checkHash", jsonGroupName) == 0) 
       {
         aImageInfo[imageNumber].checkHash = (value[0] == 't');
+      }
+      else if (strcmp("hashFile", jsonGroupName) == 0) 
+      {
+        aImageInfo[imageNumber].hashFile = (value[0] == 't');
       }
     }
 }
@@ -607,6 +616,7 @@ int main()
   {
     aImageInfo[i].fileExists = false;
     aImageInfo[i].checkHash = true;
+    aImageInfo[i].hashFile = false;
   }
   #endif
 

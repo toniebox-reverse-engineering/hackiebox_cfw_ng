@@ -4,7 +4,25 @@
         "waitForPress": false
     },
     "ofw1": {
+        "checkHash": false,
+        "hashFile": false
+    },
+    "ofw2": {
+    },
+    "ofw3": {
+    },
+    "cfw1": {
+    },
+    "cfw2": {
         "checkHash": false
+    },
+    "cfw3": {
+    },
+    "add1": {
+    },
+    "add2": {
+    },
+    "add3": {
     }
 }
 
