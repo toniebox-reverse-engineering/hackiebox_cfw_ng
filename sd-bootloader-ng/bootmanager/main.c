@@ -858,10 +858,6 @@ int main()
               uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
               uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
 
-              uint32_t check1 = *pCheck1;
-              uint32_t check2 = *pCheck2;
-              uint32_t target = *pTarget;
-
               if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
                 *pTarget = 0x0010014C;
               }
