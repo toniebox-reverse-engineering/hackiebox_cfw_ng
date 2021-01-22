@@ -6,3 +6,12 @@ obj_nonos_opt/
 obj_os_opt/
 /_tmp/
 .vscode/
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw1.bin
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw1.sha
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw2.bin
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw2.sha
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw3.bin
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw3.sha
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw1.bin
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw2.bin
+sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw3.bin
