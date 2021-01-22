@@ -151,6 +151,7 @@ typedef struct sImageInfo
   bool checkHash;
   bool hashFile;
   bool watchdog;
+  bool ofwFix;
 } sImageInfo;
 static sImageInfo aImageInfo[IMG_MAX_COUNT];
 
@@ -382,9 +383,13 @@ static void SdInit(void)
 
 static void BoardInitCustom(void)
 {
-  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA0 (Ear Buttons / SD Power / Power)
-  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOAA (Charger)
-  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
+  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK); //Clock for GPIOA0 (Ear Buttons / SD Power / Power)
+  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK); //Clock for GPIOAA (Charger)
+  MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
+
+  MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
+  MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
+  MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
 
   //Green LED
   MAP_PinTypeGPIO(LED_GREEN_PIN_NUM, PIN_MODE_0, false);
@@ -527,7 +532,7 @@ static uint8_t GetImageNumber(char* imageId)
   } else if (strncmp(imageId, IMG_CFW_NAME, 3) == 0)
   {
     factor = 1;
-  } else if (strncmp(imageId, IMG_CFW_NAME, 3) == 0)
+  } else if (strncmp(imageId, IMG_ADD_NAME, 3) == 0)
   {
     factor = 2;
   }
@@ -623,6 +628,10 @@ void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       {
         aImageInfo[imageNumber].watchdog = (value[0] == 't');
       }
+      else if (strcmp("ofwFix", jsonValueName) == 0) 
+      {
+        aImageInfo[imageNumber].ofwFix = (value[0] == 't');
+      }
     }
 }
 
@@ -650,6 +659,7 @@ static void initializeConfig() {
     aImageInfo[i].checkHash = true;
     aImageInfo[i].hashFile = false;
     aImageInfo[i].watchdog = false;
+    aImageInfo[i].ofwFix = false;
   }
 }
 static void readConfig() {
@@ -742,7 +752,13 @@ void watchdog_stop() {  /*
     MAP_WatchdogIntClear(WDT_BASE);
     MAP_WatchdogIntUnregister(WDT_BASE);*/
 }
-
+void hibernate() {
+    //enable ear wakeup interrupt
+    PRCMHibernateWakeupSourceEnable(PRCM_HIB_GPIO2 | PRCM_HIB_GPIO4);
+    //TODO
+    //Utils_SpiFlashDeepPowerDown();
+    PRCMHibernateEnter();
+}
 
 int main()
 {
@@ -757,10 +773,11 @@ int main()
   BoardInitBase();
   BoardInitCustom();
 
-  uint16_t battery = 0;
-  bool charger = false;
+  uint16_t battery;
+  bool charger ;
   battery = getBatteryLevel();
   charger = isChargerConnected();
+  
   
   watchdog_start();
   #ifndef FIXED_BOOT_IMAGE
@@ -804,7 +821,6 @@ int main()
               hashExp[64] = '\0';
               hashAct[64] = '\0';
 
-              uint32_t datasize = filesize;
               if (aImageInfo[selectedImgNum].hashFile) {
                 char* shaFile = HASH_SD_PATH;
                 memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
@@ -820,12 +836,12 @@ int main()
                   //TODO
                 }
               } else {
-                datasize -= 64; //sha256 ist 64bytes long.
-                memcpy(hashExp, (char*)(pImgRun + datasize), 64);
+                filesize -= 64; //sha256 ist 64bytes long.
+                memcpy(hashExp, (char*)(pImgRun + filesize), 64);
               }
 
               MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
-              MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, datasize, hashActRaw);
+              MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, filesize, hashActRaw);
               btox(hashAct, hashActRaw, 64);
 
               if (strncmp(hashAct, hashExp, 64) != 0) {
@@ -835,6 +851,19 @@ int main()
                 
                 generalSettings.waitForPress = true;
                 goto retrySelection;
+              }
+            }
+            if (aImageInfo[selectedImgNum].ofwFix) {
+              uint32_t* pCheck1 = (uint32_t*)(pImgRun+filesize-0x04);
+              uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
+              uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
+
+              uint32_t check1 = *pCheck1;
+              uint32_t check2 = *pCheck2;
+              uint32_t target = *pTarget;
+
+              if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
+                *pTarget = 0x0010014C;
               }
             }
             #endif
