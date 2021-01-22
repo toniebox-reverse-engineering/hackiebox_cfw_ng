@@ -5,38 +5,49 @@
     },
     "ofw1": {
         "checkHash": true,
-        "hashFile": true
+        "hashFile": true,
+        "watchdog": false
     },
     "ofw2": {
         "checkHash": true,
-        "hashFile": false
+        "hashFile": false,
+        "watchdog": true,
+        "ofwFix": true
     },
     "ofw3": {
         "checkHash": true,
-        "hashFile": false
+        "hashFile": false,
+        "watchdog": true,
+        "ofwFix": true
     },
     "cfw1": {
         "checkHash": true,
-        "hashFile": true
+        "hashFile": true,
+        "watchdog": false
     },
     "cfw2": {
         "checkHash": true,
-        "hashFile": true
+        "hashFile": true,
+        "watchdog": false
     },
     "cfw3": {
         "checkHash": true,
-        "hashFile": true
+        "hashFile": true,
+        "watchdog": false
     },
     "add1": {
         "checkHash": false,
-        "hashFile": false
+        "hashFile": false,
+        "watchdog": false
     },
     "add2": {
         "checkHash": false,
-        "hashFile": false
+        "hashFile": false,
+        "watchdog": false
     },
     "add3": {
         "checkHash": false,
-        "hashFile": false
+        "hashFile": false,
+        "watchdog": false
     }
 }
