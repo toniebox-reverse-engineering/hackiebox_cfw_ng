@@ -1,5 +1,6 @@
 *.a
 *.o
+*.pyc
 exe/
 obj/
 obj_nonos_opt/
