@@ -76,7 +76,6 @@ IPATH+=${SDKROOT}/simplelink_extlib/flc
 IPATH+=${SDKROOT}/simplelink_extlib/provisioninglib
 
 IPATH+=lib/FatFs
-IPATH+=lib/jsmn
 IPATH+=lib/jsmn-stream
 
 #
@@ -106,16 +105,21 @@ ${BINDIR}:
 # Rules for building the bootmgr example.
 #
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/main.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/helper.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/config.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/patch.o
+
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/udma_if.o
+
+${BINDIR}/bootmgr.axf: ${OBJDIR}/ff.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/diskio.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/jsmn_stream.o
+
+${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/network_common.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/startup_${COMPILER}.o
 ${BINDIR}/bootmgr.axf: ${SDKROOT}/simplelink/${COMPILER}/${BINDIR}/libsimplelink_nonos_opt.a
 ${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/${BINDIR}/libdriver.a
-
-${BINDIR}/bootmgr.axf: ${OBJDIR}/ff.o
-${BINDIR}/bootmgr.axf: ${OBJDIR}/diskio.o
-${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
-${BINDIR}/bootmgr.axf: ${OBJDIR}/jsmn_stream.o
 
 SCATTERgcc_bootmgr=bootmgr.ld
 ENTRY_bootmgr=ResetISR

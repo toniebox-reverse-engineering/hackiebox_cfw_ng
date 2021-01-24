@@ -73,9 +73,9 @@
 #include "bootmgr.h"
 #include "shamd5.h"
 #include "adc.h"
+#include "wdt.h"
 
-#include "utils.h"
-//#include "sdhost.h" //TODO: fixes some compiler warnings, even diskio.h should load it!
+#include "sdhost.h" //TODO: fixes some compiler warnings, even diskio.h should load it!
 
 #include "ff.h"
 #include "diskio.h"
@@ -84,76 +84,10 @@ static FATFS fatfs;
 
 #include "jsmn_stream.h"
 
-//#define FIXED_BOOT_IMAGE
+#include "config.h"
+#include "patch.h"
+#include "globalDefines.h"
 
-#define IMG_OFW_ID_1 0
-#define IMG_OFW_ID_2 1
-#define IMG_OFW_ID_3 2
-#define IMG_CFW_ID_1 3
-#define IMG_CFW_ID_2 4
-#define IMG_CFW_ID_3 5
-#define IMG_ADD_ID_1 6
-#define IMG_ADD_ID_2 7
-#define IMG_ADD_ID_3 8
-
-#define SD_PATH_BASE "/revvox/boot/"
-#define SD_PATH_BASE_LEN 13
-#define IMG_SD_NAME "ng-CCCN.bin"
-
-#define IMG_FLASH_PATH "/sys/pre-img.bin"
-#define IMG_SD_PATH SD_PATH_BASE IMG_SD_NAME
-#define IMG_SD_NAME_REPL1_POS 3
-#define IMG_SD_NAME_REPL2_POS 6
-#define IMG_SD_PATH_REPL1_POS SD_PATH_BASE_LEN + IMG_SD_NAME_REPL1_POS
-#define IMG_SD_PATH_REPL2_POS SD_PATH_BASE_LEN + IMG_SD_NAME_REPL2_POS
-#define IMG_OFW_NAME "ofw"
-#define IMG_CFW_NAME "cfw"
-#define IMG_ADD_NAME "add"
-#define CFG_SD_PATH SD_PATH_BASE "ngCfg.json"
-
-#define IMG_SD_BOOTLOADER_NAME "ngBootloader.bin"
-#define IMG_SD_BOOTLOADER_PATH SD_PATH_BASE IMG_SD_BOOTLOADER_NAME
-
-#define HASH_SD_NAME "ng-CCCN.sha"
-#define HASH_SD_PATH SD_PATH_BASE HASH_SD_NAME
-
-#define IMG_MAX_COUNT 9
-
-
-#define max(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a > _b ? _a : _b;       \
-})
-
-#define min(a,b)             \
-({                           \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    _a < _b ? _a : _b;       \
-})
-
-#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
-
-
-typedef struct sGeneralSettings
-{
-  uint8_t activeImage;
-  bool waitForPress;
-
-} sGeneralSettings;
-static sGeneralSettings generalSettings = {0, false};
-
-typedef struct sImageInfo
-{
-  bool fileExists;
-  bool checkHash;
-  bool hashFile;
-  bool watchdog;
-  bool ofwFix;
-} sImageInfo;
-static sImageInfo aImageInfo[IMG_MAX_COUNT];
 
 char imagePath[] = IMG_SD_PATH; //TODO!
 static char* GetImagePathById(uint8_t number) {
@@ -242,49 +176,7 @@ void Run(unsigned long ulBaseLoc)
         "	bx     r1");
 }
 
-#define COLOR_BLACK 0
-#define COLOR_GREEN 1
-#define COLOR_BLUE 2
-#define COLOR_RED 4
-#define COLOR_CYAN 3
 
-
-#define HAL_FCPU_MHZ 80U
-#define HAL_FCPU_HZ (1000000U * HAL_FCPU_MHZ)
-#define HAL_SYSTICK_PERIOD_US 1000U
-#define UTILS_DELAY_US_TO_COUNT(us) (((us)*HAL_FCPU_MHZ) / 6)
-
-#define APP_IMG_SRAM_OFFSET 0x20004000
-#define CFG_SRAM_OFFSET 0x20000000
-
-#define EAR_BIG_PRCM PRCM_GPIOA0
-#define EAR_SMALL_PRCM PRCM_GPIOA0
-
-#define LED_GREEN_PORT GPIOA3_BASE
-#define LED_BLUE_PORT GPIOA3_BASE
-#define EAR_BIG_PORT GPIOA0_BASE
-#define EAR_SMALL_PORT GPIOA0_BASE
-#define POWER_SD_PORT GPIOA0_BASE
-#define POWER_PORT GPIOA0_BASE
-#define CHARGER_PORT GPIOA2_BASE
-
-//#define LED_GREEN_GPIO pin_GP25
-#define LED_GREEN_PIN_NUM PIN_21 // GP25/SOP2
-#define LED_BLUE_PIN_NUM PIN_17 // GP24
-#define EAR_BIG_PIN_NUM PIN_57   // GP02
-#define EAR_SMALL_PIN_NUM PIN_59 // GP04
-#define POWER_SD_PIN_NUM PIN_58 // GP03
-#define POWER_PIN_NUM PIN_61 // GP06
-#define CHARGER_PIN_NUM PIN_08 // GP17
-#define BATTERY_LEVEL_PIN_NUM PIN_60 // GP05
-
-#define LED_GREEN_PORT_MASK GPIO_PIN_1
-#define LED_BLUE_PORT_MASK GPIO_PIN_0
-#define EAR_BIG_PORT_MASK GPIO_PIN_2
-#define EAR_SMALL_PORT_MASK GPIO_PIN_4
-#define POWER_SD_PORT_MASK GPIO_PIN_3
-#define POWER_PORT_MASK GPIO_PIN_6
-#define CHARGER_PORT_MASK GPIO_PIN_1
 
 
 static void LedGreenOn() {
@@ -327,26 +219,26 @@ static void LedOff(uint8_t color) {
   }
 }
 
-static void prebootmgr_blink_color(int times, int wait_us, uint8_t color)
+static void prebootmgr_blink_color(int times, int wait_ms, uint8_t color)
 {
   for (int i = 0; i < times; i++)
   {
     LedSet(color);
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
+    UtilsDelayMs(wait_ms);
     LedSet(COLOR_BLACK);
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(wait_us * 1000));
+    UtilsDelayMs(wait_ms);
   }
 }
 
-static void prebootmgr_blink(int times, int wait_us) {
-  prebootmgr_blink_color(times, wait_us, COLOR_GREEN);
+static void prebootmgr_blink(int times, int wait_ms) {
+  prebootmgr_blink_color(times, wait_ms, COLOR_GREEN);
 }
 
-static void prebootmgr_blink_error(int times, int wait_us) {
+static void prebootmgr_blink_error(int times, int wait_ms) {
   #ifdef FIXED_BOOT_IMAGE
-  prebootmgr_blink_color(times, wait_us, COLOR_BLUE);
+  prebootmgr_blink_color(times, wait_ms, COLOR_BLUE);
   #else
-  prebootmgr_blink_color(times, wait_us, COLOR_GREEN);
+  prebootmgr_blink_color(times, wait_ms, COLOR_GREEN);
   #endif
 }
 
@@ -450,7 +342,7 @@ static bool SdFileExists(char* filename) {
 static uint8_t Selector(uint8_t startNumber) {
   int8_t counter = startNumber;
 
-  while (!aImageInfo[counter].fileExists)
+  while (!Config_imageInfos[counter].fileExists)
   {
     if (counter < 9) {
       counter +=1;
@@ -461,15 +353,15 @@ static uint8_t Selector(uint8_t startNumber) {
 
   LedSet(COLOR_GREEN);
   while (EarSmallPressed()) {
-      UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
+      UtilsDelayMs(10); //Wait while pressed
   }  
   
   uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
   uint8_t curColorId = 0;
-  while (generalSettings.waitForPress)
+  while (Config_generalSettings.waitForPress)
   {
     LedSet(colors[curColorId]);
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(250 * 1000));
+    UtilsDelayMs(250);
     
     if (curColorId<COUNT_OF(colors)-1) {
       curColorId++;
@@ -491,9 +383,9 @@ static uint8_t Selector(uint8_t startNumber) {
           } else {
             counter = 0;
           }
-        } while (!aImageInfo[counter].fileExists);
+        } while (!Config_imageInfos[counter].fileExists);
         while (EarSmallPressed()) {
-            UtilsDelay(UTILS_DELAY_US_TO_COUNT(10 * 1000)); //Wait while pressed
+            UtilsDelayMs(10); //Wait while pressed
         }
     }
     if (counter < 3) {
@@ -503,7 +395,7 @@ static uint8_t Selector(uint8_t startNumber) {
     } else /*if (counter < 9)*/ {
       prebootmgr_blink_color((counter+1)-6, 100, COLOR_CYAN);
     }
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+    UtilsDelayMs(500);
   }
   return counter;
 }
@@ -516,180 +408,10 @@ static bool CheckSdImages() {
   bool hasValidImage = false;
   for (uint8_t i=0; i<IMG_MAX_COUNT; i++)
   {
-    aImageInfo[i].fileExists = SdImageExists(i);
-    hasValidImage |= aImageInfo[i].fileExists;
+    Config_imageInfos[i].fileExists = SdImageExists(i);
+    hasValidImage |= Config_imageInfos[i].fileExists;
   }
   return hasValidImage;
-}
-
-static uint8_t GetImageNumber(char* imageId)
-{
-  uint8_t factor = 0;
-  uint8_t id = 0;
-  if (strncmp(imageId, IMG_OFW_NAME, 3) == 0)
-  {
-    factor = 0;
-  } else if (strncmp(imageId, IMG_CFW_NAME, 3) == 0)
-  {
-    factor = 1;
-  } else if (strncmp(imageId, IMG_ADD_NAME, 3) == 0)
-  {
-    factor = 2;
-  }
-  id = (char)(imageId[3] - 0x31);
-  if (id>=0 && id<3) {
-    return id + 3*factor;
-  }
-  return 0;
-}
-
-char jsonGroupName[8];
-char jsonValueName[17];
-
-jsmn_stream_parser parser;
-void jsmn_start_arr(void *user_arg) {
-    uint8_t test = 1;
-    /* An example of using the user arg / context pointer in a callback */
-    //printf("Array started. Parser id = %d\n", *parser_id);
-}
-void jsmn_end_arr(void *user_arg) {
-    uint8_t test = 1;
-    //printf("Array ended\n");
-}
-void jsmn_start_obj(void *user_arg) {
-    uint8_t test = 1;
-    //printf("Object started\n");
-}
-void jsmn_end_obj(void *user_arg) {
-    uint8_t test = 1;
-    //printf("Object ended\n");
-}
-void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
-    uint8_t len;
-    switch (parser.stack_height)
-    {
-    case 1:
-      len = min(key_len, COUNT_OF(jsonGroupName)-1);
-      strncpy(jsonGroupName, key, len);
-      jsonGroupName[min(key_len, COUNT_OF(jsonGroupName))] = '\0';
-      break;
-    case 3:
-      len = min(key_len, COUNT_OF(jsonValueName)-1);
-      strncpy(jsonValueName, key, len);
-      jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
-      break;
-    }
-}
-void jsmn_str(const char *value, size_t len, void *user_arg) {
-    if (parser.stack_height != 4)
-      return;
-
-    if (strcmp("general", jsonGroupName) == 0)
-    {
-      if (strcmp("activeImg", jsonValueName) == 0)
-      {
-        generalSettings.activeImage = GetImageNumber(value);
-      }
-    }
-    else if (strncmp(jsonGroupName, "ofw", 3) == 0
-      || strncmp(jsonGroupName, "cfw", 3)
-      || strncmp(jsonGroupName, "add", 3))
-    {
-      uint8_t imageNumber = GetImageNumber(jsonGroupName);
-
-    }
-    
-}
-void jsmn_primitive(const char *value, size_t len, void *user_arg) {
-    if (parser.stack_height != 4)
-      return;
-
-    if (strcmp("general", jsonGroupName) == 0)
-    {
-      if (strcmp("waitForPress", jsonValueName) == 0)
-      {
-        generalSettings.waitForPress = (value[0] == 't');
-      }
-    }
-    else if (strncmp(jsonGroupName, "ofw", 3) == 0
-      || strncmp(jsonGroupName, "cfw", 3)
-      || strncmp(jsonGroupName, "add", 3))
-    {
-      uint8_t imageNumber = GetImageNumber(jsonGroupName);
-      if (strcmp("checkHash", jsonValueName) == 0) 
-      {
-        aImageInfo[imageNumber].checkHash = (value[0] == 't');
-      }
-      else if (strcmp("hashFile", jsonValueName) == 0) 
-      {
-        aImageInfo[imageNumber].hashFile = (value[0] == 't');
-      }
-      else if (strcmp("watchdog", jsonValueName) == 0) 
-      {
-        aImageInfo[imageNumber].watchdog = (value[0] == 't');
-      }
-      else if (strcmp("ofwFix", jsonValueName) == 0) 
-      {
-        aImageInfo[imageNumber].ofwFix = (value[0] == 't');
-      }
-    }
-}
-
-jsmn_stream_callbacks_t cbs = {
-    jsmn_start_arr,
-    jsmn_end_arr,
-    jsmn_start_obj,
-    jsmn_end_obj,
-    jsmn_obj_key,
-    jsmn_str,
-    jsmn_primitive
-};
-
-static void btox(char *hexstr, const char *binarr, int hexstrlen) 
-{
-    const char characters[]= "0123456789abcdef";
-    while (--hexstrlen >= 0) {
-      hexstr[hexstrlen] = characters[(binarr[hexstrlen>>1] >> ((1 - (hexstrlen&1)) << 2)) & 0xF];
-    }
-}
-static void initializeConfig() {
-  for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
-  {
-    aImageInfo[i].fileExists = false;
-    aImageInfo[i].checkHash = true;
-    aImageInfo[i].hashFile = false;
-    aImageInfo[i].watchdog = false;
-    aImageInfo[i].ofwFix = false;
-  }
-}
-static void readConfig() {
-  //TODO ERRORS
-
-  FIL ffile;
-  uint8_t ffs_result;
-
-  ffs_result = f_open(&ffile, CFG_SD_PATH, FA_READ);
-  if (ffs_result == FR_OK) {
-    uint32_t filesize = f_size(&ffile);
-    uint32_t bytesRead = 0;
-    uint32_t allBytesRead = 0;
-    
-    jsmn_stream_init(&parser, &cbs, NULL);
-    char buffer[128];
-    while (allBytesRead<filesize)
-    {
-      ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
-      if (ffs_result != FR_OK)
-        break;
-
-      for (uint32_t i = 0; i < bytesRead; i++)
-      {
-        jsmn_stream_parse(&parser, buffer[i]);
-      }
-      allBytesRead += bytesRead;
-    }
-    f_close(&ffile);
-  }
 }
 
 static uint16_t getBatteryLevel()
@@ -781,10 +503,10 @@ int main()
   
   watchdog_start();
   #ifndef FIXED_BOOT_IMAGE
-  initializeConfig();
+  Config_initImageInfos();
   #endif
 
-  UtilsDelay(UTILS_DELAY_US_TO_COUNT(100 * 1000));
+  UtilsDelayMs(100);
   watchdog_stop();
   ffs_result = f_mount(&fatfs, "0", 1);
   if (ffs_result == FR_OK)
@@ -794,12 +516,12 @@ int main()
     if (SdFileExists(image)) {
     #else
     if (CheckSdImages()) {
-      readConfig();
+      Config_readJsonCfg();
 
       retrySelection:
-        generalSettings.activeImage = Selector(generalSettings.activeImage);
+        Config_generalSettings.activeImage = Selector(Config_generalSettings.activeImage);
         
-      uint8_t selectedImgNum = generalSettings.activeImage;
+      uint8_t selectedImgNum = Config_generalSettings.activeImage;
       char* image = GetImagePathById(selectedImgNum);
     #endif
 
@@ -813,7 +535,7 @@ int main()
             f_close(&ffile);
 
             #ifndef FIXED_BOOT_IMAGE
-            if (aImageInfo[selectedImgNum].checkHash) {
+            if (Config_imageInfos[selectedImgNum].checkHash) {
               char hashExp[65];
               char hashAct[65];
               uint8_t hashActRaw[32];
@@ -821,7 +543,7 @@ int main()
               hashExp[64] = '\0';
               hashAct[64] = '\0';
 
-              if (aImageInfo[selectedImgNum].hashFile) {
+              if (Config_imageInfos[selectedImgNum].hashFile) {
                 char* shaFile = HASH_SD_PATH;
                 memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
                 ffs_result = f_open(&ffile, shaFile, FA_READ);
@@ -849,11 +571,11 @@ int main()
 
                 prebootmgr_blink_error(10, 50);
                 
-                generalSettings.waitForPress = true;
+                Config_generalSettings.waitForPress = true;
                 goto retrySelection;
               }
             }
-            if (aImageInfo[selectedImgNum].ofwFix) {
+            if (Config_imageInfos[selectedImgNum].ofwFix) {
               uint32_t* pCheck1 = (uint32_t*)(pImgRun+filesize-0x04);
               uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
               uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
@@ -867,24 +589,24 @@ int main()
             BoardDeinitCustom();
             Run((unsigned long)pImgRun);
           } else {
-              UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+              UtilsDelayMs(1000);
               prebootmgr_blink_error(4, 500);
-              UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+              UtilsDelayMs(2000);
               prebootmgr_blink_error(ffs_result, 1000);
           }
       } else {
-          UtilsDelay(UTILS_DELAY_US_TO_COUNT(1000 * 1000));
+          UtilsDelayMs(1000);
           prebootmgr_blink_error(3, 500);
-          UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+          UtilsDelayMs(2000);
           prebootmgr_blink_error(ffs_result, 1000);
       }
     }
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(2000 * 1000));
+    UtilsDelayMs(2000);
   }
   
-  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  UtilsDelayMs(500);
   prebootmgr_blink_error(2, 500);
-  UtilsDelay(UTILS_DELAY_US_TO_COUNT(500 * 1000));
+  UtilsDelayMs(500);
   prebootmgr_blink_error(ffs_result, 1000);
 
   SlFsFileInfo_t pFsFileInfo;
