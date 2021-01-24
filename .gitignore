@@ -16,3 +16,5 @@ sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-cfw3.sha
 sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw1.bin
 sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw2.bin
 sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw3.bin
+common/debug/sync.py
+common/debug/gdb-dashboard.py
