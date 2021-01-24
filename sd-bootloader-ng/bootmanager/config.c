@@ -7,7 +7,7 @@ static jsmn_stream_parser parser;
 static char jsonGroupName[17];
 static char jsonValueName[17];
 
-static uint8_t GetImageNumber(const char* imageId)
+static uint8_t getImageNumber(const char* imageId)
 {
   uint8_t factor = 0;
   uint8_t id = 0;
@@ -69,14 +69,14 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
     {
       if (strcmp("activeImg", jsonValueName) == 0)
       {
-        Config_generalSettings.activeImage = GetImageNumber(value);
+        Config_generalSettings.activeImage = getImageNumber(value);
       }
     }
     else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
       || strncmp(jsonGroupName, "add", 3))
     {
-      uint8_t imageNumber = GetImageNumber(jsonGroupName);
+      uint8_t imageNumber = getImageNumber(jsonGroupName);
 
     }
     
@@ -96,7 +96,7 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       || strncmp(jsonGroupName, "cfw", 3)
       || strncmp(jsonGroupName, "add", 3))
     {
-      uint8_t imageNumber = GetImageNumber(jsonGroupName);
+      uint8_t imageNumber = getImageNumber(jsonGroupName);
       if (strcmp("checkHash", jsonValueName) == 0) 
       {
         Config_imageInfos[imageNumber].checkHash = (value[0] == 't');
@@ -127,7 +127,7 @@ static jsmn_stream_callbacks_t cbs = {
 };
 
 
-void Config_initImageInfos(void) {
+void Config_InitImageInfos(void) {
   for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
   {
     Config_imageInfos[i].fileExists = false;
@@ -138,7 +138,7 @@ void Config_initImageInfos(void) {
   }
 }
 
-void Config_readJsonCfg(void) {
+void Config_ReadJsonCfg(void) {
   //TODO ERRORS
 
   FIL ffile;

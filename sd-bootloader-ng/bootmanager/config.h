@@ -35,8 +35,8 @@ typedef struct sImageInfo
 extern sGeneralSettings Config_generalSettings;
 extern sImageInfo Config_imageInfos[IMG_MAX_COUNT];
 
-void Config_initImageInfos(void);
-void Config_readJsonCfg(void);
+void Config_InitImageInfos(void);
+void Config_ReadJsonCfg(void);
 
 
 #ifdef __cplusplus

@@ -279,9 +279,9 @@ static void BoardInitCustom(void)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK); //Clock for GPIOAA (Charger)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
 
-  MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
-  MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
-  MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
+  //MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
+  //MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
+  //MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
 
   //Green LED
   MAP_PinTypeGPIO(LED_GREEN_PIN_NUM, PIN_MODE_0, false);
@@ -311,12 +311,9 @@ static void BoardInitCustom(void)
   MAP_PRCMPeripheralReset(PRCM_DTHE);
   
   SdInit();
-
-  sl_Start(NULL, NULL, NULL);
 }
 static void BoardDeinitCustom(void)
 {
-  sl_Stop(30);
   //Power off SD
   MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, POWER_SD_PORT_MASK); //SIC! 
   //Power off other peripherals
@@ -494,16 +491,16 @@ int main()
   //
   BoardInitBase();
   BoardInitCustom();
-
+/*
   uint16_t battery;
   bool charger ;
   battery = getBatteryLevel();
   charger = isChargerConnected();
-  
+  */
   
   watchdog_start();
   #ifndef FIXED_BOOT_IMAGE
-  Config_initImageInfos();
+  Config_InitImageInfos();
   #endif
 
   UtilsDelayMs(100);
@@ -516,7 +513,8 @@ int main()
     if (SdFileExists(image)) {
     #else
     if (CheckSdImages()) {
-      Config_readJsonCfg();
+      Patch_Read("swd");
+      Config_ReadJsonCfg();
 
       retrySelection:
         Config_generalSettings.activeImage = Selector(Config_generalSettings.activeImage);
@@ -611,11 +609,13 @@ int main()
 
   SlFsFileInfo_t pFsFileInfo;
   _i32 fhandle;
+  sl_Start(NULL, NULL, NULL); //for reading flash
   if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
       if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
           if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
               sl_FsClose(fhandle, 0, 0, 0);
               BoardDeinitCustom();
+              sl_Stop(30);
               Run(APP_IMG_SRAM_OFFSET);
           }
       }
