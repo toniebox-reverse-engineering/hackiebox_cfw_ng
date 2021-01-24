@@ -1,16 +1,23 @@
 #include "patch.h"
 
+sSearchAndReplacePatch Patch_searchAndReplace;
+
 static jsmn_stream_parser parser;
 static char jsonGroupName[17];
+static char jsonValueName[17];
+static uint8_t cursor = 0;
 
 static void jsmn_start_arr(void *user_arg) {
-    uint8_t test = 1;
-    /* An example of using the user arg / context pointer in a callback */
-    //printf("Array started. Parser id = %d\n", *parser_id);
+    cursor = 0;
 }
 static void jsmn_end_arr(void *user_arg) {
-    uint8_t test = 1;
-    //printf("Array ended\n");
+    if (strcmp("searchAndReplace", jsonGroupName) == 0) {
+        if (strcmp("search", jsonValueName) == 0) {
+            Patch_searchAndReplace.length = cursor;
+        } else if (strcmp("replace", jsonValueName) == 0) {
+            
+        }
+    }
 }
 static void jsmn_start_obj(void *user_arg) {
     uint8_t test = 1;
@@ -29,15 +36,40 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
       strncpy(jsonGroupName, key, len);
       jsonGroupName[min(key_len, COUNT_OF(jsonGroupName))] = '\0';
       break;
+    case 3:
+    case 4:
+      len = min(key_len, COUNT_OF(jsonValueName)-1);
+      strncpy(jsonValueName, key, len);
+      jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
+      break;
+    case 6:
+        if (strcmp("searchAndReplace", jsonGroupName) == 0 && key_len == 2) {
+            if (cursor >= PATCH_MAX_BYTES)
+                return;
+                
+            char* values;
+            char* mask;
+            if (strcmp("search", jsonValueName) == 0) {
+                values = Patch_searchAndReplace.search;
+                mask = Patch_searchAndReplace.searchMask;
+            } else if (strcmp("replace", jsonValueName) == 0) {
+                values = Patch_searchAndReplace.replace;
+                mask = Patch_searchAndReplace.replaceMask;
+            } 
+            if (strcmp("??", key) == 0) {
+                mask[cursor] = 0x00;
+            } else {
+                values[cursor] = (char)xtob((char*)key);
+                mask[cursor] = 0xFF;
+            }
+            cursor++;
+        }  
+        break;
     }
 }
 static void jsmn_str(const char *value, size_t len, void *user_arg) {
-    if (parser.stack_height != 4)
-      return;
-
-    if (strcmp("general", jsonGroupName) == 0)
-    {
-    }    
+    if (parser.stack_height != 5)
+      return;  
 }
 static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
     if (parser.stack_height != 4)
@@ -58,7 +90,7 @@ static jsmn_stream_callbacks_t cbs = {
     jsmn_primitive
 };
 
-void Patch_read(char* name) {
+void Patch_Read(char* name) {
   //TODO ERRORS
 
   FIL ffile;

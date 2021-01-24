@@ -80,4 +80,6 @@
 #define POWER_PORT_MASK GPIO_PIN_6
 #define CHARGER_PORT_MASK GPIO_PIN_1
 
+#define PATCH_MAX_BYTES 128
+
 #endif

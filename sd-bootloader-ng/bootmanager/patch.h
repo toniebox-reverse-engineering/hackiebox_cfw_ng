@@ -17,7 +17,20 @@ extern "C"
 #include "globalDefines.h"
 #include "helper.h"
 
-void Patch_read(char* name);
+typedef struct sSearchAndReplacePatch
+{
+  uint8_t length;
+
+  char search[PATCH_MAX_BYTES];
+  char searchMask[PATCH_MAX_BYTES];
+
+  char replace[PATCH_MAX_BYTES];
+  char replaceMask[PATCH_MAX_BYTES];
+
+} sSearchAndReplacePatch;
+extern sSearchAndReplacePatch Patch_searchAndReplace;
+
+void Patch_Read(char* name);
 
 #ifdef __cplusplus
 }
