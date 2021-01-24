@@ -1,0 +1,108 @@
+Release notes for
+****************************************************
+GNU Arm Embedded Toolchain 2020-q4-major
+****************************************************
+
+This release includes bare metal pre-built binaries for AArch32 EABI targets,
+which can be hosted on:
+* Windows 10 or later on 32/64-bit architecture
+* Linux
+  - on AArch64 (RHEL 7, Ubuntu 14.04 or later)
+  - on x86_64 (RHEL 7, Ubuntu 16.04 or later)
+* Mac OS X 10.14 or later on 64-bit architecture
+
+For Windows, the binaries are provided with an installer and as a zip file.
+For Linux, the binaries are provided as tarball files.
+For Mac OS X, the binaries are provided as tarball and pkg files.
+
+The release also contains source code package (together with build scripts and
+instructions to setup the build environment), which is composed of:
+
+  * gcc : refs/vendors/ARM/heads/arm-10
+    git://gcc.gnu.org/git/gcc.git commit 3b91aab15443ee150b2ba314a4b26645ce8d713b
+
+  * binutils : binutils-2_35-branch
+    git://sourceware.org/git/binutils-gdb.git commit d9a444bca66bf4b0d328acb547ca114081f3fd87
+
+  * newlib and newlib-nano : newlib-3.3.0
+    git://sourceware.org/git/newlib-cygwin.git commit 6d79e0a58866548f435527798fbd4a6849d05bc7
+
+  * gdb : gdb-10-branch
+    git://sourceware.org/git/binutils-gdb.git commit f3fb4a77f29a99ffa2e1460dfa652081cdbd38be
+
+Note that some or all of the following prerequisites are downloaded when
+building from source:
+
+  * EnvVarUpdate NSIS script :
+    http://nsis.sourceforge.net/mediawiki/images/a/ad/EnvVarUpdate.7z
+
+  * expat 2.1.1 :
+    https://downloads.sourceforge.net/project/expat/expat/2.1.1/expat-2.1.1.tar.bz2
+
+  * gmp 6.1.0 :
+    https://gmplib.org/download/gmp/gmp-6.1.0.tar.bz2
+
+  * isl 0.18 :
+    http://isl.gforge.inria.fr/isl-0.18.tar.xz
+
+  * libelf 0.8.13 :
+    https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz
+
+  * libiconv 1.15 :
+    https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz
+
+  * mpc 1.0.3 :
+    ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
+
+  * mpfr 3.1.4 :
+    http://www.mpfr.org/mpfr-3.1.4/mpfr-3.1.4.tar.bz2
+
+  * python 2.7.7 :
+    https://www.python.org/ftp/python/2.7.7/python-2.7.7.msi
+
+  * zlib 1.2.8 :
+    http://www.zlib.net/fossils/zlib-1.2.8.tar.gz
+
+Features:
+* All GCC 10.2 features
+
+Tests:
+* Targets:
+  + Variety of Cortex-M0/M0+/M3/M4/M7/A9 boards
+  + Qemu
+  + Arm Fast Models
+
+Notable changes in 2020-q4-major release:
+* Added support for:
+  + M-profile Vector Extension (MVE) assembler and intrinsics
+  + Custom Datapath Extension (CDE)
+  + Cortex-M55
+
+* Fixed issue where load or store of __fp16 type together with MVE
+  might generate invalid code.
+
+* Fixed issue https://gcc.gnu.org/bugzilla/show_bug.cgi?id=91816
+  where the compiler was generating a conditional branch in Thumb2,
+  which was too far for b{cond} to handle.
+
+* Fixed internal errors in arm and aarch64 GAS when assembling code
+  that attempts a negative .org.
+
+* Fixed issue https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96191
+  where the -fstack-protector option was leaving the canary value
+  in a temporary register on return from the function.
+
+Known issues:
+* Doing IPA on CMSE generates a linker error:
+The linker will error out when resulting object file contains a symbol for
+the clone function with the __acle_se prefix that has a non-local binding.
+  Issue occurs when compiling binaries for M-profile Secure Extensions where
+the compiler may decide to clone a function with the cmse_nonsecure_entry
+attribute.
+  Although cloning nonsecure entry functions is legal, as long as the clone
+is only used inside the secure application, the clone function itself should
+not be seen as a secure entry point and so it should not have the __acle_se
+prefix.
+  A possible workaround for this is to add a 'noclone' attribute to
+functions with the 'cmse_nonsecure_entry'. This will prevent GCC from cloning
+such functions.
