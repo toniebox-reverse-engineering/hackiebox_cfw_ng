@@ -19,7 +19,7 @@
         "hashFile": false,
         "watchdog": true,
         "ofwFix": true,
-        "patches": ["swd"]
+        "patches": ["swd", "uidCheck.308", "blockCheck.308"]
     },
     "cfw1": {
         "checkHash": true,
