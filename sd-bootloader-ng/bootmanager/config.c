@@ -6,6 +6,7 @@ sImageInfo Config_imageInfos[IMG_MAX_COUNT];
 static jsmn_stream_parser parser;
 static char jsonGroupName[17];
 static char jsonValueName[17];
+static uint8_t jsonArrayId;
 
 static uint8_t getImageNumber(const char* imageId)
 {
@@ -29,9 +30,7 @@ static uint8_t getImageNumber(const char* imageId)
 }
 
 static void jsmn_start_arr(void *user_arg) {
-    uint8_t test = 1;
-    /* An example of using the user arg / context pointer in a callback */
-    //printf("Array started. Parser id = %d\n", *parser_id);
+    jsonArrayId = 0;
 }
 static void jsmn_end_arr(void *user_arg) {
     uint8_t test = 1;
@@ -59,25 +58,36 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
       strncpy(jsonValueName, key, len);
       jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
       break;
+    case 5:
+      if (strncmp(jsonGroupName, "ofw", 3) == 0
+            || strncmp(jsonGroupName, "cfw", 3)
+            || strncmp(jsonGroupName, "add", 3))
+      {
+        if (strcmp("patches", jsonValueName) == 0) {
+          if (key_len < PATCH_MAX_NAME_LENGTH) {
+            uint8_t imageNumber = getImageNumber(jsonGroupName);
+            memcpy(Config_imageInfos[imageNumber].patches[jsonArrayId], key, key_len);
+            Config_imageInfos[imageNumber].patches[jsonArrayId][key_len] = '\0';
+            jsonArrayId++;
+          }
+        }
+      }
+      break;
     }
 }
 static void jsmn_str(const char *value, size_t len, void *user_arg) {
     if (parser.stack_height != 4)
       return;
 
-    if (strcmp("general", jsonGroupName) == 0)
-    {
-      if (strcmp("activeImg", jsonValueName) == 0)
-      {
+    if (strcmp("general", jsonGroupName) == 0) {
+      if (strcmp("activeImg", jsonValueName) == 0) {
         Config_generalSettings.activeImage = getImageNumber(value);
       }
-    }
-    else if (strncmp(jsonGroupName, "ofw", 3) == 0
+    } else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
       || strncmp(jsonGroupName, "add", 3))
     {
       uint8_t imageNumber = getImageNumber(jsonGroupName);
-
     }
     
 }
@@ -85,32 +95,22 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
     if (parser.stack_height != 4)
       return;
 
-    if (strcmp("general", jsonGroupName) == 0)
-    {
-      if (strcmp("waitForPress", jsonValueName) == 0)
-      {
+    if (strcmp("general", jsonGroupName) == 0) {
+      if (strcmp("waitForPress", jsonValueName) == 0) {
         Config_generalSettings.waitForPress = (value[0] == 't');
       }
-    }
-    else if (strncmp(jsonGroupName, "ofw", 3) == 0
+    } else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
       || strncmp(jsonGroupName, "add", 3))
     {
       uint8_t imageNumber = getImageNumber(jsonGroupName);
-      if (strcmp("checkHash", jsonValueName) == 0) 
-      {
+      if (strcmp("checkHash", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].checkHash = (value[0] == 't');
-      }
-      else if (strcmp("hashFile", jsonValueName) == 0) 
-      {
+      } else if (strcmp("hashFile", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].hashFile = (value[0] == 't');
-      }
-      else if (strcmp("watchdog", jsonValueName) == 0) 
-      {
+      } else if (strcmp("watchdog", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].watchdog = (value[0] == 't');
-      }
-      else if (strcmp("ofwFix", jsonValueName) == 0) 
-      {
+      } else if (strcmp("ofwFix", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].ofwFix = (value[0] == 't');
       }
     }
@@ -135,6 +135,9 @@ void Config_InitImageInfos(void) {
     Config_imageInfos[i].hashFile = false;
     Config_imageInfos[i].watchdog = false;
     Config_imageInfos[i].ofwFix = false;
+    for (uint8_t j = 0; j < PATCH_MAX_PER_IMAGE; j++) {
+      Config_imageInfos[i].patches[j][0] = '\0';
+    }
   }
 }
 

@@ -11,21 +11,26 @@ static void jsmn_start_arr(void *user_arg) {
     cursor = 0;
 }
 static void jsmn_end_arr(void *user_arg) {
-    if (strcmp("searchAndReplace", jsonGroupName) == 0) {
-        if (strcmp("search", jsonValueName) == 0) {
+  if (parser.stack_height != 6)
+    return;
+
+  if (strcmp("searchAndReplace", jsonGroupName) == 0) {
+      if (strcmp("search", jsonValueName) == 0 || strcmp("replace", jsonValueName) == 0) {
+          if (Patch_searchAndReplace.length == 0) {
             Patch_searchAndReplace.length = cursor;
-        } else if (strcmp("replace", jsonValueName) == 0) {
-            
-        }
-    }
+          } else {
+            Patch_searchAndReplace.length = min(cursor, Patch_searchAndReplace.length);
+          }
+      } 
+  }
 }
 static void jsmn_start_obj(void *user_arg) {
     uint8_t test = 1;
     //printf("Object started\n");
 }
 static void jsmn_end_obj(void *user_arg) {
-    uint8_t test = 1;
-    //printf("Object ended\n");
+  if (parser.stack_height != 4)
+    return;
 }
 static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
     uint8_t len;
@@ -102,6 +107,8 @@ void Patch_Read(char* name) {
   strcpy(filename, name);
   char* fileext = filename + strlen(filename);
   strcpy(fileext, ".json");
+
+  Patch_searchAndReplace.length = 0;
 
   
   ffs_result = f_open(&ffile, filepath, FA_READ);

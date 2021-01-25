@@ -30,6 +30,7 @@ typedef struct sImageInfo
   bool hashFile;
   bool watchdog;
   bool ofwFix;
+  char patches[PATCH_MAX_PER_IMAGE][PATCH_MAX_NAME_LENGTH];
 } sImageInfo;
 
 extern sGeneralSettings Config_generalSettings;

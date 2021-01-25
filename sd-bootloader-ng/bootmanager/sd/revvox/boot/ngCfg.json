@@ -1,6 +1,6 @@
 {
     "general": {
-        "activeImg": "cfw1",
+        "activeImg": "ofw3",
         "waitForPress": false
     },
     "ofw1": {
@@ -18,7 +18,8 @@
         "checkHash": true,
         "hashFile": false,
         "watchdog": true,
-        "ofwFix": true
+        "ofwFix": true,
+        "patches": ["swd"]
     },
     "cfw1": {
         "checkHash": true,
