@@ -337,7 +337,7 @@ static bool SdFileExists(char* filename) {
 }
 
 #pragma GCC push_options
-#pragma GCC optimize ("O0")
+#pragma GCC optimize ("O0") //Workaround to fix counter behaving weird and allow being set to 8 despite the slot has no file.
 static uint8_t Selector(uint8_t startNumber) {
   int8_t counter = startNumber;
 
