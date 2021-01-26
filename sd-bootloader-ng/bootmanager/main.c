@@ -336,6 +336,8 @@ static bool SdFileExists(char* filename) {
   return false;
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 static uint8_t Selector(uint8_t startNumber) {
   int8_t counter = startNumber;
 
@@ -396,6 +398,7 @@ static uint8_t Selector(uint8_t startNumber) {
   }
   return counter;
 }
+#pragma GCC pop_options
 
 static bool SdImageExists(uint8_t number) {
   char* image = GetImagePathById(number);
