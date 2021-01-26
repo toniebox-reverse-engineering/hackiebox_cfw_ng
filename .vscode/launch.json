@@ -33,7 +33,7 @@
                 "file ./exe/bootmgr.axf",
                 "load",
             ],
-            "preLaunchTask": "Bootmanager: make clean all",
+            "preLaunchTask": "Bootmanager: make debug clean all",
             "runToMain": true,
         }
     ]
