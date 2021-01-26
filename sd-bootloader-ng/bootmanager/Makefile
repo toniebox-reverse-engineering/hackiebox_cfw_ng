@@ -45,8 +45,12 @@ ROOT=../..
 #
 # Set optimization level and linkscript
 #
-OPT_LEVEL=0
+#OPT_LEVEL=s
 ADD_LINK_SCRIPT=${PWD}/concatBootmanagerRelocator.sh
+
+ifndef LINK_FILE
+LINK_FILE=bootmgr.ld
+endif
 
 #
 # Include the common make definitions.
@@ -121,7 +125,7 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/startup_${COMPILER}.o
 ${BINDIR}/bootmgr.axf: ${SDKROOT}/simplelink/${COMPILER}/${BINDIR}/libsimplelink_nonos_opt.a
 ${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/${BINDIR}/libdriver.a
 
-SCATTERgcc_bootmgr=bootmgr.ld
+SCATTERgcc_bootmgr=${LINK_FILE}
 ENTRY_bootmgr=ResetISR
 
 #

@@ -100,6 +100,46 @@
                 "reveal": "silent",
                 "clear": true
             }
+        },        {
+            "label": "Bootmanager: make debug all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefileDebug",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
+        },
+        {
+            "label": "Bootmanager: make debug clean all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefileDebug",
+                "clean",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         },
         {
             "label": "Bootmanager: make clean",
