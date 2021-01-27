@@ -320,10 +320,10 @@ static void BoardDeinitCustom(void)
   MAP_GPIOPinWrite(POWER_PORT, POWER_PORT_MASK, 0x00);
 }
 
-static bool EarSmallPressed(void) {
+static volatile bool EarSmallPressed(void) {
   return !(EAR_SMALL_PORT_MASK & MAP_GPIOPinRead(EAR_SMALL_PORT, EAR_SMALL_PORT_MASK));
 }
-static bool EarBigPressed(void) {
+static volatile bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
 }
 
@@ -336,18 +336,14 @@ static bool SdFileExists(char* filename) {
   return false;
 }
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0") //Workaround to fix counter behaving weird and allow being set to 8 despite the slot has no file.
+//#pragma GCC push_options
+//#pragma GCC optimize ("O0") //Workaround to fix counter behaving weird and allow being set to 8 despite the slot has no file.
 static uint8_t Selector(uint8_t startNumber) {
   int8_t counter = startNumber;
 
   while (!Config_imageInfos[counter].fileExists)
   {
-    if (counter < 9) {
-      counter +=1;
-    } else {
-      counter = 0;
-    }
+    counter = (counter+1) % COUNT_OF(Config_imageInfos);
   }
 
   LedSet(COLOR_GREEN);
@@ -377,11 +373,7 @@ static uint8_t Selector(uint8_t startNumber) {
     if (EarSmallPressed()) {
         do
         {
-          if (counter < 9) {
-            counter +=1;
-          } else {
-            counter = 0;
-          }
+          counter = (counter+1) % COUNT_OF(Config_imageInfos);
         } while (!Config_imageInfos[counter].fileExists);
         while (EarSmallPressed()) {
             UtilsDelayMs(10); //Wait while pressed
@@ -398,7 +390,7 @@ static uint8_t Selector(uint8_t startNumber) {
   }
   return counter;
 }
-#pragma GCC pop_options
+//#pragma GCC pop_options
 
 static bool SdImageExists(uint8_t number) {
   char* image = GetImagePathById(number);
