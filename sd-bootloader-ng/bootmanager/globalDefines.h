@@ -31,7 +31,7 @@
 #define CFG_SD_PATH SD_PATH_BASE "ngCfg.json"
 #define PATCH_SD_BASE_PATH SD_PATH_BASE "patch/"
 
-#define IMG_SD_BOOTLOADER_NAME "ngBootloader.bin"
+#define IMG_SD_BOOTLOADER_NAME "ngbootloader.bin"
 #define IMG_SD_BOOTLOADER_PATH SD_PATH_BASE IMG_SD_BOOTLOADER_NAME
 
 #define HASH_SD_NAME "ng-CCCN.sha"
