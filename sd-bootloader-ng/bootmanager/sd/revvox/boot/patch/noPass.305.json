@@ -1,8 +1,10 @@
 {
-    "searchAndReplace": [{
+    "general": {
         "_desc": "After two failed tag passwords attempts, the box may try it without a password.",
         "_memPos": "",
-        "_fwver": "3.0.5+",
+        "_fwVer": "3.0.5+"
+    },
+    "searchAndReplace": [{
         "search":  ["4f", "f0", "0f", "31", "??", "aa", "00", "20", "11", "91", "??", "??", "??", "??", "05", "28", "04", "46", "??", "d1"],
         "replace": ["??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "00", "20", "??", "??", "??", "e0"]
     }]
