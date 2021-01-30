@@ -49,6 +49,7 @@ Its sha256 hash should be *e86749c2e47f6c87eb462516e56a0a9ad215f38beb312cc77785c
 2) Select *Local file* "ngpreloader.bin"
 3) Set *Overwrite* to "on"
 4) Set *SD/Flash path*  to "/sys/mcuimg.bin"
+5) Press *Upload*!
 
 #### Verification
 To verify that the upload was successful you can download the mcuimg.bin from flash afterwards and compare it with the ng-preloader.bin you have just uploaded.
