@@ -6,7 +6,7 @@
     "ofw1": {
         "checkHash": true,
         "hashFile": true,
-        "watchdog": false
+        "watchdog": true
     },
     "ofw2": {
         "checkHash": true,
@@ -24,17 +24,17 @@
     "cfw1": {
         "checkHash": true,
         "hashFile": true,
-        "watchdog": false
+        "watchdog": true
     },
     "cfw2": {
         "checkHash": true,
         "hashFile": true,
-        "watchdog": false
+        "watchdog": true
     },
     "cfw3": {
         "checkHash": true,
         "hashFile": true,
-        "watchdog": false
+        "watchdog": true
     },
     "add1": {
         "checkHash": false,

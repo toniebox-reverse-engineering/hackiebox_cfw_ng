@@ -242,6 +242,46 @@ static void prebootmgr_blink_error(int times, int wait_ms) {
   #endif
 }
 
+uint8_t watchdog_feed_state;
+static void watchdog_feed() {
+  watchdog_feed_state = WATCHDOG_TIMEOUT_S;
+}
+static void watchdog_unfeed() {
+  watchdog_feed_state = 0;
+}
+static void watchdog_eat() {
+  watchdog_feed_state--;
+}
+void watchdog_handler() {
+  if (watchdog_feed_state > 0) {
+    MAP_WatchdogIntClear(WDT_BASE);
+    watchdog_eat();
+  }
+}
+bool watchdogInitialized = false;
+static bool watchdog_start() {
+  watchdogInitialized = true;
+  watchdog_feed();
+
+  MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
+  MAP_WatchdogUnlock(WDT_BASE);
+  MAP_IntPrioritySet(INT_WDT, INT_PRIORITY_LVL_1);
+  MAP_WatchdogIntRegister(WDT_BASE, watchdog_handler);
+  MAP_WatchdogReloadSet(WDT_BASE, 80000000*1); //Tick every second
+  MAP_WatchdogEnable(WDT_BASE);
+
+  return MAP_WatchdogRunning(WDT_BASE);
+}
+static void watchdog_stop() {
+  if (!watchdogInitialized)
+    return;
+  MAP_WatchdogUnlock(WDT_BASE);
+  MAP_WatchdogStallDisable(WDT_BASE);
+  MAP_WatchdogIntClear(WDT_BASE);
+  MAP_WatchdogIntUnregister(WDT_BASE);
+  watchdogInitialized = false;
+}
+
 static void SdInit(void)
 {
   //Power SD
@@ -314,6 +354,7 @@ static void BoardInitCustom(void)
 }
 static void BoardDeinitCustom(void)
 {
+  watchdog_feed();
   //Power off SD
   MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, POWER_SD_PORT_MASK); //SIC! 
   //Power off other peripherals
@@ -348,7 +389,8 @@ static uint8_t Selector(uint8_t startNumber) {
 
   LedSet(COLOR_GREEN);
   while (EarSmallPressed()) {
-      UtilsDelayMs(10); //Wait while pressed
+    UtilsDelayMs(10); //Wait while pressed
+    watchdog_feed();
   }  
   
   uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
@@ -356,7 +398,8 @@ static uint8_t Selector(uint8_t startNumber) {
   if (Config_generalSettings.waitForPress) {
     LedSet(COLOR_BLUE);
     while (EarSmallPressed() || EarBigPressed()) {
-        UtilsDelayMs(10); //Wait while pressed
+      UtilsDelayMs(10); //Wait while pressed
+      watchdog_feed();
     } 
   }
   while (Config_generalSettings.waitForPress)
@@ -372,6 +415,8 @@ static uint8_t Selector(uint8_t startNumber) {
 
     if (EarBigPressed())
       break;
+    
+    watchdog_feed();
   } 
 
   LedSet(COLOR_BLACK);
@@ -393,6 +438,7 @@ static uint8_t Selector(uint8_t startNumber) {
       prebootmgr_blink_color((counter+1)-6, 100, COLOR_CYAN);
     }
     UtilsDelayMs(500);
+    watchdog_feed();
   }
   return counter;
 }
@@ -442,42 +488,12 @@ static bool isChargerConnected()
   return (CHARGER_PORT_MASK & MAP_GPIOPinRead(CHARGER_PORT, CHARGER_PORT_MASK));
 }
 
-//*****************************************************************************
-//
-//! Main function
-//!
-//! This is the main function for this application bootloader
-//!
-//! \return None
-//
-//*****************************************************************************
-void watchdog_handler() {
-  MAP_WatchdogIntClear(WDT_BASE);
-}
-bool watchdog_start() {
-    //watchdog_feed();
-
-    MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);/*
-    MAP_WatchdogUnlock(WDT_BASE);
-    MAP_IntPrioritySet(INT_WDT, INT_PRIORITY_LVL_1);
-    MAP_WatchdogIntRegister(WDT_BASE, watchdog_handler); //TODO
-    MAP_WatchdogReloadSet(WDT_BASE, 80000000*15); //15s
-    MAP_WatchdogEnable(WDT_BASE);*/
-
-    return MAP_WatchdogRunning(WDT_BASE);
-}
-void watchdog_stop() {  /*
-    MAP_WatchdogUnlock(WDT_BASE);
-    MAP_WatchdogStallDisable(WDT_BASE);
-    MAP_WatchdogIntClear(WDT_BASE);
-    MAP_WatchdogIntUnregister(WDT_BASE);*/
-}
-void hibernate() {
-    //enable ear wakeup interrupt
-    PRCMHibernateWakeupSourceEnable(PRCM_HIB_GPIO2 | PRCM_HIB_GPIO4);
-    //TODO
-    //Utils_SpiFlashDeepPowerDown();
-    PRCMHibernateEnter();
+static void hibernate() {
+  watchdog_stop();
+  BoardDeinitCustom();
+  
+  PRCMHibernateWakeupSourceEnable(PRCM_HIB_GPIO2 | PRCM_HIB_GPIO4); //enable ear wakeup interrupt
+  PRCMHibernateEnter();
 }
 
 int main()
@@ -487,25 +503,29 @@ int main()
   FIL ffile;
   uint8_t ffs_result;
 
-  //
-  // Board Initialization
-  //
+
   BoardInitBase();
   BoardInitCustom();
+  watchdog_start();
 /*
   uint16_t battery;
   bool charger ;
   battery = getBatteryLevel();
   charger = isChargerConnected();
   */
+  if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
+    prebootmgr_blink_error(5, 33);
+    prebootmgr_blink_error(5, 66);
+    prebootmgr_blink_error(5, 33);
+
+    hibernate();
+  }
   
-  watchdog_start();
   #ifndef FIXED_BOOT_IMAGE
   Config_InitImageInfos();
   #endif
 
   UtilsDelayMs(100);
-  watchdog_stop();
   ffs_result = f_mount(&fatfs, "0", 1);
   if (ffs_result == FR_OK)
     {
@@ -620,8 +640,8 @@ int main()
                 }
               }
             }
-            
-
+            if (!Config_imageInfos[selectedImgNum].watchdog)
+              watchdog_stop();
             #endif
 
             BoardDeinitCustom();
@@ -654,23 +674,20 @@ int main()
       if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
           if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
               sl_FsClose(fhandle, 0, 0, 0);
-              BoardDeinitCustom();
               sl_Stop(30);
+              BoardDeinitCustom();
               Run(APP_IMG_SRAM_OFFSET);
           }
       }
   }
   
-  while (true)
-  {
-    prebootmgr_blink_error(3, 33);
-    prebootmgr_blink_error(3, 66);
-    prebootmgr_blink_error(3, 33);
+  prebootmgr_blink_error(3, 33);
+  prebootmgr_blink_error(3, 66);
+  prebootmgr_blink_error(3, 33);
 
-    __asm volatile(" dsb \n"
-                   " isb \n"
-                   " wfi \n");
-  }
+  sl_Stop(30);
+  
+  hibernate();
 }
 //*****************************************************************************
 // WLAN Event handler callback hookup function

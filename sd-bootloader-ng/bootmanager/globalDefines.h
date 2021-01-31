@@ -3,6 +3,8 @@
 
 //#define FIXED_BOOT_IMAGE
 
+#define WATCHDOG_TIMEOUT_S 15
+
 #define IMG_OFW_ID_1 0
 #define IMG_OFW_ID_2 1
 #define IMG_OFW_ID_3 2
