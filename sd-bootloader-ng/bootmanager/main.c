@@ -353,6 +353,12 @@ static uint8_t Selector(uint8_t startNumber) {
   
   uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
   uint8_t curColorId = 0;
+  if (Config_generalSettings.waitForPress) {
+    LedSet(COLOR_BLUE);
+    while (EarSmallPressed() || EarBigPressed()) {
+        UtilsDelayMs(10); //Wait while pressed
+    } 
+  }
   while (Config_generalSettings.waitForPress)
   {
     LedSet(colors[curColorId]);
