@@ -48,7 +48,7 @@
 	</data>
 	<graph id="G" edgedefault="directed">
 		<data key="d6">
-			<y:Json>{"version":"2.0.0","layout":"layout-flowchart","config":{"noObf_positiveBranchLabel":["yes"],"noObf_negativeBranchLabel":["no"],"noObf_layoutOrientation":"TOP_TO_BOTTOM","noObf_preferredPositiveBranchDirection":1,"noObf_preferredNegativeBranchDirection":12,"noObf_inEdgeGrouping":"optimized","noObf_allowFlatwiseEdges":true,"noObf_nodeToNodeDistance":30,"noObf_minimumEdgeDistance":30,"noObf_minimumEdgeLength":20,"noObf_placeNodeLabels":true},"theme":{"name":"light","version":"1.0.0"}}</y:Json>
+			<y:Json>{"version":"2.0.0","theme":{"name":"light","version":"1.0.0"}}</y:Json>
 		</data>
 		<node id="n0">
 			<data key="d0">1</data>
@@ -112,7 +112,7 @@ available?]]></y:Label.Text>
 			<data key="d4">
 				<x:List>
 					<y:Label LayoutParameter="{x:Static y:InteriorStretchLabelModel.Center}">
-						<y:Label.Text>Stop</y:Label.Text>
+						<y:Label.Text>hibernation</y:Label.Text>
 						<y:Label.Style>
 							<yjs:DefaultLabelStyle verticalTextAlignment="CENTER" horizontalTextAlignment="CENTER" clipText="false" font="{y:GraphMLReference 1}" textFill="BLACK"/>
 						</y:Label.Style>
@@ -120,16 +120,12 @@ available?]]></y:Label.Text>
 				</x:List>
 			</data>
 			<data key="d5">
-				<y:RectD X="390.5" Y="441" Width="50" Height="30"/>
+				<y:RectD X="356" Y="435" Width="124" Height="30"/>
 			</data>
 			<data key="d7">
 				<demostyle:FlowchartNodeStyle type="terminator" fill="#FFFD2C2C"/>
 			</data>
-			<port name="p0">
-				<data key="d16">
-					<y:FreeNodePortLocationModelParameter Ratio="0.5,0"/>
-				</data>
-			</port>
+			<port name="p0"/>
 		</node>
 		<node id="n3">
 			<data key="d0">5</data>
@@ -240,7 +236,7 @@ and run]]></y:Label.Text>
 			</port>
 			<port name="p1">
 				<data key="d16">
-					<y:FreeNodePortLocationModelParameter Ratio="0.5,1"/>
+					<y:FreeNodePortLocationModelParameter Ratio="0.5,0.9838709677419355"/>
 				</data>
 			</port>
 		</node>
@@ -327,22 +323,27 @@ and run]]></y:Label.Text>
 				<y:GraphMLReference ResourceKey="10"/>
 			</data>
 		</edge>
-		<edge id="e4" source="n6" target="n2" sourceport="p1" targetport="p0">
+		<edge id="e4" source="n7" target="n1" sourceport="p0" targetport="p1">
 			<data key="d13">
 				<y:GraphMLReference ResourceKey="10"/>
 			</data>
 		</edge>
-		<edge id="e5" source="n7" target="n1" sourceport="p0" targetport="p1">
+		<edge id="e5" source="n0" target="n7" sourceport="p0" targetport="p1">
 			<data key="d13">
 				<y:GraphMLReference ResourceKey="10"/>
 			</data>
 		</edge>
-		<edge id="e6" source="n0" target="n7" sourceport="p0" targetport="p1">
+		<edge id="e6" source="n1" target="n4" sourceport="p2" targetport="p1">
 			<data key="d13">
-				<y:GraphMLReference ResourceKey="10"/>
+				<yjs:PolylineEdgeStyle stroke="{y:GraphMLReference 7}" targetArrow="{y:GraphMLReference 11}"/>
 			</data>
 		</edge>
-		<edge id="e7" source="n1" target="n4" sourceport="p2" targetport="p1">
+		<edge id="e7" source="n6" target="n2" sourceport="p1" targetport="p0">
+			<data key="d12">
+				<x:List>
+					<y:Bend Location="418,378.5322580645161"/>
+				</x:List>
+			</data>
 			<data key="d13">
 				<yjs:PolylineEdgeStyle stroke="{y:GraphMLReference 7}" targetArrow="{y:GraphMLReference 11}"/>
 			</data>
