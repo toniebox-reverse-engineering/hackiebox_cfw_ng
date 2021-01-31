@@ -159,6 +159,108 @@
                 "reveal": "silent",
                 "clear": true
             }
+        },
+
+        {
+            "label": "Preloader: make all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefilePreloader",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
+        },
+        {
+            "label": "Preloader: make clean all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefilePreloader",
+                "clean",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
+        },        {
+            "label": "Preloader: make debug all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefileDebugPreloader",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
+        },
+        {
+            "label": "Preloader: make debug clean all",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefileDebugPreloader",
+                "clean",
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
+        },
+        {
+            "label": "Preloader: make clean",
+            "options": {
+                "cwd": "${workspaceFolder}/sd-bootloader-ng/bootmanager"
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f", "MakefilePreloader",
+                "clean"
+            ],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true
+            }
         }
     ]
 }
