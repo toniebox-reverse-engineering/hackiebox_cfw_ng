@@ -132,7 +132,8 @@ CFLAGS=-mthumb             \
        -std=c99            \
        -g3 				   \
        -O${OPT_LEVEL}	   \
-       -c 
+       -c                  \
+	   -DTARGET_IS_CC3200
 
 #
 # The command for calling the library archiver.
