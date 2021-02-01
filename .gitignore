@@ -18,3 +18,6 @@ sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw2.bin
 sd-bootloader-ng/bootmanager/sd/revvox/boot/ng-ofw3.bin
 common/debug/sync.py
 common/debug/gdb-dashboard.py
+
+#Keep ARM SDK files
+!/arm-sdk/**
