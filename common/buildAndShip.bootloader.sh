@@ -1,5 +1,9 @@
 #!/bin/bash
+set -e 
 
+#Change into script directory
+cd $(cd -P -- "$(dirname -- "$0")" && pwd -P)
+#Change to repository root
 cd ..
 ROOT=$PWD
 OUT_DIR=${ROOT}/exe/sd-bootloader-ng
@@ -16,12 +20,12 @@ BOOTMGR_DES_DIR=${OUT_DIR}/sd/revvox/boot
 PRELOAD_DES_BIN=${PRELOAD_DES_DIR}/mcuimg.bin
 BOOTMGR_DES_BIN=${BOOTMGR_DES_DIR}/ngbootloader.bin
 
-if [ -d "$RELOC_DIR" ] && [ -d "$RELOC_DIR" ]; then
+if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo Clean output directory
-    rm -f ${OUT_FILE}
+    rm -f ${OUT_FILE} | tee "ignore.log"
     rm -rf ${OUT_DIR}
     echo Create output directory
-    mkdir ${OUT_DIR}
+    mkdir -p ${OUT_DIR}
     mkdir -p ${PRELOAD_DES_DIR}
     mkdir -p ${BOOTMGR_DES_DIR}/patch
 
@@ -50,5 +54,7 @@ if [ -d "$RELOC_DIR" ] && [ -d "$RELOC_DIR" ]; then
 
     zip -r ${OUT_FILE} ${OUT_DIR}
 else
-    echo Wrong directory...
+    echo Wrong directory, missing subdirectories...
+    echo ROOT=${ROOT}
+    exit 1
 fi
