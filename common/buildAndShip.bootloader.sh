@@ -8,6 +8,8 @@ cd ..
 ROOT=$PWD
 
 source ${ROOT}/common/make/sdkPath
+source ${ROOT}/common/make/armGccPath
+export PATH="${ARMGCC_BIN}:$PATH"
 
 OUT_DIR=${ROOT}/exe/sd-bootloader-ng
 OUT_FILE=${ROOT}/exe/sd-bootloader-ng.zip
