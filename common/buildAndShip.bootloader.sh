@@ -6,8 +6,13 @@ cd $(cd -P -- "$(dirname -- "$0")" && pwd -P)
 #Change to repository root
 cd ..
 ROOT=$PWD
+
+source ${ROOT}/common/make/sdkPath
+
 OUT_DIR=${ROOT}/exe/sd-bootloader-ng
 OUT_FILE=${ROOT}/exe/sd-bootloader-ng.zip
+
+DRIVELIB_DIR=${SDKROOT}/driverlib/gcc
 RELOC_DIR=${ROOT}/sd-bootloader-ng/relocator
 BOOTMGR_DIR=${ROOT}/sd-bootloader-ng/bootmanager
 
@@ -22,12 +27,16 @@ BOOTMGR_DES_BIN=${BOOTMGR_DES_DIR}/ngbootloader.bin
 
 if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo Clean output directory
-    rm -f ${OUT_FILE} | tee "ignore.log"
+    rm -f ${OUT_FILE}
     rm -rf ${OUT_DIR}
     echo Create output directory
     mkdir -p ${OUT_DIR}
     mkdir -p ${PRELOAD_DES_DIR}
     mkdir -p ${BOOTMGR_DES_DIR}/patch
+
+    echo Build driverlib
+    cd ${DRIVELIB_DIR}
+    make -f ${ROOT}/common/make/MakefileDriverlib clean all
 
     echo Build relocator
     cd ${RELOC_DIR}
