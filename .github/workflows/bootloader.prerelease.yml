@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Install libnewlib for arm
-      run: sudo apt-get install libnewlib-arm-none-eabi=3.1.0.20181231-1
+      run: sudo apt-get install libnewlib-arm-none-eabi
 
     - name: Get current datetime
       id: get-datetime
