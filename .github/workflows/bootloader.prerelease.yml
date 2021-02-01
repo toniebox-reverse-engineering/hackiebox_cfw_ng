@@ -21,6 +21,12 @@ jobs:
     - name: Build and zip Bootloader
       id:  build-zip-bootloader
       run: ./common/buildAndShip.bootloader.sh
+    
+    - name: Check release existence
+      id: check_release
+      uses: andstor/file-existence-action@v1
+      with:
+        files: "./exe/sd-bootloader-ng.zip"  
       
     - name: Create Release
       id: create_release
@@ -28,8 +34,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
       with:
-        tag_name: nightly_${{ env.CURRENT_DATE }}_${{ github.ref }}
-        release_name: Nightly ${{ env.CURRENT_DATE }} - ${{ github.ref }}
+        tag_name: nightly_${{ env.CURRENT_DATE }}_${{ github.sha }}
+        release_name: Nightly ${{ env.CURRENT_DATE }} - ${{ github.sha }}
         draft: true
         prerelease: true
         
