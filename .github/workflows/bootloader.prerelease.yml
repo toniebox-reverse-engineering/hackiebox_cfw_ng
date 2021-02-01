@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install build
-      run: sudo apt-get install gcc-arm-none-eabi binutils-arm-none-eabi
-
     - name: Get current datetime
       id: get-datetime
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
