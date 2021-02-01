@@ -20,4 +20,4 @@ common/debug/sync.py
 common/debug/gdb-dashboard.py
 
 #Keep ARM SDK files
-!/arm-sdk/**
+!arm-sdk/**
