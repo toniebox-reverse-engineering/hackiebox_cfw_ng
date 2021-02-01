@@ -139,12 +139,12 @@ CFLAGS=-mthumb             \
 #
 # The command for calling the library archiver.
 #
-AR=${PREFIX}-ar
+AR=${ARMGCC_ROOT}/${PREFIX}-ar
 
 #
 # The command for calling the linker.
 #
-LD=${PREFIX}-ld 
+LD=${ARMGCC_ROOT}/${PREFIX}-ld 
 
 #
 # The flags passed to the linker.
@@ -170,7 +170,7 @@ LIBM:=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
 #
 # The command for extracting images from the linked executables.
 #
-OBJCOPY=${PREFIX}-objcopy
+OBJCOPY=${ARMGCC_ROOT}/${PREFIX}-objcopy
 
 #
 # The script for additional linking scripts
