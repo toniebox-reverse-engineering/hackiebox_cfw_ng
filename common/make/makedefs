@@ -95,9 +95,7 @@ PREFIX=arm-none-eabi
 #
 # The command for calling the compiler.
 #
-#CC=${PREFIX}-gcc
-CC_VERSION=10-2020-q4-major
-CC=${ROOT}/arm-sdk/${CC_VERSION}/bin/${PREFIX}-gcc
+CC=${PREFIX}-gcc
 
 #
 # The location of the C compiler
