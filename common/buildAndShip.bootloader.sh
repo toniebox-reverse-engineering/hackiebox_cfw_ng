@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e 
 
 #Change into script directory
 cd $(cd -P -- "$(dirname -- "$0")" && pwd -P)
@@ -21,10 +22,10 @@ BOOTMGR_DES_BIN=${BOOTMGR_DES_DIR}/ngbootloader.bin
 
 if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo Clean output directory
-    rm -f ${OUT_FILE}
-    rm -rf ${OUT_DIR}
+    rm -f ${OUT_FILE} | /dev/null
+    rm -rf ${OUT_DIR} | /dev/null
     echo Create output directory
-    mkdir ${OUT_DIR}
+    mkdir -p ${OUT_DIR}
     mkdir -p ${PRELOAD_DES_DIR}
     mkdir -p ${BOOTMGR_DES_DIR}/patch
 
