@@ -1,6 +1,8 @@
 #!/bin/bash
 
-$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+#Change into script directory
+cd $(cd -P -- "$(dirname -- "$0")" && pwd -P)
+#Change to repository root
 cd ..
 ROOT=$PWD
 OUT_DIR=${ROOT}/exe/sd-bootloader-ng
@@ -17,7 +19,7 @@ BOOTMGR_DES_DIR=${OUT_DIR}/sd/revvox/boot
 PRELOAD_DES_BIN=${PRELOAD_DES_DIR}/mcuimg.bin
 BOOTMGR_DES_BIN=${BOOTMGR_DES_DIR}/ngbootloader.bin
 
-if [ -d "$RELOC_DIR" ] && [ -d "$RELOC_DIR" ]; then
+if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo Clean output directory
     rm -f ${OUT_FILE}
     rm -rf ${OUT_DIR}
