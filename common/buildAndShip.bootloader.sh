@@ -1,5 +1,6 @@
 #!/bin/bash
 
+$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd ..
 ROOT=$PWD
 OUT_DIR=${ROOT}/exe/sd-bootloader-ng
@@ -50,5 +51,7 @@ if [ -d "$RELOC_DIR" ] && [ -d "$RELOC_DIR" ]; then
 
     zip -r ${OUT_FILE} ${OUT_DIR}
 else
-    echo Wrong directory...
+    echo Wrong directory, missing subdirectories...
+    echo ROOT=${ROOT}
+    exit 1
 fi
