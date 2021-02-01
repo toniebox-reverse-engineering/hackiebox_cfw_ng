@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install libnewlib for arm
+      run: sudo apt-get install libnewlib-arm-none-eabi=3.1.0.20181231-1
+
     - name: Get current datetime
       id: get-datetime
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
