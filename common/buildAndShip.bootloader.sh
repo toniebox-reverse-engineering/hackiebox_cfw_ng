@@ -22,8 +22,8 @@ BOOTMGR_DES_BIN=${BOOTMGR_DES_DIR}/ngbootloader.bin
 
 if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo Clean output directory
-    rm -f ${OUT_FILE} | /dev/null
-    rm -rf ${OUT_DIR} | /dev/null
+    rm -f ${OUT_FILE} | tee "ignore.log"
+    rm -rf ${OUT_DIR}
     echo Create output directory
     mkdir -p ${OUT_DIR}
     mkdir -p ${PRELOAD_DES_DIR}
