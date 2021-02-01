@@ -39,8 +39,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
       with:
-        tag_name: nightly_${{ env.CURRENT_DATE }}-${{ env.GITHUB_RUN_NUMBER }}
-        release_name: Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ env.GITHUB_RUN_NUMBER }}
+        tag_name: nightly_${{ env.CURRENT_DATE }}-${{ github.run_number }}
+        release_name: Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}
         draft: true
         prerelease: true
         
@@ -52,5 +52,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./exe/sd-bootloader-ng.zip
-        asset_name: hackiebox_cfw_ng.bootloader.nightly_${{ env.CURRENT_DATE }}-${{ env.GITHUB_RUN_NUMBER }}.zip
+        asset_name: hackiebox_cfw_ng.bootloader.nightly_${{ env.CURRENT_DATE }}-${{ github.run_number }}.zip
         asset_content_type: application/zip

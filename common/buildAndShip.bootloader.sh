@@ -73,7 +73,8 @@ if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     cp ${BOOTMGR_SRC_SD}/ng-ofw1.sha ${BOOTMGR_DES_DIR}/ng-ofw1.sha
     cp ${BOOTMGR_SRC_SD}/patch/* ${BOOTMGR_DES_DIR}/patch/
 
-    zip -r ${OUT_FILE} ${OUT_DIR}
+    cd ${OUT_DIR}
+    zip -r ${OUT_FILE} *
 else
     echo Wrong directory, missing subdirectories...
     echo ROOT=${ROOT}
