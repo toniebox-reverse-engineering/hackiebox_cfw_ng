@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install libnewlib for arm
-      run: sudo apt-get install libnewlib-arm-none-eabi
+    - name: Install libnewlib for arm / build-essential
+      run: sudo apt-get install libnewlib-arm-none-eabi build-essential
 
     - name: Get current datetime
       id: get-datetime
