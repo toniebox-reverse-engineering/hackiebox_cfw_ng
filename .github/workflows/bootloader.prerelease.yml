@@ -22,11 +22,15 @@ jobs:
       id:  build-zip-bootloader
       run: ./common/buildAndShip.bootloader.sh
     
-    - name: Check release existence
+    - name: Check files existence
       id: check_release
       uses: andstor/file-existence-action@v1
       with:
         files: "./exe/sd-bootloader-ng.zip"  
+    
+    - name: File exists
+      if: steps.check_files.outputs.files_exists == 'true'
+      run: echo All files exists!
       
     - name: Create Release
       id: create_release
