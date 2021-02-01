@@ -17,4 +17,4 @@ The HackieboxNG SD bootloader consists of two parts. The bootloader itself that 
 ## HackieboxNG SD firmware
 TBD
 
-[Chech out the wiki for more detailed information](https://github.com/toniebox-reverse-engineering/hackiebox_cfw/wiki)
+[Chech out the wiki for more detailed information](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/wiki)
