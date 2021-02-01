@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install libnewlib for arm / build-essential
-      run: sudo apt-get install libnewlib-arm-none-eabi build-essential
+    - name: Install build
+      run: sudo apt-get install gcc-arm-none-eabi binutils-arm-none-eabi gdb-arm-none-eabi openocd
 
     - name: Get current datetime
       id: get-datetime
