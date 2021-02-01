@@ -15,6 +15,7 @@ OUT_DIR=${ROOT}/exe/sd-bootloader-ng
 OUT_FILE=${ROOT}/exe/sd-bootloader-ng.zip
 
 DRIVELIB_DIR=${SDKROOT}/driverlib/gcc
+SIMPLELINK_DIR=${SDKROOT}/simplelink/gcc
 RELOC_DIR=${ROOT}/sd-bootloader-ng/relocator
 BOOTMGR_DIR=${ROOT}/sd-bootloader-ng/bootmanager
 
@@ -31,15 +32,24 @@ if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo Clean output directory
     rm -f ${OUT_FILE}
     rm -rf ${OUT_DIR}
+
+    echo 
     echo Create output directory
     mkdir -p ${OUT_DIR}
     mkdir -p ${PRELOAD_DES_DIR}
     mkdir -p ${BOOTMGR_DES_DIR}/patch
 
+    echo 
     echo Build driverlib
     cd ${DRIVELIB_DIR}
     make -f ${ROOT}/common/make/MakefileDriverlib clean all
 
+    echo 
+    echo Build libsimplelink_nonos_opt
+    cd ${SIMPLELINK_DIR}
+    make -f ${ROOT}/common/make/MakefileSimplelink_opt target=NONOS clean all
+
+    echo 
     echo Build relocator
     cd ${RELOC_DIR}
     make -f Makefile clean all
