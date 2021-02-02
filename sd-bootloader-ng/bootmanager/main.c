@@ -87,29 +87,10 @@ static FATFS fatfs;
 #include "globalDefines.h"
 #include "watchdog.h"
 
+#include "wiring.h"
 
-char imagePath[] = IMG_SD_PATH; //TODO!
-static char* GetImagePathById(uint8_t number) {
-  //char* imagePath;
-  char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
-  char* name;
 
-  if (number < 3) {
-    name = IMG_OFW_NAME;
-  } else if (number < 6) {
-    name = IMG_CFW_NAME;
-  } else /*if (number < 9)*/ {
-    name = IMG_ADD_NAME;
-  }
-
-  for (uint8_t i=0; i<3; i++)
-  {
-    imagePath[IMG_SD_PATH_REPL1_POS+i] = name[i];
-  }
-  imagePath[IMG_SD_PATH_REPL2_POS] = id;
-
-  return imagePath;
-}
+static char imagePath[] = IMG_SD_PATH;
 //*****************************************************************************
 // Vector Table
 extern void (*const g_pfnVectors[])(void);
@@ -157,7 +138,7 @@ BoardInitBase(void)
 //! \return None.
 //
 //*****************************************************************************
-void Run(unsigned long ulBaseLoc)
+static void Run(unsigned long ulBaseLoc)
 {
 
   //
@@ -327,6 +308,92 @@ static volatile bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
 }
 
+static char* GetImagePathById(uint8_t number) {
+  char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
+  char* name;
+
+  if (number < 3) {
+    name = IMG_OFW_NAME;
+  } else if (number < 6) {
+    name = IMG_CFW_NAME;
+  } else /*if (number < 9)*/ {
+    name = IMG_ADD_NAME;
+  }
+
+  for (uint8_t i=0; i<3; i++)
+  {
+    imagePath[IMG_SD_PATH_REPL1_POS+i] = name[i];
+  }
+  imagePath[IMG_SD_PATH_REPL2_POS] = id;
+
+  return imagePath;
+}
+static bool SdImageExists(uint8_t number) {
+  char* image = GetImagePathById(number);
+  return SdFileExists(image);
+}
+static bool CheckSdImages() {
+  bool hasValidImage = false;
+  for (uint8_t i=0; i<IMG_MAX_COUNT; i++)
+  {
+    Config_imageInfos[i].fileExists = SdImageExists(i);
+    hasValidImage |= Config_imageInfos[i].fileExists;
+  }
+  return hasValidImage;
+}
+
+static bool isChargerConnected() {
+  return (CHARGER_PORT_MASK & MAP_GPIOPinRead(CHARGER_PORT, CHARGER_PORT_MASK));
+}
+static uint16_t getBatteryLevel()
+{
+  uint16_t channel = ADC_CH_3;
+  uint16_t uiIndex = 0;
+  uint32_t ulSample;
+
+  MAP_PinTypeADC(BATTERY_LEVEL_PIN_NUM, PIN_MODE_255);
+
+	while(MAP_ADCFIFOLvlGet(ADC_BASE, channel))
+    MAP_ADCFIFORead(ADC_BASE, channel); // flush the channel's FIFO if not empty
+
+	MAP_ADCTimerConfig(ADC_BASE,2^17); // Configure ADC timer which is used to timestamp the ADC data samples
+	MAP_ADCTimerEnable(ADC_BASE); // Enable ADC timer which is used to timestamp the ADC data samples
+	MAP_ADCEnable(ADC_BASE); // Enable ADC module
+	MAP_ADCChannelEnable(ADC_BASE, channel); // Enable ADC channel
+
+  while(!MAP_ADCFIFOLvlGet(ADC_BASE, channel)) { }
+  ulSample = MAP_ADCFIFORead(ADC_BASE, channel);
+
+  MAP_ADCDisable(ADC_BASE);
+  MAP_ADCChannelDisable(ADC_BASE, channel);
+  MAP_ADCTimerDisable(ADC_BASE);
+
+	return (ulSample >> 2 ) & 0x0FFF;	
+}
+
+static void hibernate() {
+  watchdog_stop();
+  BoardDeinitCustom();
+  
+  PRCMHibernateWakeupSourceEnable(PRCM_HIB_GPIO2 | PRCM_HIB_GPIO4); //enable ear wakeup interrupt
+  PRCMHibernateEnter();
+}
+
+static void checkBattery() {
+  #ifndef FIXED_BOOT_IMAGE
+  if (isChargerConnected())
+    return;
+  
+  if (getBatteryLevel() < Config_generalSettings.minBatteryLevel) {
+    prebootmgr_blink_error(2, 66);
+    prebootmgr_blink_error(2, 133);
+    prebootmgr_blink_error(2, 66);
+
+    hibernate();
+  }
+  #endif
+}
+
 //#pragma GCC push_options
 //#pragma GCC optimize ("O0") //Workaround to fix counter behaving weird and allow being set to 8 despite the slot has no file.
 static uint8_t Selector(uint8_t startNumber) {
@@ -352,6 +419,10 @@ static uint8_t Selector(uint8_t startNumber) {
       watchdog_feed();
     } 
   }
+
+  //uint32_t millisStart = millis();
+  uint32_t millisState = millis();
+  uint32_t secondsDelta = 0;
   while (Config_generalSettings.waitForPress)
   {
     LedSet(colors[curColorId]);
@@ -365,8 +436,16 @@ static uint8_t Selector(uint8_t startNumber) {
 
     if (EarBigPressed())
       break;
+      
+    //TODO WORKAROUND
+    //secondsDelta = (millis() - millisStart) / 1000;
+    millisState += 250;
+    secondsDelta = millisState / 1000;
+    if (secondsDelta > Config_generalSettings.waitTimeoutInS)
+      hibernate();
     
     watchdog_feed();
+    checkBattery();
   } 
 
   LedSet(COLOR_BLACK);
@@ -394,58 +473,6 @@ static uint8_t Selector(uint8_t startNumber) {
 }
 //#pragma GCC pop_options
 
-static bool SdImageExists(uint8_t number) {
-  char* image = GetImagePathById(number);
-  return SdFileExists(image);
-}
-static bool CheckSdImages() {
-  bool hasValidImage = false;
-  for (uint8_t i=0; i<IMG_MAX_COUNT; i++)
-  {
-    Config_imageInfos[i].fileExists = SdImageExists(i);
-    hasValidImage |= Config_imageInfos[i].fileExists;
-  }
-  return hasValidImage;
-}
-
-static uint16_t getBatteryLevel()
-{
-  uint16_t channel = ADC_CH_3;
-  uint16_t uiIndex = 0;
-  uint32_t ulSample;
-
-  MAP_PinTypeADC(BATTERY_LEVEL_PIN_NUM, PIN_MODE_255);
-
-	while(MAP_ADCFIFOLvlGet(ADC_BASE, channel))
-    MAP_ADCFIFORead(ADC_BASE, channel); // flush the channel's FIFO if not empty
-
-	MAP_ADCTimerConfig(ADC_BASE,2^17); // Configure ADC timer which is used to timestamp the ADC data samples
-	MAP_ADCTimerEnable(ADC_BASE); // Enable ADC timer which is used to timestamp the ADC data samples
-	MAP_ADCEnable(ADC_BASE); // Enable ADC module
-	MAP_ADCChannelEnable(ADC_BASE, channel); // Enable ADC channel
-
-  while(!MAP_ADCFIFOLvlGet(ADC_BASE, channel)) { }
-  ulSample = MAP_ADCFIFORead(ADC_BASE, channel);
-
-  MAP_ADCDisable(ADC_BASE);
-  MAP_ADCChannelDisable(ADC_BASE, channel);
-  MAP_ADCTimerDisable(ADC_BASE);
-
-	return (ulSample >> 2 ) & 0x0FFF;	
-}
-static bool isChargerConnected()
-{
-  return (CHARGER_PORT_MASK & MAP_GPIOPinRead(CHARGER_PORT, CHARGER_PORT_MASK));
-}
-
-static void hibernate() {
-  watchdog_stop();
-  BoardDeinitCustom();
-  
-  PRCMHibernateWakeupSourceEnable(PRCM_HIB_GPIO2 | PRCM_HIB_GPIO4); //enable ear wakeup interrupt
-  PRCMHibernateEnter();
-}
-
 int main()
 {
 
@@ -453,16 +480,10 @@ int main()
   FIL ffile;
   uint8_t ffs_result;
 
-
   BoardInitBase();
   BoardInitCustom();
   watchdog_start();
-/*
-  uint16_t battery;
-  bool charger ;
-  battery = getBatteryLevel();
-  charger = isChargerConnected();
-  */
+
   if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
     prebootmgr_blink_error(5, 33);
     prebootmgr_blink_error(5, 66);
@@ -484,6 +505,7 @@ int main()
     #else
     if (CheckSdImages()) {
       Config_ReadJsonCfg();
+      checkBattery();
 
       retrySelection:
         Config_generalSettings.activeImage = Selector(Config_generalSettings.activeImage);
@@ -593,6 +615,7 @@ int main()
               watchdog_stop();
             #endif
 
+            checkBattery();
             BoardDeinitCustom();
             Run((unsigned long)pImgRun);
           } else {
