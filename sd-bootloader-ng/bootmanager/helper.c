@@ -7,7 +7,8 @@
 #include "ff.h"
 
 void UtilsDelayUs(unsigned long delayUs) {
-    MAP_UtilsDelay(UTILS_DELAY_US_TO_COUNT(delayUs));
+    //Using the chip integrated via MAP will get too fast?!
+    UtilsDelay(UTILS_DELAY_US_TO_COUNT(delayUs));
 }
 void UtilsDelayMs(unsigned long delayMs) {
     UtilsDelayUs(1000*delayMs);
