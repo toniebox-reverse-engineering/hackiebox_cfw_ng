@@ -78,7 +78,7 @@ SECTIONS
         *(.data*)
 	. = ALIGN (8);
         _edata = .;
-    } > SRAM
+    } > SRAM2
 	
     .bss :
     {
@@ -95,6 +95,6 @@ SECTIONS
 	. = ALIGN(8);
 	_eheap = .;
 
-    }
+    } > SRAM2
 }
 
