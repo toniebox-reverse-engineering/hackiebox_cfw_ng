@@ -1,11 +1,13 @@
 #include "helper.h"
 
 #include <stdbool.h>
+#include "rom.h"
+#include "rom_map.h"
 #include "watchdog.h"
 #include "ff.h"
 
 void UtilsDelayUs(unsigned long delayUs) {
-    UtilsDelay(UTILS_DELAY_US_TO_COUNT(delayUs));
+    MAP_UtilsDelay(UTILS_DELAY_US_TO_COUNT(delayUs));
 }
 void UtilsDelayMs(unsigned long delayMs) {
     UtilsDelayUs(1000*delayMs);
