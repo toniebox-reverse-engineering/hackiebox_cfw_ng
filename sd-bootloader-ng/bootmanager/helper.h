@@ -6,6 +6,7 @@ extern "C"
 #endif
 #include "globalDefines.h"
 #include "utils.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 #define max(a,b)             \
@@ -26,9 +27,12 @@ extern "C"
 
 void UtilsDelayUs(unsigned long delayUs);
 void UtilsDelayMs(unsigned long delayMs);
+void UtilsDelayMsWD(unsigned long delayMs);
 
 void btox(char *hexstr, const char *binarr, int hexstrlen);
 uint8_t xtob(char* hexByte);
+
+bool SdFileExists(char* filename);
 
 #ifdef __cplusplus
 }

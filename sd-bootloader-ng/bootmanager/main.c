@@ -56,7 +56,6 @@
 #include "hw_memmap.h"
 #include "hw_gprcm.h"
 #include "hw_common_reg.h"
-#include "hw_ints.h"
 #include "hw_nvic.h"
 #include "hw_shamd5.h"
 #include "hw_dthe.h"
@@ -73,7 +72,6 @@
 #include "bootmgr.h"
 #include "shamd5.h"
 #include "adc.h"
-#include "wdt.h"
 
 #include "sdhost.h" //TODO: fixes some compiler warnings, even diskio.h should load it!
 
@@ -87,6 +85,7 @@ static FATFS fatfs;
 #include "config.h"
 #include "patch.h"
 #include "globalDefines.h"
+#include "watchdog.h"
 
 
 char imagePath[] = IMG_SD_PATH; //TODO!
@@ -114,8 +113,6 @@ static char* GetImagePathById(uint8_t number) {
 //*****************************************************************************
 // Vector Table
 extern void (*const g_pfnVectors[])(void);
-
-
 
 //*****************************************************************************
 //
@@ -224,9 +221,9 @@ static void prebootmgr_blink_color(int times, int wait_ms, uint8_t color)
   for (int i = 0; i < times; i++)
   {
     LedSet(color);
-    UtilsDelayMs(wait_ms);
+    UtilsDelayMsWD(wait_ms);
     LedSet(COLOR_BLACK);
-    UtilsDelayMs(wait_ms);
+    UtilsDelayMsWD(wait_ms);
   }
 }
 
@@ -240,46 +237,6 @@ static void prebootmgr_blink_error(int times, int wait_ms) {
   #else
   prebootmgr_blink_color(times, wait_ms, COLOR_GREEN);
   #endif
-}
-
-uint8_t watchdog_feed_state;
-static void watchdog_feed() {
-  watchdog_feed_state = WATCHDOG_TIMEOUT_S;
-}
-static void watchdog_unfeed() {
-  watchdog_feed_state = 0;
-}
-static void watchdog_eat() {
-  watchdog_feed_state--;
-}
-void watchdog_handler() {
-  if (watchdog_feed_state > 0) {
-    MAP_WatchdogIntClear(WDT_BASE);
-    watchdog_eat();
-  }
-}
-bool watchdogInitialized = false;
-static bool watchdog_start() {
-  watchdogInitialized = true;
-  watchdog_feed();
-
-  MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
-  MAP_WatchdogUnlock(WDT_BASE);
-  MAP_IntPrioritySet(INT_WDT, INT_PRIORITY_LVL_1);
-  MAP_WatchdogIntRegister(WDT_BASE, watchdog_handler);
-  MAP_WatchdogReloadSet(WDT_BASE, 80000000*1); //Tick every second
-  MAP_WatchdogEnable(WDT_BASE);
-
-  return MAP_WatchdogRunning(WDT_BASE);
-}
-static void watchdog_stop() {
-  if (!watchdogInitialized)
-    return;
-  MAP_WatchdogUnlock(WDT_BASE);
-  MAP_WatchdogStallDisable(WDT_BASE);
-  MAP_WatchdogIntClear(WDT_BASE);
-  MAP_WatchdogIntUnregister(WDT_BASE);
-  watchdogInitialized = false;
 }
 
 static void SdInit(void)
@@ -359,6 +316,8 @@ static void BoardDeinitCustom(void)
   MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, POWER_SD_PORT_MASK); //SIC! 
   //Power off other peripherals
   MAP_GPIOPinWrite(POWER_PORT, POWER_PORT_MASK, 0x00);
+
+  PRCMHibernateWakeupSourceDisable(PRCM_HIB_GPIO17);//Disable charger Wakeup
 }
 
 static volatile bool EarSmallPressed(void) {
@@ -366,15 +325,6 @@ static volatile bool EarSmallPressed(void) {
 }
 static volatile bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
-}
-
-static bool SdFileExists(char* filename) {
-  FIL ffile;
-  if (f_open(&ffile, filename, FA_READ) == FR_OK) {
-      f_close(&ffile); 
-      return true;
-  }
-  return false;
 }
 
 //#pragma GCC push_options
@@ -389,7 +339,7 @@ static uint8_t Selector(uint8_t startNumber) {
 
   LedSet(COLOR_GREEN);
   while (EarSmallPressed()) {
-    UtilsDelayMs(10); //Wait while pressed
+    UtilsDelayMsWD(10); //Wait while pressed
     watchdog_feed();
   }  
   
@@ -398,14 +348,14 @@ static uint8_t Selector(uint8_t startNumber) {
   if (Config_generalSettings.waitForPress) {
     LedSet(COLOR_BLUE);
     while (EarSmallPressed() || EarBigPressed()) {
-      UtilsDelayMs(10); //Wait while pressed
+      UtilsDelayMsWD(10); //Wait while pressed
       watchdog_feed();
     } 
   }
   while (Config_generalSettings.waitForPress)
   {
     LedSet(colors[curColorId]);
-    UtilsDelayMs(250);
+    UtilsDelayMsWD(250);
     
     if (curColorId<COUNT_OF(colors)-1) {
       curColorId++;
@@ -427,7 +377,7 @@ static uint8_t Selector(uint8_t startNumber) {
           counter = (counter+1) % COUNT_OF(Config_imageInfos);
         } while (!Config_imageInfos[counter].fileExists);
         while (EarSmallPressed()) {
-            UtilsDelayMs(10); //Wait while pressed
+            UtilsDelayMsWD(10); //Wait while pressed
         }
     }
     if (counter < 3) {
@@ -437,7 +387,7 @@ static uint8_t Selector(uint8_t startNumber) {
     } else /*if (counter < 9)*/ {
       prebootmgr_blink_color((counter+1)-6, 100, COLOR_CYAN);
     }
-    UtilsDelayMs(500);
+    UtilsDelayMsWD(500);
     watchdog_feed();
   }
   return counter;
@@ -525,10 +475,9 @@ int main()
   Config_InitImageInfos();
   #endif
 
-  UtilsDelayMs(100);
+  UtilsDelayMsWD(100);
   ffs_result = f_mount(&fatfs, "0", 1);
-  if (ffs_result == FR_OK)
-    {
+  if (ffs_result == FR_OK) {
     #ifdef FIXED_BOOT_IMAGE
     char* image = IMG_SD_BOOTLOADER_PATH;
     if (SdFileExists(image)) {
@@ -647,24 +596,24 @@ int main()
             BoardDeinitCustom();
             Run((unsigned long)pImgRun);
           } else {
-              UtilsDelayMs(1000);
+              UtilsDelayMsWD(1000);
               prebootmgr_blink_error(4, 500);
-              UtilsDelayMs(2000);
+              UtilsDelayMsWD(2000);
               prebootmgr_blink_error(ffs_result, 1000);
           }
       } else {
-          UtilsDelayMs(1000);
+          UtilsDelayMsWD(1000);
           prebootmgr_blink_error(3, 500);
-          UtilsDelayMs(2000);
+          UtilsDelayMsWD(2000);
           prebootmgr_blink_error(ffs_result, 1000);
       }
     }
-    UtilsDelayMs(2000);
+    UtilsDelayMsWD(2000);
   }
   
-  UtilsDelayMs(500);
+  UtilsDelayMsWD(500);
   prebootmgr_blink_error(2, 500);
-  UtilsDelayMs(500);
+  UtilsDelayMsWD(500);
   prebootmgr_blink_error(ffs_result, 1000);
 
   SlFsFileInfo_t pFsFileInfo;
