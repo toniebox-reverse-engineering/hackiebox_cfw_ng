@@ -112,6 +112,7 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/main.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/helper.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/config.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/patch.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/watchdog.o
 
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/udma_if.o
 
