@@ -1,7 +1,9 @@
 {
     "general": {
         "activeImg": "ofw3",
-        "waitForPress": false
+        "waitForPress": false,
+        "waitTimeoutInS": 60,
+        "minBatteryLevel": 2100
     },
     "ofw1": {
         "checkHash": true,
