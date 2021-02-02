@@ -46,8 +46,8 @@
 
 static void (*SysTickCbFuncs[8])(uint32_t ui32TimeMS);
 
-#define SYSTICKMS               (1000 / SYSTICKHZ)
 #define SYSTICKHZ               1000
+#define SYSTICKMS               (1000 / SYSTICKHZ)
 
 static unsigned long milliseconds = 0;
 #define SYSTICK_INT_PRIORITY    0x80
@@ -142,7 +142,7 @@ void registerSysTickCb(void (*userFunc)(uint32_t))
 	}
 }
 */
-static void SysTickIntHandler(void) {
+void xPortSysTickHandler(void) {
 	milliseconds++;
 
 	uint8_t i;
@@ -150,7 +150,4 @@ static void SysTickIntHandler(void) {
 		if (SysTickCbFuncs[i])
 			SysTickCbFuncs[i](SYSTICKMS);
 	}
-}
-void xPortSysTickHandler(void) {
-	SysTickIntHandler();
 }
