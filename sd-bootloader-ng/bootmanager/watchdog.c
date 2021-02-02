@@ -31,7 +31,6 @@ static void watchdog_handler(void) {
   }
 }
 static bool initWatchdog(unsigned long ulLoadVal, void (*pfnHandler)(void)) {
-  #ifndef DISABLE_WATCHDOG
   watchdog_feed();
 
   MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
@@ -43,11 +42,15 @@ static bool initWatchdog(unsigned long ulLoadVal, void (*pfnHandler)(void)) {
   MAP_WatchdogEnable(WDT_BASE);
 
   return MAP_WatchdogRunning(WDT_BASE);
-  #endif
 }
 
 bool watchdog_start(void) {
+  #ifndef DISABLE_WATCHDOG
   return initWatchdog(MILLISECONDS_TO_TICKS(1000*WATCHDOG_CHECK_S), watchdog_handler);
+  #else
+  watchdog_stop();
+  return true;
+  #endif
 }
 
 static void watchdog_handler_always(void) {
