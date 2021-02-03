@@ -11,7 +11,8 @@ extern "C"
 
 void watchdog_feed(void);
 bool watchdog_start(void);
-void watchdog_stop(void);
+bool watchdog_start_slow(void);
+bool watchdog_stop(void);
 
 #ifdef __cplusplus
 }

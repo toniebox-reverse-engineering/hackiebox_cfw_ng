@@ -83,7 +83,7 @@ extern int main(void);
 // Reserve space for the system stack.
 //
 //*****************************************************************************
-static uint32_t pui32Stack[128];
+static uint32_t pui32Stack[256];
 
 //*****************************************************************************
 //
@@ -110,7 +110,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
     IntDefaultHandler,                      // The PendSV handler
-    xPortSysTickHandler,                    // The SysTick handler
+    IntDefaultHandler,                      // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A0
     IntDefaultHandler,                      // GPIO Port A1
     IntDefaultHandler,                      // GPIO Port A2

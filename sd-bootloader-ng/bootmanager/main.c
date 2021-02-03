@@ -257,6 +257,8 @@ static void BoardInitCustom(void)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK); //Clock for GPIOAA (Charger)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
 
+  MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
+  
   //MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
@@ -421,7 +423,7 @@ static uint8_t Selector(uint8_t startNumber) {
   }
 
   //uint32_t millisStart = millis();
-  uint32_t millisState = millis();
+  uint32_t millisState = 0;
   uint32_t secondsDelta = 0;
   while (Config_generalSettings.waitForPress)
   {
@@ -434,8 +436,11 @@ static uint8_t Selector(uint8_t startNumber) {
       curColorId = 0;
     }
 
-    if (EarBigPressed())
+    if (EarBigPressed()) {
+      LedSet(COLOR_BLACK);
+      UtilsDelayMsWD(250);
       break;
+    }
       
     //TODO WORKAROUND
     //secondsDelta = (millis() - millisStart) / 1000;
@@ -475,7 +480,6 @@ static uint8_t Selector(uint8_t startNumber) {
 
 int main()
 {
-
   sBootInfo_t sBootInfo;
   FIL ffile;
   uint8_t ffs_result;
@@ -611,12 +615,21 @@ int main()
                 }
               }
             }
-            if (!Config_imageInfos[selectedImgNum].watchdog)
-              watchdog_stop();
             #endif
 
             checkBattery();
             BoardDeinitCustom();
+
+            #ifdef FIXED_BOOT_IMAGE
+              watchdog_start_slow();
+            #else
+            if (!Config_imageInfos[selectedImgNum].watchdog) {
+              watchdog_stop();
+            } else {
+              watchdog_start_slow();
+            }
+            #endif
+            
             Run((unsigned long)pImgRun);
           } else {
               UtilsDelayMsWD(1000);
