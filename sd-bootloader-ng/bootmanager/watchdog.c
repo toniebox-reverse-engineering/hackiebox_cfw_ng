@@ -10,12 +10,15 @@
 #include "interrupt.h"
 
 volatile static uint8_t watchdog_feed_state;
-#ifndef SIMPLE_WATCHDOG
 volatile static bool watchdog_init = false;
-#endif
 
+static void watchdog_clear(void) {
+  if (watchdog_init)
+    MAP_WatchdogIntClear(WDT_BASE);
+}
 void watchdog_feed(void) {
   watchdog_feed_state = WATCHDOG_TIMEOUT_S;
+  watchdog_clear();
 }
 static void watchdog_unfeed(void) {
   watchdog_feed_state = 0;
@@ -27,11 +30,6 @@ void watchdog_eat(void) {
     watchdog_feed_state = 0;
   }
 }
-static void watchdog_clear(void) {
-  #ifndef DISABLE_WATCHDOG
-  MAP_WatchdogIntClear(WDT_BASE);
-  #endif
-}
 static void watchdog_handler(void) {
   if (watchdog_feed_state > 0) {
     watchdog_clear();
@@ -40,42 +38,43 @@ static void watchdog_handler(void) {
 }
 static bool initWatchdog(unsigned long ulLoadVal, void (*pfnHandler)(void)) {
   #ifndef DISABLE_WATCHDOG
+  if (watchdog_init) {
+    watchdog_stop();
+  }
   watchdog_feed();
+
+  MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
+
+  watchdog_init = MAP_WatchdogRunning(WDT_BASE);
 
   MAP_WatchdogUnlock(WDT_BASE);
   MAP_IntPrioritySet(INT_WDT, INT_PRIORITY_LVL_1);
   MAP_WatchdogStallEnable(WDT_BASE); //Allow Debugging
-  MAP_WatchdogIntUnregister(WDT_BASE);
   MAP_WatchdogIntRegister(WDT_BASE, pfnHandler);
   MAP_WatchdogReloadSet(WDT_BASE, ulLoadVal);
-  MAP_WatchdogEnable(WDT_BASE);
+  if (!watchdog_init)
+    MAP_WatchdogEnable(WDT_BASE);
 
-  return MAP_WatchdogRunning(WDT_BASE);
+  watchdog_init = MAP_WatchdogRunning(WDT_BASE);
   #endif
+  return watchdog_init;
 }
 
 bool watchdog_start(void) {
-  #ifndef SIMPLE_WATCHDOG
   return initWatchdog(MILLISECONDS_TO_TICKS(1000*WATCHDOG_CHECK_S), watchdog_handler);
-  #else
-  return watchdog_stop();
-  #endif
 }
-
 bool watchdog_start_slow(void) {
-  #ifndef SIMPLE_WATCHDOG
   return initWatchdog(MILLISECONDS_TO_TICKS(1000*WATCHDOG_TIMEOUT_SLOW_S), watchdog_clear);
-  #else
-  return watchdog_stop();
-  #endif
 }
 bool watchdog_stop(void) {
-  #ifndef NOSTOP_WATCHDOG
-  #ifndef SIMPLE_WATCHDOG
-  if (watchdog_init)
-    return true;
-  watchdog_init = true;
-  #endif
-  return initWatchdog(0x00FFFFFF, watchdog_clear);
-  #endif
+  watchdog_init = false;
+
+  MAP_WatchdogUnlock(WDT_BASE);
+  MAP_WatchdogReloadSet(WDT_BASE, 0xFFFFFFFF); //set timer to high value
+  MAP_WatchdogIntClear(WDT_BASE);
+  MAP_WatchdogIntUnregister(WDT_BASE);
+
+  //watchdog_init = MAP_WatchdogRunning(WDT_BASE);
+
+  //MAP_PRCMPeripheralClkDisable(PRCM_WDT, PRCM_RUN_MODE_CLK);
 }

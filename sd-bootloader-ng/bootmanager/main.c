@@ -138,6 +138,8 @@ BoardInitBase(void)
 //! \return None.
 //
 //*****************************************************************************
+#pragma GCC push_options
+#pragma GCC optimize ("O0") //Don't optimize or it may fail
 static void Run(unsigned long ulBaseLoc)
 {
 
@@ -153,6 +155,7 @@ static void Run(unsigned long ulBaseLoc)
   __asm("	ldr    r1,[r0]\n"
         "	bx     r1");
 }
+#pragma GCC pop_options
 
 
 
@@ -257,7 +260,7 @@ static void BoardInitCustom(void)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK); //Clock for GPIOAA (Charger)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
 
-  MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
+  //MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
   
   //MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
@@ -396,8 +399,6 @@ static void checkBattery() {
   #endif
 }
 
-//#pragma GCC push_options
-//#pragma GCC optimize ("O0") //Workaround to fix counter behaving weird and allow being set to 8 despite the slot has no file.
 static uint8_t Selector(uint8_t startNumber) {
   int8_t counter = startNumber;
 
@@ -476,7 +477,23 @@ static uint8_t Selector(uint8_t startNumber) {
   }
   return counter;
 }
-//#pragma GCC pop_options
+
+static void watchdog_recovery_sequence() {
+  //force NWP to idle State
+  HWREG(0x400F70B8) = 0x1;
+  UtilsDelay(800000/5);
+
+  //Clear the interrupt
+  HWREG(0x400F70B0) = 0x1;
+  UtilsDelay(800000/5);
+
+  //reset NWP, WLAN domains
+  HWREG(0x4402E16C) |= 0x2;
+  UtilsDelay(800);
+
+  //Wnsure ANA DCDC is moved to PFM mode before envoking hibernate
+  HWREG(0x4402F024) &= 0xF7FFFFFF;
+}
 
 int main()
 {
@@ -489,6 +506,8 @@ int main()
   watchdog_start();
 
   if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
+    watchdog_recovery_sequence();
+
     prebootmgr_blink_error(5, 33);
     prebootmgr_blink_error(5, 66);
     prebootmgr_blink_error(5, 33);
@@ -629,7 +648,8 @@ int main()
               watchdog_start_slow();
             }
             #endif
-            
+            watchdog_feed();
+
             Run((unsigned long)pImgRun);
           } else {
               UtilsDelayMsWD(1000);
