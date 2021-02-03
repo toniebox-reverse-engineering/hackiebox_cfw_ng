@@ -4,8 +4,11 @@
 //#define FIXED_BOOT_IMAGE
 //#define DISABLE_WATCHDOG
 
-#define WATCHDOG_CHECK_S 2
+
+#define WATCHDOG_CHECK_S 5
 #define WATCHDOG_TIMEOUT_S 15
+#define WATCHDOG_TIMEOUT_SLOW_S 15
+
 #define WATCHDOG_UtilsDelayMS_MAX 25
 
 #define IMG_OFW_ID_1 0

@@ -87,29 +87,10 @@ static FATFS fatfs;
 #include "globalDefines.h"
 #include "watchdog.h"
 
+#include "wiring.h"
 
-char imagePath[] = IMG_SD_PATH; //TODO!
-static char* GetImagePathById(uint8_t number) {
-  //char* imagePath;
-  char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
-  char* name;
 
-  if (number < 3) {
-    name = IMG_OFW_NAME;
-  } else if (number < 6) {
-    name = IMG_CFW_NAME;
-  } else /*if (number < 9)*/ {
-    name = IMG_ADD_NAME;
-  }
-
-  for (uint8_t i=0; i<3; i++)
-  {
-    imagePath[IMG_SD_PATH_REPL1_POS+i] = name[i];
-  }
-  imagePath[IMG_SD_PATH_REPL2_POS] = id;
-
-  return imagePath;
-}
+static char imagePath[] = IMG_SD_PATH;
 //*****************************************************************************
 // Vector Table
 extern void (*const g_pfnVectors[])(void);
@@ -157,7 +138,9 @@ BoardInitBase(void)
 //! \return None.
 //
 //*****************************************************************************
-void Run(unsigned long ulBaseLoc)
+#pragma GCC push_options
+#pragma GCC optimize ("O0") //Don't optimize or it may fail
+static void Run(unsigned long ulBaseLoc)
 {
 
   //
@@ -172,6 +155,7 @@ void Run(unsigned long ulBaseLoc)
   __asm("	ldr    r1,[r0]\n"
         "	bx     r1");
 }
+#pragma GCC pop_options
 
 
 
@@ -276,6 +260,8 @@ static void BoardInitCustom(void)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK); //Clock for GPIOAA (Charger)
   MAP_PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK); //Clock for GPIOA3 (Green/Blue LED)
 
+  //MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
+  
   //MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
@@ -327,73 +313,26 @@ static volatile bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
 }
 
-//#pragma GCC push_options
-//#pragma GCC optimize ("O0") //Workaround to fix counter behaving weird and allow being set to 8 despite the slot has no file.
-static uint8_t Selector(uint8_t startNumber) {
-  int8_t counter = startNumber;
+static char* GetImagePathById(uint8_t number) {
+  char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
+  char* name;
 
-  while (!Config_imageInfos[counter].fileExists)
+  if (number < 3) {
+    name = IMG_OFW_NAME;
+  } else if (number < 6) {
+    name = IMG_CFW_NAME;
+  } else /*if (number < 9)*/ {
+    name = IMG_ADD_NAME;
+  }
+
+  for (uint8_t i=0; i<3; i++)
   {
-    counter = (counter+1) % COUNT_OF(Config_imageInfos);
+    imagePath[IMG_SD_PATH_REPL1_POS+i] = name[i];
   }
+  imagePath[IMG_SD_PATH_REPL2_POS] = id;
 
-  LedSet(COLOR_GREEN);
-  while (EarSmallPressed()) {
-    UtilsDelayMsWD(10); //Wait while pressed
-    watchdog_feed();
-  }  
-  
-  uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
-  uint8_t curColorId = 0;
-  if (Config_generalSettings.waitForPress) {
-    LedSet(COLOR_BLUE);
-    while (EarSmallPressed() || EarBigPressed()) {
-      UtilsDelayMsWD(10); //Wait while pressed
-      watchdog_feed();
-    } 
-  }
-  while (Config_generalSettings.waitForPress)
-  {
-    LedSet(colors[curColorId]);
-    UtilsDelayMsWD(250);
-    
-    if (curColorId<COUNT_OF(colors)-1) {
-      curColorId++;
-    } else {
-      curColorId = 0;
-    }
-
-    if (EarBigPressed())
-      break;
-    
-    watchdog_feed();
-  } 
-
-  LedSet(COLOR_BLACK);
-  while (EarBigPressed()) {
-    if (EarSmallPressed()) {
-        do
-        {
-          counter = (counter+1) % COUNT_OF(Config_imageInfos);
-        } while (!Config_imageInfos[counter].fileExists);
-        while (EarSmallPressed()) {
-            UtilsDelayMsWD(10); //Wait while pressed
-        }
-    }
-    if (counter < 3) {
-      prebootmgr_blink_color((counter+1)-0, 100, COLOR_GREEN);
-    } else if (counter < 6) {
-      prebootmgr_blink_color((counter+1)-3, 100, COLOR_BLUE);
-    } else /*if (counter < 9)*/ {
-      prebootmgr_blink_color((counter+1)-6, 100, COLOR_CYAN);
-    }
-    UtilsDelayMsWD(500);
-    watchdog_feed();
-  }
-  return counter;
+  return imagePath;
 }
-//#pragma GCC pop_options
-
 static bool SdImageExists(uint8_t number) {
   char* image = GetImagePathById(number);
   return SdFileExists(image);
@@ -408,6 +347,9 @@ static bool CheckSdImages() {
   return hasValidImage;
 }
 
+static bool isChargerConnected() {
+  return (CHARGER_PORT_MASK & MAP_GPIOPinRead(CHARGER_PORT, CHARGER_PORT_MASK));
+}
 static uint16_t getBatteryLevel()
 {
   uint16_t channel = ADC_CH_3;
@@ -433,10 +375,6 @@ static uint16_t getBatteryLevel()
 
 	return (ulSample >> 2 ) & 0x0FFF;	
 }
-static bool isChargerConnected()
-{
-  return (CHARGER_PORT_MASK & MAP_GPIOPinRead(CHARGER_PORT, CHARGER_PORT_MASK));
-}
 
 static void hibernate() {
   watchdog_stop();
@@ -446,24 +384,130 @@ static void hibernate() {
   PRCMHibernateEnter();
 }
 
+static void checkBattery() {
+  #ifndef FIXED_BOOT_IMAGE
+  if (isChargerConnected())
+    return;
+  
+  if (getBatteryLevel() < Config_generalSettings.minBatteryLevel) {
+    prebootmgr_blink_error(2, 66);
+    prebootmgr_blink_error(2, 133);
+    prebootmgr_blink_error(2, 66);
+
+    hibernate();
+  }
+  #endif
+}
+
+static uint8_t Selector(uint8_t startNumber) {
+  int8_t counter = startNumber;
+
+  while (!Config_imageInfos[counter].fileExists)
+  {
+    counter = (counter+1) % COUNT_OF(Config_imageInfos);
+  }
+
+  LedSet(COLOR_GREEN);
+  while (EarSmallPressed()) {
+    UtilsDelayMsWD(10); //Wait while pressed
+    watchdog_feed();
+  }  
+  
+  uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
+  uint8_t curColorId = 0;
+  if (Config_generalSettings.waitForPress) {
+    LedSet(COLOR_BLUE);
+    while (EarSmallPressed() || EarBigPressed()) {
+      UtilsDelayMsWD(10); //Wait while pressed
+      watchdog_feed();
+    } 
+  }
+
+  //uint32_t millisStart = millis();
+  uint32_t millisState = 0;
+  uint32_t secondsDelta = 0;
+  while (Config_generalSettings.waitForPress)
+  {
+    LedSet(colors[curColorId]);
+    UtilsDelayMsWD(250);
+    
+    if (curColorId<COUNT_OF(colors)-1) {
+      curColorId++;
+    } else {
+      curColorId = 0;
+    }
+
+    if (EarBigPressed()) {
+      LedSet(COLOR_BLACK);
+      UtilsDelayMsWD(250);
+      break;
+    }
+      
+    //TODO WORKAROUND
+    //secondsDelta = (millis() - millisStart) / 1000;
+    millisState += 250;
+    secondsDelta = millisState / 1000;
+    if (secondsDelta > Config_generalSettings.waitTimeoutInS)
+      hibernate();
+    
+    watchdog_feed();
+    checkBattery();
+  } 
+
+  LedSet(COLOR_BLACK);
+  while (EarBigPressed()) {
+    if (EarSmallPressed()) {
+        do
+        {
+          counter = (counter+1) % COUNT_OF(Config_imageInfos);
+        } while (!Config_imageInfos[counter].fileExists);
+        while (EarSmallPressed()) {
+            UtilsDelayMsWD(10); //Wait while pressed
+        }
+    }
+    if (counter < 3) {
+      prebootmgr_blink_color((counter+1)-0, 100, COLOR_GREEN);
+    } else if (counter < 6) {
+      prebootmgr_blink_color((counter+1)-3, 100, COLOR_BLUE);
+    } else /*if (counter < 9)*/ {
+      prebootmgr_blink_color((counter+1)-6, 100, COLOR_CYAN);
+    }
+    UtilsDelayMsWD(500);
+    watchdog_feed();
+  }
+  return counter;
+}
+
+static void watchdog_recovery_sequence() {
+  //force NWP to idle State
+  HWREG(0x400F70B8) = 0x1;
+  UtilsDelay(800000/5);
+
+  //Clear the interrupt
+  HWREG(0x400F70B0) = 0x1;
+  UtilsDelay(800000/5);
+
+  //reset NWP, WLAN domains
+  HWREG(0x4402E16C) |= 0x2;
+  UtilsDelay(800);
+
+  //Wnsure ANA DCDC is moved to PFM mode before envoking hibernate
+  HWREG(0x4402F024) &= 0xF7FFFFFF;
+}
+
 int main()
 {
-
   sBootInfo_t sBootInfo;
   FIL ffile;
   uint8_t ffs_result;
 
-
   BoardInitBase();
   BoardInitCustom();
   watchdog_start();
-/*
-  uint16_t battery;
-  bool charger ;
-  battery = getBatteryLevel();
-  charger = isChargerConnected();
-  */
+
   if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
+    watchdog_recovery_sequence();
+
     prebootmgr_blink_error(5, 33);
     prebootmgr_blink_error(5, 66);
     prebootmgr_blink_error(5, 33);
@@ -484,6 +528,7 @@ int main()
     #else
     if (CheckSdImages()) {
       Config_ReadJsonCfg();
+      checkBattery();
 
       retrySelection:
         Config_generalSettings.activeImage = Selector(Config_generalSettings.activeImage);
@@ -589,11 +634,22 @@ int main()
                 }
               }
             }
-            if (!Config_imageInfos[selectedImgNum].watchdog)
-              watchdog_stop();
             #endif
 
+            checkBattery();
             BoardDeinitCustom();
+
+            #ifdef FIXED_BOOT_IMAGE
+              watchdog_start_slow();
+            #else
+            if (!Config_imageInfos[selectedImgNum].watchdog) {
+              watchdog_stop();
+            } else {
+              watchdog_start_slow();
+            }
+            #endif
+            watchdog_feed();
+
             Run((unsigned long)pImgRun);
           } else {
               UtilsDelayMsWD(1000);

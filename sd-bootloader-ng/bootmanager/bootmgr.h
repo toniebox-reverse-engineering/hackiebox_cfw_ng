@@ -61,27 +61,6 @@ extern "C"
 #define USER_IMG_2_TOKEN        0x55AAAA55
 #define USER_BOOT_INFO_TOKEN    0xA5A55A5A
 
-
-
-//*****************************************************************************
-// Macros
-//*****************************************************************************
-#ifndef FAST_BOOT
-#define APP_IMG_SRAM_OFFSET     0x20004000
-#else
-#define APP_IMG_SRAM_OFFSET     0x20008000
-#endif
-  
-#define DEVICE_IS_CC3101RS      0x18
-#define DEVICE_IS_CC3101S       0x1B
-
-
-//*****************************************************************************
-// Fucntion prototype
-//*****************************************************************************
-extern void Run(unsigned long);
-
-
 //****************************************************************************
 //
 // Mark the end of the C bindings section for C++ compilers.

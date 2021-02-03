@@ -1,6 +1,13 @@
 #include "config.h"
+#include <stdlib.h> 
 
-sGeneralSettings Config_generalSettings = {0, false};
+sGeneralSettings Config_generalSettings = {
+  0,      //activeImage
+  false,  //waitForPress
+  60,     //waitTimeoutInS
+  2100,   //minBatteryLevel (Divide through around 700 to get voltage, so 3V should be save)
+  false,  //Serial Log
+};
 sImageInfo Config_imageInfos[IMG_MAX_COUNT];
 
 static jsmn_stream_parser parser;
@@ -98,6 +105,12 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
     if (strcmp("general", jsonGroupName) == 0) {
       if (strcmp("waitForPress", jsonValueName) == 0) {
         Config_generalSettings.waitForPress = (value[0] == 't');
+      } else if (strcmp("waitTimeoutInS", jsonValueName) == 0) {
+        Config_generalSettings.waitTimeoutInS = (uint16_t)strtoul(value, NULL, 0);
+      } else if (strcmp("minBatteryLevel", jsonValueName) == 0) {
+        Config_generalSettings.minBatteryLevel = (uint16_t)strtoul(value, NULL, 0);
+      } else if (strcmp("serialLog", jsonValueName) == 0) {
+        Config_generalSettings.serialLog = (value[0] == 't');
       }
     } else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
@@ -154,14 +167,14 @@ void Config_ReadJsonCfg(void) {
     uint32_t allBytesRead = 0;
     
     jsmn_stream_init(&parser, &cbs, NULL);
-    char buffer[128];
+    char buffer[512];
     while (allBytesRead<filesize)
     {
       ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
       if (ffs_result != FR_OK)
         break;
 
-      for (uint32_t i = 0; i < bytesRead; i++)
+      for (uint16_t i = 0; i < bytesRead; i++)
       {
         jsmn_stream_parse(&parser, buffer[i]);
       }

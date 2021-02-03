@@ -37,13 +37,13 @@
 ******************************************************************************/
 
 
-HEAP_SIZE = 0x00000000;
+HEAP_SIZE = 0x00000200;
 
 MEMORY
 {
     /*SRAM (rwx) : ORIGIN = 0x20038000, LENGTH = 0x8000*/
     SRAM (rwx) : ORIGIN = 0x20034000, LENGTH = 0x12000
-    APPTARGET (rwx) : ORIGIN = 0x20004000, LENGTH = 0x34000
+    APPTARGET (rwx) : ORIGIN = 0x20004000, LENGTH = 0x30000
     SRAM2 (rwx) : ORIGIN = 0x20000000, LENGTH = 0x4000
 }
 
@@ -71,9 +71,9 @@ SECTIONS
       __exidx_end = .;
     } > SRAM
 
-    __init_data = .;
-
-    .data : AT(__init_data)
+    /*__init_data = .;*/
+    
+    .data : /*AT(__init_data)*/
     {
         _data = .;
         *(.data*)
@@ -96,6 +96,6 @@ SECTIONS
 	. = ALIGN(8);
 	_eheap = .;
 
-    }
+    } > SRAM2
 }
 

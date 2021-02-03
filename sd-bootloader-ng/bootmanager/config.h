@@ -21,6 +21,9 @@ typedef struct sGeneralSettings
 {
   uint8_t activeImage;
   bool waitForPress;
+  uint16_t waitTimeoutInS;
+  uint16_t minBatteryLevel;
+  bool serialLog;
 
 } sGeneralSettings;
 typedef struct sImageInfo
