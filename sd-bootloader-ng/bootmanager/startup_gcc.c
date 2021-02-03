@@ -202,11 +202,13 @@ ResetISR(void)
     //
     // Copy the data segment initializers
     //
+    
+    /*
     pui32Src = &__init_data;
     for(pui32Dest = &_data; pui32Dest < &_edata; )
     {
         *pui32Dest++ = *pui32Src++;
-    }
+    }*/
 
     //
     // Zero fill the bss segment.

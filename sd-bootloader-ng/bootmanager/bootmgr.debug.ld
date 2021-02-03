@@ -71,15 +71,15 @@ SECTIONS
       __exidx_end = .;
     } > SRAM
 
-    __init_data = .;
-
-    .data : AT(__init_data)
+    /*__init_data = .;*/
+    
+    .data : /*AT(__init_data)*/
     {
         _data = .;
         *(.data*)
 	. = ALIGN (8);
         _edata = .;
-    } > SRAM2
+    } > SRAM
 	
     .bss :
     {
