@@ -1,3 +1,7 @@
 #!/bin/bash
 
-export PATH="$PATH:${PWD}/../../arm-sdk/10-2020-q4-major/bin"
+ROOT=../..
+
+source ${ROOT}/common/make/armGccPath
+
+export PATH="${ARMGCC_BIN}:$PATH"

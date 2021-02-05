@@ -1,7 +1,9 @@
 {
     "general": {
         "activeImg": "ofw3",
-        "waitForPress": false
+        "waitForPress": false,
+        "waitTimeoutInS": 60,
+        "minBatteryLevel": 2100
     },
     "ofw1": {
         "checkHash": true,
@@ -19,7 +21,7 @@
         "hashFile": false,
         "watchdog": true,
         "ofwFix": true,
-        "patches": ["uidCheck.305", "blockCheck.308", "noPass.305", "noPrivacy.305", "noChargWake.305"]
+        "patches": ["blockCheck.308", "noCerts.305", "noChargWake.305", "noPass.305", "noPrivacy.305", "uidCheck.305"]
     },
     "cfw1": {
         "checkHash": true,

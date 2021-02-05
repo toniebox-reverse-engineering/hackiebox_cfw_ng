@@ -118,14 +118,14 @@ void Patch_Read(char* name) {
     uint32_t allBytesRead = 0;
     
     jsmn_stream_init(&parser, &cbs, NULL);
-    char buffer[128];
+    char buffer[512];
     while (allBytesRead<filesize)
     {
       ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
       if (ffs_result != FR_OK)
         break;
 
-      for (uint32_t i = 0; i < bytesRead; i++)
+      for (uint16_t i = 0; i < bytesRead; i++)
       {
         jsmn_stream_parse(&parser, buffer[i]);
       }

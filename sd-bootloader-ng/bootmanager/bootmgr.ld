@@ -37,7 +37,7 @@
 ******************************************************************************/
 
 
-HEAP_SIZE = 0x00000000;
+HEAP_SIZE = 0x00000200;
 
 MEMORY
 {
@@ -70,9 +70,9 @@ SECTIONS
       __exidx_end = .;
     } > SRAM
 
-    __init_data = .;
+    /*__init_data = .;*/
 
-    .data : AT(__init_data)
+    .data : /*AT(__init_data)*/
     {
         _data = .;
         *(.data*)
@@ -95,6 +95,6 @@ SECTIONS
 	. = ALIGN(8);
 	_eheap = .;
 
-    }
+    } > SRAM2
 }
 

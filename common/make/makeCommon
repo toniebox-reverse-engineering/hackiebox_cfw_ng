@@ -1,5 +1,7 @@
-SDKVERSION=1.5.0
-SDKROOT=${ROOT}/ti-sdk/${SDKVERSION}/cc3200-sdk
+include ${ROOT}/common/make/sdkPath
+include ${ROOT}/common/make/armGccPath
+
+export PATH:="${ARMGCC_BIN}:${PATH}"
 
 #include ${SDKROOT}/tools/gcc_scripts/makedefs
 include ${ROOT}/common/make/makedefs

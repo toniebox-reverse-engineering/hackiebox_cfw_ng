@@ -95,16 +95,15 @@ PREFIX=arm-none-eabi
 #
 # The command for calling the compiler.
 #
-#CC=${PREFIX}-gcc
-CC_VERSION=10-2020-q4-major
-CC=${ROOT}/arm-sdk/${CC_VERSION}/bin/${PREFIX}-gcc
+CC=${ARMGCC_BIN}/${PREFIX}-gcc
 
 #
 # The location of the C compiler
 # ARMGCC_ROOT is used by some makefiles that need to know where the compiler
 # is installed.
 #
-ARMGCC_ROOT:=${shell dirname '${shell sh -c "which ${CC}"}'}/..
+#ARMGCC_ROOT:=${shell dirname '${shell sh -c "which ${CC}"}'}/..
+#Set from parent
 
 #
 # Set the compiler CPU/FPU options.
@@ -133,18 +132,18 @@ CFLAGS=-mthumb             \
        -g3 				   \
        -O${OPT_LEVEL}	   \
        -c                  \
-	   -DTARGET_IS_CC3200  \
-	   ${ADDITIONAL_CFLAGS}
+       -DTARGET_IS_CC3200  \
+       ${ADDITIONAL_CFLAGS}
 
 #
 # The command for calling the library archiver.
 #
-AR=${PREFIX}-ar
+AR=${ARMGCC_BIN}/${PREFIX}-ar
 
 #
 # The command for calling the linker.
 #
-LD=${PREFIX}-ld 
+LD=${ARMGCC_BIN}/${PREFIX}-ld 
 
 #
 # The flags passed to the linker.
@@ -170,7 +169,7 @@ LIBM:=${shell ${CC} ${CFLAGS} -print-file-name=libm.a}
 #
 # The command for extracting images from the linked executables.
 #
-OBJCOPY=${PREFIX}-objcopy
+OBJCOPY=${ARMGCC_BIN}/${PREFIX}-objcopy
 
 #
 # The script for additional linking scripts
