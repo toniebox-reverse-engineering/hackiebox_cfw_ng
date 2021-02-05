@@ -1,4 +1,9 @@
 # HackieboxNG original firmware patches
+## Offline / Privacy
+It is recommended to keep the toniebox offline if you are using a patched firmware. Using the offline mode is recommended. In addition you should enable the Null certificate patch.
+
+### Null certificate Paths ([noCerts.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noCerts.305.json))
+This patch clears the paths to the certificates. This way the box will abort the https connection as it can't check if the boxine server is a valid one. 
 
 ## Alternative Tags (SLIX / SLIX2)
 If you want to use alternative tags those patches will help you. Even other iso15693 tags may work.
