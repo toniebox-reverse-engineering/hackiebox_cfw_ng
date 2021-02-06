@@ -570,7 +570,7 @@ int main()
                   //TODO
                 }
               } else {
-                filesize -= 64; //sha256 ist 64bytes long.
+                filesize -= 64; //sha256 is 64 bytes long.
                 memcpy(hashExp, (char*)(pImgRun + filesize), 64);
               }
 
