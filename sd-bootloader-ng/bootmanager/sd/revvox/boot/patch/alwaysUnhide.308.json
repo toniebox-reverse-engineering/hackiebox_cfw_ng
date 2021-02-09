@@ -1,6 +1,6 @@
 {
     "general": {
-        "_desc": "Always unhides files (instead of hiding them)",
+        "_desc": "Always unhides files instead of hiding them. Breaks updating tonie (creative/live) content.",
         "_memPos": "",
         "_fwVer": "3.0.8"
     },
@@ -9,4 +9,3 @@
         "replace": ["??", "??", "??", "??", "00", "??", "??", "??"]
     }]
 }
-

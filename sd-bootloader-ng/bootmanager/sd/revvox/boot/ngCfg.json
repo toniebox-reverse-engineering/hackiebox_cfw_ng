@@ -21,7 +21,7 @@
         "hashFile": false,
         "watchdog": true,
         "ofwFix": true,
-        "patches": ["blockCheck.308", "noCerts.305", "noChargWake.305", "noHideA.308", "noPass.305", "noPrivacy.305", "uidCheck.305"]
+        "patches": ["blockCheck.308", "noCerts.305", "noChargWake.305", "noHide.308", "noPass.305", "noPrivacy.305", "uidCheck.305"]
     },
     "cfw1": {
         "checkHash": true,

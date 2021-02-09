@@ -17,8 +17,13 @@ Usally doesn't allow tags without the boxine specific or the NXP specific privac
 ### No UID check ([uidCheck.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/uidCheck.305.json))
 Usally the toniebox checks if the UID of the tag starts with *E0:04:03*. With that patch you may use tags with other UIDs (ex SLIX or SLIX2)
 
-### Unhide files that should be hidden ([noHideA.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noHideA.308.json))
-Usally the toniebox sets the file attribute hidden of the tonie file for all live tags and since v3.0.8 all custom tags. If the toniebox is online, it will delete that file to redownload its content. This patch replaces the hide functionality with unhide. So the files won't be deleted and redownloaded.
+### Hide A: Do not hide files that need new content ([noHide.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noHide.308.json))
+*You just need one of the hide patches! This one is recommended*
+Usally the toniebox sets the file attribute hidden of the tonie file for all live tags or tags having new content. If the toniebox is online and the tag is placed on top it will delete that file to redownload its content. This also applies to all custom tags. This patch disabled the hide function. So the files won't be deleted and redownloaded. **Attention** You won't be able to update creative tonies anymore!
+
+### Hide B: Unhide files that should be hidden (because they have new content) ([alwaysUnhide.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/alwaysUnhide.308.json))
+*You just need one of the hide patches!*
+Usally the toniebox sets the file attribute hidden of the tonie file for all live tags or tags having new content. If the toniebox is online and the tag is placed on top it will delete that file to redownload its content. This also applies to all custom tags. This patch replaces the hide functionality with unhide. So the files won't be deleted and redownloaded. **Attention** You won't be able to update creative tonies anymore!
 
 
 ## Additional
