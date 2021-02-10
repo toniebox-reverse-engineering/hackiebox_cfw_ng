@@ -8,8 +8,11 @@ This patch clears the paths to the certificates. This way the box will abort the
 ## Alternative Tags (SLIX / SLIX2)
 If you want to use alternative tags those patches will help you. Even other iso15693 tags may work.
 
-### Block count ([blockCheck.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheck.308.json))
+### Block count >8 ([blockCheck.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheck.308.json))
 Usally the toniebox checks if the tag has exactly 8 blocks. The check allows the tag to have more than that. (ex. SLIX or SLIX2)
+
+### Block count <=8 ([blockCheckRemove.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheckRemove.308.json))
+Usally the toniebox checks if the tag has exactly 8 blocks. The check allows the tag to have less than that. (ex. broken SLIX-L fake tags)
 
 ### No privacy password ([noPass.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPass.305.json))
 Usally doesn't allow tags without the boxine specific or the NXP specific privacy mode password. With the patch you can use tags without having privacy password support (ex. SLIX).
