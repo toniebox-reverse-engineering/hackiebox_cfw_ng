@@ -28,9 +28,8 @@ typedef struct sSearchAndReplacePatch
   char replaceMask[PATCH_MAX_BYTES];
 
 } sSearchAndReplacePatch;
-extern sSearchAndReplacePatch Patch_searchAndReplace;
 
-void Patch_Read(char* name);
+void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength);
 
 #ifdef __cplusplus
 }

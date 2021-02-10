@@ -1,14 +1,60 @@
 #include "patch.h"
 
-sSearchAndReplacePatch Patch_searchAndReplace;
+static sSearchAndReplacePatch searchAndReplacePatch;
+static char* image;
+static uint32_t imageLen;
 
 static jsmn_stream_parser parser;
 static char jsonGroupName[17];
 static char jsonValueName[17];
 static uint8_t cursor = 0;
 
+static void clearSearchAndReplace() {
+  sSearchAndReplacePatch* patch = &searchAndReplacePatch;
+  patch->length = 0;
+  memset(patch->search, 0x00, COUNT_OF(patch->search));
+  memset(patch->searchMask, 0x00, COUNT_OF(patch->searchMask));
+  memset(patch->replace, 0x00, COUNT_OF(patch->replace));
+  memset(patch->replaceMask, 0x00, COUNT_OF(patch->replaceMask));
+}
+static void doSearchAndReplace() {
+  sSearchAndReplacePatch* patch = &searchAndReplacePatch;
+  if (patch->length > 0) {
+    bool doPatch = false;
+    uint32_t offset = 0;
+    for (offset=0; offset<imageLen-patch->length; offset++) {
+      if (patch->searchMask[0] == 0x00)
+        continue;
+      if (patch->search[0] != image[offset])
+        continue;
+
+      uint32_t offset2;
+      for (offset2=1; offset2<patch->length; offset2++) {
+        if (patch->searchMask[offset2] == 0x00)
+          continue;
+        if (patch->search[offset2] != image[offset+offset2]) {
+          offset2 = 0;
+          break;
+        }
+      }
+      if (offset2 == patch->length) {
+        doPatch = true;
+        break;
+      }
+    }
+    if (doPatch) {
+      for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {
+        if (patch->replaceMask[replaceOffset] == 0x00)
+          continue;
+        image[offset+replaceOffset] = patch->replace[replaceOffset];
+      }
+    }
+  }
+  clearSearchAndReplace();
+}
+
 static void jsmn_start_arr(void *user_arg) {
-    cursor = 0;
+  cursor = 0;
 }
 static void jsmn_end_arr(void *user_arg) {
   if (parser.stack_height != 6)
@@ -16,10 +62,11 @@ static void jsmn_end_arr(void *user_arg) {
 
   if (strcmp("searchAndReplace", jsonGroupName) == 0) {
       if (strcmp("search", jsonValueName) == 0 || strcmp("replace", jsonValueName) == 0) {
-          if (Patch_searchAndReplace.length == 0) {
-            Patch_searchAndReplace.length = cursor;
+          if (searchAndReplacePatch.length == 0) {
+            searchAndReplacePatch.length = cursor;
           } else {
-            Patch_searchAndReplace.length = min(cursor, Patch_searchAndReplace.length);
+            searchAndReplacePatch.length = min(cursor, searchAndReplacePatch.length);
+            doSearchAndReplace();
           }
       } 
   }
@@ -55,11 +102,11 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
             char* values;
             char* mask;
             if (strcmp("search", jsonValueName) == 0) {
-                values = Patch_searchAndReplace.search;
-                mask = Patch_searchAndReplace.searchMask;
+                values = searchAndReplacePatch.search;
+                mask = searchAndReplacePatch.searchMask;
             } else if (strcmp("replace", jsonValueName) == 0) {
-                values = Patch_searchAndReplace.replace;
-                mask = Patch_searchAndReplace.replaceMask;
+                values = searchAndReplacePatch.replace;
+                mask = searchAndReplacePatch.replaceMask;
             } 
             if (strcmp("??", key) == 0) {
                 mask[cursor] = 0x00;
@@ -95,7 +142,7 @@ static jsmn_stream_callbacks_t cbs = {
     jsmn_primitive
 };
 
-void Patch_Read(char* name) {
+void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
   //TODO ERRORS
 
   FIL ffile;
@@ -104,18 +151,18 @@ void Patch_Read(char* name) {
   char filepath[COUNT_OF(PATCH_SD_BASE_PATH)+32+5];
   strcpy(filepath, PATCH_SD_BASE_PATH);
   char* filename = filepath + COUNT_OF(PATCH_SD_BASE_PATH)-1;
-  strcpy(filename, name);
+  strcpy(filename, patchName);
   char* fileext = filename + strlen(filename);
   strcpy(fileext, ".json");
 
-  Patch_searchAndReplace.length = 0;
-
-  
   ffs_result = f_open(&ffile, filepath, FA_READ);
   if (ffs_result == FR_OK) {
     uint32_t filesize = f_size(&ffile);
     uint32_t bytesRead = 0;
     uint32_t allBytesRead = 0;
+    clearSearchAndReplace();
+    image = imageBytes;
+    imageLen = imageLength;
     
     jsmn_stream_init(&parser, &cbs, NULL);
     char buffer[512];
