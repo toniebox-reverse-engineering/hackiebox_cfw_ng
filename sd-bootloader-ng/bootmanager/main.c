@@ -600,39 +600,7 @@ int main()
             for (uint8_t i=0; i<PATCH_MAX_PER_IMAGE; i++) {
               if (Config_imageInfos[selectedImgNum].patches[i][0] == '\0')
                 break;
-              Patch_Read(Config_imageInfos[selectedImgNum].patches[i]);
-              sSearchAndReplacePatch* patch = &Patch_searchAndReplace;
-              if (patch->length > 0) {
-                bool doPatch = false;
-                uint32_t offset = 0;
-                for (offset=0; offset<filesize-patch->length; offset++) {
-                  if (patch->searchMask[0] == 0x00)
-                    continue;
-                  if (patch->search[0] != pImgRun[offset])
-                    continue;
-
-                  uint32_t offset2;
-                  for (offset2=1; offset2<patch->length; offset2++) {
-                    if (patch->searchMask[offset2] == 0x00)
-                      continue;
-                    if (patch->search[offset2] != pImgRun[offset+offset2]) {
-                      offset2 = 0;
-                      break;
-                    }
-                  }
-                  if (offset2 == patch->length) {
-                    doPatch = true;
-                    break;
-                  }
-                }
-                if (doPatch) {
-                  for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {
-                    if (patch->replaceMask[replaceOffset] == 0x00)
-                      continue;
-                    pImgRun[offset+replaceOffset] = patch->replace[replaceOffset];
-                  }
-                }
-              }
+              Patch_Apply(pImgRun, Config_imageInfos[selectedImgNum].patches[i], filesize);
             }
             #endif
 

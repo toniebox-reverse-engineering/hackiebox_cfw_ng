@@ -1,0 +1,11 @@
+{
+    "general": {
+        "_desc": "Always unhides files instead of hiding them. Breaks updating tonie (creative/live) content.",
+        "_memPos": "",
+        "_fwVer": "3.0.8"
+    },
+    "searchAndReplace": [{
+        "search":  ["00", "29", "14", "bf", "02", "27", "00", "27"],
+        "replace": ["??", "??", "??", "??", "00", "??", "??", "??"]
+    }]
+}

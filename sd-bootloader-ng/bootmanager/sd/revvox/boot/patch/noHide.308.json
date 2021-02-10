@@ -1,0 +1,11 @@
+{
+    "general": {
+        "_desc": "Do not hide files, if they are marked as deprecated from server. Breaks updating tonie (creative/live) content.",
+        "_memPos": "",
+        "_fwVer": "3.0.8"
+    },
+    "searchAndReplace": [{
+        "search":  ["01", "21", "1c", "a8", "fc", "f7", "77", "fa"],
+        "replace": ["??", "??", "??", "??", "00", "bf", "00", "bf"]
+    }]
+}
