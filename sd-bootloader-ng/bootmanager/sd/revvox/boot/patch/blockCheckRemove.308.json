@@ -1,0 +1,11 @@
+{
+    "general": {
+        "_desc": "Removes check for tag blocks completely (broken tags)",
+        "_memPos": "0x1F46",
+        "_fwVer": "3.0.8+"
+    },
+    "searchAndReplace": [{
+        "search":  ["08", "f0", "56", "fa", "04", "46", "88", "b1", "03", "46", "32", "46"],
+        "replace": ["00", "20", "00", "bf", "??", "??", "??", "??", "??", "??", "??", "??"]
+    }]
+}
