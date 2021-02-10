@@ -1,7 +1,7 @@
 {
     "general": {
-        "_desc": "Removes check for tag blocks count = 8",
-        "_memPos": "",
+        "_desc": "Removes check for tag blocks count > 8",
+        "_memPos": "0x1F82",
         "_fwVer": "3.0.8+"
     },
     "searchAndReplace": [{
