@@ -2,7 +2,8 @@
 
 ## Introduction
 The HackieboxNG CFW is based on a full open source gcc (arm/ti) toolchain. This allows building the new firmware generation without dependecies to micropython or Energia.
-Makefiles + Visual Studio Code launch.json/tasks.json are provided to get started instantly (on linux)
+Makefiles + Visual Studio Code launch.json/tasks.json are provided to get started instantly on linux.
+An openocd file for the cc3200-launchpad is preconfigured in the launch.json. You may alternativly use the provided j-link config file if you got this type of debugger.
 
 ## How to build
 Currently building is only supported under Linux and tested under Debian and Ubuntu.
