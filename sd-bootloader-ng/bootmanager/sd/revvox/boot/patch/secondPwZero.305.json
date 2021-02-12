@@ -1,0 +1,11 @@
+{
+    "general": {
+        "_desc": "Sets second privacy unlock password to 0x00000000 instead of 0x0f0f0f0f",
+        "_memPos": "",
+        "_fwVer": "3.0.5+"
+    },
+    "searchAndReplace": [{
+        "search":  ["4f", "f0", "0f", "31"],
+        "replace": ["??", "??", "00", "??"]
+    }]
+}
