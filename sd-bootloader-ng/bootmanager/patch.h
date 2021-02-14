@@ -29,6 +29,16 @@ typedef struct sSearchAndReplacePatch
 
 } sSearchAndReplacePatch;
 
+typedef struct sSearchPosition
+{
+  uint8_t length;
+
+  int32_t offset;
+  char search[PATCH_MAX_BYTES];
+  char searchMask[PATCH_MAX_BYTES];
+
+} sSearchPosition;
+
 void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength);
 
 #ifdef __cplusplus
