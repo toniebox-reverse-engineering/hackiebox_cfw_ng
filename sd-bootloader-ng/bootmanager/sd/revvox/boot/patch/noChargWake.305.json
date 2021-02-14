@@ -2,6 +2,7 @@
     "general": {
         "_desc": "Disables Wakeup trigger on charger pin. Box needs a clean restart.",
         "_memPos": "0x11C42",
+        "_memPosFw": "3.0.8",
         "_fwVer": "3.0.5+"
     },
     "searchAndReplace": [{
