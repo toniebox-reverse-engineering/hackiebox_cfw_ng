@@ -42,7 +42,7 @@ static uint32_t get_bits(int32_t value, uint8_t start, uint8_t end) {
   return (uint32_t)((value>>start)&mask);
 }
 
-static void armAsm_bl_blx(uint32_t pc, uint32_t target, uint32_t* instruction, bool x) { 
+static void armAsmT_bl_blx(uint32_t pc, uint32_t target, uint32_t* instruction, bool x) { 
     //Base from
     //https://gist.github.com/jeremy-allen-cs/c93bd333b5b585c2b840 
     //https://www.cs.utexas.edu/~simon/378/resources/ARMv7-AR_TRM.pdf
@@ -105,9 +105,9 @@ static void armAsm_bl_blx(uint32_t pc, uint32_t target, uint32_t* instruction, b
 
     *instruction = result;
 }
-void ArmAsm_bl(uint32_t pc, uint32_t target, uint32_t* instruction) { 
-    armAsm_bl_blx(pc, target, instruction, false);
+void ArmAsmT_bl(uint32_t pc, uint32_t target, uint32_t* instruction) { 
+    armAsmT_bl_blx(pc, target, instruction, false);
 }
-void ArmAsm_blx(uint32_t pc, uint32_t target, uint32_t* instruction) { 
-    armAsm_bl_blx(pc, target, instruction, true);
+void ArmAsmT_blx(uint32_t pc, uint32_t target, uint32_t* instruction) { 
+    armAsmT_bl_blx(pc, target, instruction, true);
 }
