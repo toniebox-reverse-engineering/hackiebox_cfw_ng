@@ -1,8 +1,9 @@
 #include "patch.h"
 
-static sSearchPosition searchFunctionPosition;
+static sSearchPosition searchPosition;
 static uint32_t positions[PATCH_MAX_POSITIONS];
-static uint8_t positionCount = 0;
+static uint8_t positionCount;
+static bool positionSearchFailed;
 
 static sSearchAndReplacePatch searchAndReplacePatch;
 static char* image;
@@ -43,21 +44,33 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
 }
 
 static void clearSearchPosition() {
-  sSearchPosition* pos = &searchFunctionPosition;
+  sSearchPosition* pos = &searchPosition;
   pos->length = 0;
   pos->offset = 0;
   memset(pos->search, 0x00, COUNT_OF(pos->search));
   memset(pos->searchMask, 0x00, COUNT_OF(pos->searchMask));
 }
 static void doSearchPosition() {
-  sSearchPosition* pos = &searchFunctionPosition;
-  if (pos->length > 0 && positionCount < COUNT_OF(positions)) {
-    uint32_t offset = 0;
-    if (searchInMemory(pos->search, pos->searchMask, pos->length, &offset)) {
-      positions[positionCount] =  offset + pos->offset;
-      positionCount++;
-    }
+  if (positionSearchFailed)
+    return;
+
+  sSearchPosition* pos = &searchPosition;
+  if (pos->length == 0 || positionCount >= COUNT_OF(positions)) {
+    positionSearchFailed = true;
+    clearSearchPosition();
+    return;
   }
+  
+  uint32_t offset = 0;
+  if (!searchInMemory(pos->search, pos->searchMask, pos->length, &offset)) {
+    positionSearchFailed = true;
+    clearSearchPosition();
+    return;
+  }
+
+  positions[positionCount] =  offset + pos->offset;
+  positionCount++;
+
   clearSearchPosition();
 }
 
@@ -92,7 +105,7 @@ static void jsmn_end_arr(void *user_arg) {
   if (parser.stack_height == 6) {
     if (strcmp("positions", jsonGroupName) == 0) {
       if (strcmp("search", jsonValueName) == 0) {
-        searchFunctionPosition.length = cursor;
+        searchPosition.length = cursor;
       }
     } else if (strcmp("searchAndReplace", jsonGroupName) == 0) {
         if (strcmp("search", jsonValueName) == 0 || strcmp("replace", jsonValueName) == 0) {
@@ -141,8 +154,8 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
           char* values;
           char* mask;
           if (strcmp("search", jsonValueName) == 0) {
-            values = searchFunctionPosition.search;
-            mask = searchFunctionPosition.searchMask;
+            values = searchPosition.search;
+            mask = searchPosition.searchMask;
           }
           if (strcmp("??", key) == 0) {
             mask[cursor] = 0x00;
@@ -217,6 +230,8 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     uint32_t bytesRead = 0;
     uint32_t allBytesRead = 0;
     clearSearchPosition();
+    positionCount = 0;
+    positionSearchFailed = false;
     clearSearchAndReplace();
     image = imageBytes;
     imageLen = imageLength;
