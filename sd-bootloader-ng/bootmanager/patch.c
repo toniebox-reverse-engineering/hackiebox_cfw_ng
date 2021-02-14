@@ -1,5 +1,9 @@
 #include "patch.h"
 
+static sSearchPosition searchFunctionPosition;
+static uint32_t positions[PATCH_MAX_POSITIONS];
+static uint8_t positionCount = 0;
+
 static sSearchAndReplacePatch searchAndReplacePatch;
 static char* image;
 static uint32_t imageLen;
@@ -9,6 +13,54 @@ static char jsonGroupName[17];
 static char jsonValueName[17];
 static uint8_t cursor = 0;
 
+static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint32_t* position) {
+  bool found = false;
+
+  uint32_t offset = 0;
+  for (offset=0; offset<imageLen-length; offset++) {
+    if (searchMask[0] == 0x00)
+      continue;
+    if (search[0] != image[offset])
+      continue;
+
+    uint32_t offset2;
+    for (offset2=1; offset2<length; offset2++) {
+      if (searchMask[offset2] == 0x00)
+        continue;
+      if (search[offset2] != image[offset+offset2]) {
+        offset2 = 0;
+        break;
+      }
+    }
+    if (offset2 == length) {
+      *position = offset;
+      found = true;
+      break;
+    }
+  }
+
+  return found;
+}
+
+static void clearSearchPosition() {
+  sSearchPosition* pos = &searchFunctionPosition;
+  pos->length = 0;
+  pos->offset = 0;
+  memset(pos->search, 0x00, COUNT_OF(pos->search));
+  memset(pos->searchMask, 0x00, COUNT_OF(pos->searchMask));
+}
+static void doSearchPosition() {
+  sSearchPosition* pos = &searchFunctionPosition;
+  if (pos->length > 0 && positionCount < COUNT_OF(positions)) {
+    uint32_t offset = 0;
+    if (searchInMemory(pos->search, pos->searchMask, pos->length, &offset)) {
+      positions[positionCount] =  offset + pos->offset;
+      positionCount++;
+    }
+  }
+  clearSearchPosition();
+}
+
 static void clearSearchAndReplace() {
   sSearchAndReplacePatch* patch = &searchAndReplacePatch;
   patch->length = 0;
@@ -17,32 +69,12 @@ static void clearSearchAndReplace() {
   memset(patch->replace, 0x00, COUNT_OF(patch->replace));
   memset(patch->replaceMask, 0x00, COUNT_OF(patch->replaceMask));
 }
+
 static void doSearchAndReplace() {
   sSearchAndReplacePatch* patch = &searchAndReplacePatch;
   if (patch->length > 0) {
-    bool doPatch = false;
     uint32_t offset = 0;
-    for (offset=0; offset<imageLen-patch->length; offset++) {
-      if (patch->searchMask[0] == 0x00)
-        continue;
-      if (patch->search[0] != image[offset])
-        continue;
-
-      uint32_t offset2;
-      for (offset2=1; offset2<patch->length; offset2++) {
-        if (patch->searchMask[offset2] == 0x00)
-          continue;
-        if (patch->search[offset2] != image[offset+offset2]) {
-          offset2 = 0;
-          break;
-        }
-      }
-      if (offset2 == patch->length) {
-        doPatch = true;
-        break;
-      }
-    }
-    if (doPatch) {
+    if (searchInMemory(patch->search, patch->searchMask, patch->length, &offset)) {
       for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {
         if (patch->replaceMask[replaceOffset] == 0x00)
           continue;
@@ -57,18 +89,21 @@ static void jsmn_start_arr(void *user_arg) {
   cursor = 0;
 }
 static void jsmn_end_arr(void *user_arg) {
-  if (parser.stack_height != 6)
-    return;
-
-  if (strcmp("searchAndReplace", jsonGroupName) == 0) {
-      if (strcmp("search", jsonValueName) == 0 || strcmp("replace", jsonValueName) == 0) {
+  if (parser.stack_height == 6) {
+    if (strcmp("positions", jsonGroupName) == 0) {
+      if (strcmp("search", jsonValueName) == 0) {
+        searchFunctionPosition.length = cursor;
+      }
+    } else if (strcmp("searchAndReplace", jsonGroupName) == 0) {
+        if (strcmp("search", jsonValueName) == 0 || strcmp("replace", jsonValueName) == 0) {
           if (searchAndReplacePatch.length == 0) {
             searchAndReplacePatch.length = cursor;
           } else {
             searchAndReplacePatch.length = min(cursor, searchAndReplacePatch.length);
             doSearchAndReplace();
           }
-      } 
+        } 
+    }
   }
 }
 static void jsmn_start_obj(void *user_arg) {
@@ -78,6 +113,10 @@ static void jsmn_start_obj(void *user_arg) {
 static void jsmn_end_obj(void *user_arg) {
   if (parser.stack_height != 4)
     return;
+
+  if (strcmp("positions", jsonGroupName) == 0) {
+    doSearchPosition();
+  }
 }
 static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
     uint8_t len;
@@ -95,26 +134,43 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
       jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
       break;
     case 6:
-        if (strcmp("searchAndReplace", jsonGroupName) == 0 && key_len == 2) {
-            if (cursor >= PATCH_MAX_BYTES)
-                return;
-                
-            char* values;
-            char* mask;
-            if (strcmp("search", jsonValueName) == 0) {
-                values = searchAndReplacePatch.search;
-                mask = searchAndReplacePatch.searchMask;
-            } else if (strcmp("replace", jsonValueName) == 0) {
-                values = searchAndReplacePatch.replace;
-                mask = searchAndReplacePatch.replaceMask;
-            } 
-            if (strcmp("??", key) == 0) {
-                mask[cursor] = 0x00;
-            } else {
-                values[cursor] = (char)xtob((char*)key);
-                mask[cursor] = 0xFF;
-            }
-            cursor++;
+        if (strcmp("positions", jsonGroupName) == 0 && key_len == 2) {
+          if (cursor >= PATCH_MAX_BYTES)
+            return;
+              
+          char* values;
+          char* mask;
+          if (strcmp("search", jsonValueName) == 0) {
+            values = searchFunctionPosition.search;
+            mask = searchFunctionPosition.searchMask;
+          }
+          if (strcmp("??", key) == 0) {
+            mask[cursor] = 0x00;
+          } else {
+            values[cursor] = (char)xtob((char*)key);
+            mask[cursor] = 0xFF;
+          }
+          cursor++;
+        } else if (strcmp("searchAndReplace", jsonGroupName) == 0 && key_len == 2) {
+          if (cursor >= PATCH_MAX_BYTES)
+            return;
+              
+          char* values;
+          char* mask;
+          if (strcmp("search", jsonValueName) == 0) {
+            values = searchAndReplacePatch.search;
+            mask = searchAndReplacePatch.searchMask;
+          } else if (strcmp("replace", jsonValueName) == 0) {
+            values = searchAndReplacePatch.replace;
+            mask = searchAndReplacePatch.replaceMask;
+          } 
+          if (strcmp("??", key) == 0) {
+            mask[cursor] = 0x00;
+          } else {
+            values[cursor] = (char)xtob((char*)key);
+            mask[cursor] = 0xFF;
+          }
+          cursor++;
         }  
         break;
     }
@@ -160,6 +216,7 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     uint32_t filesize = f_size(&ffile);
     uint32_t bytesRead = 0;
     uint32_t allBytesRead = 0;
+    clearSearchPosition();
     clearSearchAndReplace();
     image = imageBytes;
     imageLen = imageLength;
