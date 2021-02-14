@@ -1,0 +1,11 @@
+{
+    "general": {
+        "_desc": "After two failed tag passwords attempts, the box may try it without a password and shut down the rfid for a moment.",
+        "_memPos": "",
+        "_fwVer": "3.0.8+"
+    },
+    "searchAndReplace": [{
+        "search":  ["4f", "f0", "??", "31", "??", "aa", "00", "20", "11", "91", "??", "??", "??", "??", "05", "28", "04", "46", "40", "d1", "97", "49", "97", "48", "18", "f0", "87", "fc"],
+        "replace": ["??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "00", "24", "0f", "f0", "0d", "fb", "10", "20", "0f", "f0", "6c", "f9", "3c", "e0"]
+    }]
+}
