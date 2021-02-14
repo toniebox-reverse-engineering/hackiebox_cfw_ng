@@ -2,6 +2,7 @@
     "general": {
         "_desc": "Allows tags with block count <8",
         "_memPos": "0x1F46",
+        "_memPosFw": "3.0.8",
         "_fwVer": "3.0.8+"
     },
     "searchAndReplace": [{
