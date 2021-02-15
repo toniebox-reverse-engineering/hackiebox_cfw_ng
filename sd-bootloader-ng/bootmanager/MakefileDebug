@@ -1,4 +1,4 @@
 OPT_LEVEL=0
 LINK_FILE=bootmgr.debug.ld
 
-include Makefile
+include MakefileBase
