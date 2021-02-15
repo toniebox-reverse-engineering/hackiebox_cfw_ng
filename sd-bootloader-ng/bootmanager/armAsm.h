@@ -8,9 +8,12 @@ extern "C"
 #include <stdbool.h>
 #include <stdint.h>
 
-void ArmAsmT_bl(uint32_t pc, uint32_t target, uint32_t* instruction);
-void ArmAsmT_blx(uint32_t pc, uint32_t target, uint32_t* instruction);
-void ArmAsmT_b(uint32_t pc, uint32_t target, uint16_t* instruction);
+void ArmAsmT_bl(uint32_t pc, uint32_t target, char instruction[4]);
+void ArmAsmT_blx(uint32_t pc, uint32_t target, char instruction[4]);
+void ArmAsmT_b(uint32_t pc, uint32_t target, char instruction[2]);
+void ArmAsmT_bne(uint32_t pc, uint32_t target, char instruction[2]);
+
+void ArmDasmT(uint32_t pc, char instruction[4], uint32_t* target, uint8_t* condition);
 
 #ifdef __cplusplus
 }
