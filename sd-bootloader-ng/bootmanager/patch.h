@@ -36,6 +36,8 @@ typedef struct sSearchPosition
   int32_t offset;
   char search[PATCH_MAX_BYTES];
   char searchMask[PATCH_MAX_BYTES];
+  bool deasmAddress;
+
 
 } sSearchPosition;
 
