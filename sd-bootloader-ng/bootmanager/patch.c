@@ -1,4 +1,6 @@
 #include "patch.h"
+#include "armAsm.h"
+#include <stdlib.h> 
 
 static sSearchPosition searchPosition;
 static uint32_t positions[PATCH_MAX_POSITIONS];
@@ -49,6 +51,7 @@ static void clearSearchPosition() {
   pos->offset = 0;
   memset(pos->search, 0x00, COUNT_OF(pos->search));
   memset(pos->searchMask, 0x00, COUNT_OF(pos->searchMask));
+  pos->deasmAddress = false;
 }
 static void doSearchPosition() {
   if (positionSearchFailed)
@@ -68,7 +71,14 @@ static void doSearchPosition() {
     return;
   }
 
-  positions[positionCount] =  offset + pos->offset;
+  positions[positionCount] = offset + pos->offset;
+  if (pos->deasmAddress) {
+    uint32_t addr = APP_IMG_SRAM_OFFSET + positions[positionCount];
+    uint32_t target = 0;
+    ArmDasmT(addr, (char*)addr, &target, NULL);
+    positions[positionCount] = target - APP_IMG_SRAM_OFFSET;
+  }
+
   positionCount++;
 
   clearSearchPosition();
@@ -191,13 +201,20 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
 static void jsmn_str(const char *value, size_t len, void *user_arg) {
     if (parser.stack_height != 5)
       return;  
+
+    if (strcmp("positions", jsonGroupName) == 0) {
+    }
 }
 static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
-    if (parser.stack_height != 4)
+    if (parser.stack_height != 5)
       return;
 
-    if (strcmp("general", jsonGroupName) == 0)
-    {
+    if (strcmp("positions", jsonGroupName) == 0) {
+      if (strcmp("offset", jsonValueName) == 0) {
+        searchPosition.offset = (int32_t)strtol(value, NULL, 0);
+      } else if (strcmp("deasmAddress", jsonValueName) == 0) {
+        searchPosition.deasmAddress = (value[0] == 't');
+      }
     }
 }
 
