@@ -46,7 +46,7 @@ ROOT=../..
 # Set optimization level and linkscript
 #
 #OPT_LEVEL=s
-ADD_LINK_SCRIPT=${PWD}/concatBootmanagerRelocator.sh
+ADD_LINK_SCRIPT=${PWD}/concatBootmanagerRelocator.sh ${RELOC_ADDR} ${BINSUB}
 
 ifndef LINK_FILE
 LINK_FILE=bootmgr.ld
@@ -130,8 +130,8 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/printf.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/network_common.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/startup_${COMPILER}.o
-${BINDIR}/bootmgr.axf: ${SDKROOT}/simplelink/${COMPILER}/${BINDIR}/libsimplelink_nonos_opt.a
-${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/${BINDIR}/libdriver.a
+${BINDIR}/bootmgr.axf: ${SDKROOT}/simplelink/${COMPILER}/exe/libsimplelink_nonos_opt.a
+${BINDIR}/bootmgr.axf: ${SDKROOT}/driverlib/${COMPILER}/exe/libdriver.a
 
 SCATTERgcc_bootmgr=${LINK_FILE}
 ENTRY_bootmgr=ResetISR

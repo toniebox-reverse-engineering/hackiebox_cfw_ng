@@ -508,7 +508,12 @@ int main()
   BoardInitCustom();
   watchdog_start();
 
-  Logger_info("Board initialized");
+
+  #ifndef FIXED_BOOT_IMAGE
+  Logger_info("Bootloader initialized");
+  #else
+  Logger_info("Preloader initialized");
+  #endif
 
   if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
     Logger_warn("Wakeup from WDT_Reset");

@@ -20,7 +20,7 @@
 
 
 
-#ifdef DEBUG_LOG
+#ifndef NO_DEBUG_LOG
 
 void Logger_init(void) {
     MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
