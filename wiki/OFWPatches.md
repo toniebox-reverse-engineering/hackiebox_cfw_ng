@@ -24,8 +24,8 @@ Usally doesn't allow tags without the boxine specific or the NXP specific privac
 ### No privacy password ([noPass.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPass.305.json))
 Usally doesn't allow tags without the boxine specific or the NXP specific privacy mode password. With the patch you can use tags without having privacy password support (ex. SLIX).
 
-### Second privacy password to 0f0f0f0f ([secondPwZero.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/secondPwZero.305.json))
-Usally doesn't the toniebox checks for two passwords. The boxine specific and the NXP specific standard password *0f0f0f0f*. This patch changes the second password to *00000000*. This is currently needed for SLIX tags as they will freeze with a password different to *00000000* while the rf field is on. In the future this should be replaced with a patch that shuts the rf field off if the first two passwords don't work before continuing.
+### Second privacy password to 00000000 ([secondPwZero.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/secondPwZero.305.json))
+Usally doesn't the toniebox checks for two passwords. The boxine specific and the NXP specific standard password *0f0f0f0f*. This patch changes the second password to *00000000*.
 
 
 ### No UID check ([uidCheck.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/uidCheck.305.json))
