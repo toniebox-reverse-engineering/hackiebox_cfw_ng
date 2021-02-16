@@ -1,6 +1,7 @@
 #include "patch.h"
 #include "armAsm.h"
 #include <stdlib.h> 
+#include <stddef.h>
 
 static sSearchPosition searchPosition;
 static uint32_t positions[PATCH_MAX_POSITIONS];
@@ -11,9 +12,13 @@ static sSearchAndReplacePatch searchAndReplacePatch;
 static char* image;
 static uint32_t imageLen;
 
+static sAsmReplace asmReplace;
+
 static jsmn_stream_parser parser;
 static char jsonGroupName[17];
 static char jsonValueName[17];
+static char jsonSpeciName[17];
+static char jsonSpeciSubName[17];
 static uint8_t cursor = 0;
 
 static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint32_t* position) {
@@ -108,6 +113,53 @@ static void doSearchAndReplace() {
   clearSearchAndReplace();
 }
 
+static void clearAsmReplace() {
+  memset(asmReplace.instruction, 0x00, COUNT_OF(asmReplace.instruction));
+  memset(asmReplace.parameter, 0x00, COUNT_OF(asmReplace.parameter));
+  asmReplace.length = 0;
+}
+static void doAsmReplace() {
+  if (asmReplace.length == 0)
+    return;
+
+  if (asmReplace.parameter[0] != 'p' || asmReplace.parameter[1] == '\0') 
+    goto cleanUp;
+
+  uint8_t id = strtoul(&asmReplace.parameter[1], NULL, 0);
+
+  if (positionCount <= id)
+    goto cleanUp;
+
+  uint32_t target = APP_IMG_SRAM_OFFSET + positions[id];
+
+  uint32_t offset = searchAndReplacePatch.searchMemPos; //TODO! Searching twice and assert that search is before replace.
+  uint32_t pc = APP_IMG_SRAM_OFFSET + offset + cursor; 
+
+  if (strcmp("b", asmReplace.instruction) == 0) {
+    char instr[2];
+    ArmAsmT_b(pc, target, instr);
+    searchAndReplacePatch.replace[cursor] = instr[0];
+    searchAndReplacePatch.replaceMask[cursor] = 0xFF;
+    searchAndReplacePatch.replace[cursor+1] = instr[1];
+    searchAndReplacePatch.replaceMask[cursor+1] = 0xFF;
+  } else if (strcmp("bl", asmReplace.instruction) == 0) {
+    char instr[4];
+    ArmAsmT_bl(pc, target, instr);
+    searchAndReplacePatch.replace[cursor] = instr[0];
+    searchAndReplacePatch.replaceMask[cursor] = 0xFF;
+    searchAndReplacePatch.replace[cursor+1] = instr[1];
+    searchAndReplacePatch.replaceMask[cursor+1] = 0xFF;
+    searchAndReplacePatch.replace[cursor+2] = instr[2];
+    searchAndReplacePatch.replaceMask[cursor+2] = 0xFF;
+    searchAndReplacePatch.replace[cursor+3] = instr[3];
+    searchAndReplacePatch.replaceMask[cursor+3] = 0xFF;
+  }
+
+  cleanUp:
+  cursor += asmReplace.length;
+  clearAsmReplace();
+}
+
 static void jsmn_start_arr(void *user_arg) {
   cursor = 0;
 }
@@ -121,6 +173,9 @@ static void jsmn_end_arr(void *user_arg) {
         if (strcmp("search", jsonValueName) == 0 || strcmp("replace", jsonValueName) == 0) {
           if (searchAndReplacePatch.length == 0) {
             searchAndReplacePatch.length = cursor;
+            //TODO! Searching twice and assert that search is before replace.
+            searchInMemory(searchAndReplacePatch.search, searchAndReplacePatch.searchMask, searchAndReplacePatch.length, &
+            searchAndReplacePatch.searchMemPos);  
           } else {
             searchAndReplacePatch.length = min(cursor, searchAndReplacePatch.length);
             doSearchAndReplace();
@@ -134,12 +189,23 @@ static void jsmn_start_obj(void *user_arg) {
     //printf("Object started\n");
 }
 static void jsmn_end_obj(void *user_arg) {
-  if (parser.stack_height != 4)
-    return;
-
-  if (strcmp("positions", jsonGroupName) == 0) {
-    doSearchPosition();
+  switch (parser.stack_height)
+  {
+  case 4:
+    if (strcmp("positions", jsonGroupName) == 0) {
+      doSearchPosition();
+    }
+    break;
+  case 7:
+    if (strcmp("searchAndReplace", jsonGroupName) == 0
+      && strcmp("replace", jsonValueName) == 0
+      && strcmp("asm", jsonSpeciName) == 0) {
+      doAsmReplace();
+    }
+    break;
   }
+  
+
 }
 static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
     uint8_t len;
@@ -200,25 +266,60 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
           cursor++;
         }  
         break;
+      case 7:
+        len = min(key_len, COUNT_OF(jsonSpeciName)-1);
+        strncpy(jsonSpeciName, key, len);
+        jsonSpeciName[min(key_len, COUNT_OF(jsonSpeciName))] = '\0';
+        break;
+      case 9:
+        len = min(key_len, COUNT_OF(jsonSpeciSubName)-1);
+        strncpy(jsonSpeciSubName, key, len);
+        jsonSpeciSubName[min(key_len, COUNT_OF(jsonSpeciSubName))] = '\0';
+        break;
     }
 }
 static void jsmn_str(const char *value, size_t len, void *user_arg) {
-    if (parser.stack_height != 5)
-      return;  
+    uint8_t tar_len;
+    switch (parser.stack_height) {
+    case 10:
+      if (strcmp("searchAndReplace", jsonGroupName) == 0
+        && strcmp("replace", jsonValueName) == 0
+        && strcmp("asm", jsonSpeciName) == 0) {
 
-    if (strcmp("positions", jsonGroupName) == 0) {
+        if (strcmp("instr", jsonSpeciSubName) == 0) {
+          tar_len = min(len, COUNT_OF(asmReplace.instruction)-1);
+          strncpy(asmReplace.instruction, value, tar_len);
+          asmReplace.instruction[min(len, COUNT_OF(asmReplace.instruction))] = '\0';
+        } else if (strcmp("param", jsonSpeciSubName) == 0) {
+          tar_len = min(len, COUNT_OF(asmReplace.parameter)-1);
+          strncpy(asmReplace.parameter, value, tar_len);
+          asmReplace.parameter[min(len, COUNT_OF(asmReplace.parameter))] = '\0';
+        }
+      }
+      break;
     }
 }
 static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
-    if (parser.stack_height != 5)
-      return;
 
-    if (strcmp("positions", jsonGroupName) == 0) {
-      if (strcmp("offset", jsonValueName) == 0) {
-        searchPosition.offset = (int32_t)strtol(value, NULL, 0);
-      } else if (strcmp("deasmAddress", jsonValueName) == 0) {
-        searchPosition.deasmAddress = (value[0] == 't');
+    switch (parser.stack_height) {
+    case 5:
+      if (strcmp("positions", jsonGroupName) == 0) {
+        if (strcmp("offset", jsonValueName) == 0) {
+          searchPosition.offset = (int32_t)strtol(value, NULL, 0);
+        } else if (strcmp("deasmAddress", jsonValueName) == 0) {
+          searchPosition.deasmAddress = (value[0] == 't');
+        }
       }
+      break;
+    case 10:
+      if (strcmp("searchAndReplace", jsonGroupName) == 0
+        && strcmp("replace", jsonValueName) == 0
+        && strcmp("asm", jsonSpeciName) == 0) {
+        if (strcmp("length", jsonSpeciSubName) == 0) {
+          asmReplace.length = (int8_t)strtoul(value, NULL, 0);
+        }
+      }
+      break;
     }
 }
 
@@ -254,6 +355,7 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     positionCount = 0;
     positionSearchFailed = false;
     clearSearchAndReplace();
+    clearAsmReplace();
     image = imageBytes;
     imageLen = imageLength;
     
