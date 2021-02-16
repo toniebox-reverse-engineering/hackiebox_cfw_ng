@@ -86,6 +86,7 @@ static FATFS fatfs;
 #include "patch.h"
 #include "globalDefines.h"
 #include "watchdog.h"
+#include "logger.h"
 
 #include "wiring.h"
 
@@ -262,7 +263,6 @@ static void BoardInitCustom(void)
 
   //MAP_PRCMPeripheralClkEnable(PRCM_WDT, PRCM_RUN_MODE_CLK);
   
-  //MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
   //MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
 
@@ -292,7 +292,9 @@ static void BoardInitCustom(void)
   //Init SHAMD5
   MAP_PRCMPeripheralClkEnable(PRCM_DTHE, PRCM_RUN_MODE_CLK | PRCM_SLP_MODE_CLK);
   MAP_PRCMPeripheralReset(PRCM_DTHE);
-  
+
+  Logger_init();
+
   SdInit();
 }
 static void BoardDeinitCustom(void)
@@ -377,6 +379,7 @@ static uint16_t getBatteryLevel()
 }
 
 static void hibernate() {
+  Logger_info("Prepare hibernation");
   watchdog_stop();
   BoardDeinitCustom();
   
@@ -505,7 +508,10 @@ int main()
   BoardInitCustom();
   watchdog_start();
 
+  Logger_info("Board initialized");
+
   if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
+    Logger_warn("Wakeup from WDT_Reset");
     watchdog_recovery_sequence();
 
     prebootmgr_blink_error(5, 33);
@@ -514,7 +520,7 @@ int main()
 
     hibernate();
   }
-  
+
   #ifndef FIXED_BOOT_IMAGE
   Config_InitImageInfos();
   #endif
@@ -618,6 +624,7 @@ int main()
             #endif
             watchdog_feed();
 
+            Logger_info("Start firmware from memory...");
             Run((unsigned long)pImgRun);
           } else {
               UtilsDelayMsWD(1000);

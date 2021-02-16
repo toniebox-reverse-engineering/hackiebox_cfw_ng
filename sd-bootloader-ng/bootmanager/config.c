@@ -1,5 +1,6 @@
 #include "config.h"
 #include <stdlib.h> 
+#include "logger.h"
 
 sGeneralSettings Config_generalSettings = {
   0,      //activeImage
@@ -141,6 +142,7 @@ static jsmn_stream_callbacks_t cbs = {
 
 
 void Config_InitImageInfos(void) {
+  Logger_trace("Initialize ImageInfos");
   for (uint8_t i = 0; i < IMG_MAX_COUNT; i++)
   {
     Config_imageInfos[i].fileExists = false;
