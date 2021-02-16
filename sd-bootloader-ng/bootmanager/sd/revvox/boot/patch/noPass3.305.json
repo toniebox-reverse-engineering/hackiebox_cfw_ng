@@ -16,12 +16,6 @@
         "search":  ["73", "b5", "2f", "4e", "33", "78"]
     },{
         "_id": 2,
-        "_name": "LAB_AfterPwSuccess",
-        "offset": 16,
-        "search":  ["00", "23", "23", "60", "??", "??", "??", "??", "64", "20", "??", "??", "??", "??", "??", "e7",
-                        "00", "2c"]
-    },{
-        "_id": 3,
         "_name": "bne LAB_AfterPwSuccess",
         "offset": 4,
         "search":  ["05", "28", "04", "46"],
@@ -37,7 +31,7 @@
             {"asm":{"instr": "bl", "param":"p0", "length": 4}}, 
             "10", "20",
             {"asm":{"instr": "bl", "param":"p1", "length": 4}},
-            {"asm":{"instr": "b", "param":"p3", "length": 2}}
+            {"asm":{"instr": "b", "param":"p2", "length": 2}}
         ]
     }]
 }
