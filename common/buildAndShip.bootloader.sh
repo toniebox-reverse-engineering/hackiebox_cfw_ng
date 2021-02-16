@@ -11,16 +11,28 @@ source ${ROOT}/common/make/sdkPath
 source ${ROOT}/common/make/armGccPath
 export PATH="${ARMGCC_BIN}:$PATH"
 
+if [ "$1" == "debug" ]; then
+    DEBUG_APPENDIX=Debug
+    DEBUG_APPENDIX_ZIP=_debug
+    DEBUG_PATH_APPENDIX=debug/
+else
+    DEBUG_APPENDIX=""
+    DEBUG_APPENDIX_ZIP=""
+    DEBUG_PATH_APPENDIX="build/"
+fi
+
 OUT_DIR=${ROOT}/exe/sd-bootloader-ng
-OUT_FILE=${ROOT}/exe/sd-bootloader-ng.zip
+OUT_FILE=${ROOT}/exe/sd-bootloader-ng${DEBUG_APPENDIX_ZIP}.zip
 
 DRIVELIB_DIR=${SDKROOT}/driverlib/gcc
 SIMPLELINK_DIR=${SDKROOT}/simplelink/gcc
 RELOC_DIR=${ROOT}/sd-bootloader-ng/relocator
 BOOTMGR_DIR=${ROOT}/sd-bootloader-ng/bootmanager
 
-BOOTMGR_SRC_BIN=${BOOTMGR_DIR}/exe/bootmgr.relocator.bin
+BOOTMGR_SRC_BIN=${BOOTMGR_DIR}/exe/${DEBUG_PATH_APPENDIX}/bootloader/bootmgr.relocator.bin
 BOOTMGR_SRC_SD=${BOOTMGR_DIR}/sd/revvox/boot
+
+PRELOAD_SRC_BIN=${BOOTMGR_DIR}/exe/${DEBUG_PATH_APPENDIX}/preloader/bootmgr.relocator.bin
 
 PRELOAD_DES_DIR=${OUT_DIR}/flash/sys
 BOOTMGR_DES_DIR=${OUT_DIR}/sd/revvox/boot
@@ -52,19 +64,19 @@ if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo 
     echo Build relocator
     cd ${RELOC_DIR}
-    make -f Makefile clean all
+    make -f Makefile${DEBUG_APPENDIX} clean all
 
     echo 
     echo Build Preloader
     cd ${BOOTMGR_DIR}
-    make -f MakefilePreloader clean all
-    cp ${BOOTMGR_SRC_BIN} ${PRELOAD_DES_BIN}
+    make -f Makefile${DEBUG_APPENDIX}Preloader clean all
+    cp ${PRELOAD_SRC_BIN} ${PRELOAD_DES_BIN}
 
     echo 
     echo Build Bootmanager
 
     cd ${BOOTMGR_DIR}
-    make -f Makefile clean all
+    make -f Makefile${DEBUG_APPENDIX} clean all
     cp ${BOOTMGR_SRC_BIN} ${BOOTMGR_DES_BIN}
 
     echo 
