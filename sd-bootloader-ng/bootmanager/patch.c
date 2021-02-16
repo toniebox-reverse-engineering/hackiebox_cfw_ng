@@ -166,6 +166,8 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
           if (strcmp("search", jsonValueName) == 0) {
             values = searchPosition.search;
             mask = searchPosition.searchMask;
+          } else {
+            return;
           }
           if (strcmp("??", key) == 0) {
             mask[cursor] = 0x00;
@@ -186,7 +188,9 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
           } else if (strcmp("replace", jsonValueName) == 0) {
             values = searchAndReplacePatch.replace;
             mask = searchAndReplacePatch.replaceMask;
-          } 
+          } else {
+            return;
+          }
           if (strcmp("??", key) == 0) {
             mask[cursor] = 0x00;
           } else {
