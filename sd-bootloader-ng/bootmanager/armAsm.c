@@ -21,6 +21,8 @@
 //A8.6.16 B
 #define INST_B_T1 0b1101000000000000
 #define INSM_B_T1 0b1111000000000000
+#define INST_B_T2 0b1110000000000000
+#define INSM_B_T2 0b1111100000000000
 //A8.6.23 BL, BLX (immediate)
 #define INST_BL_T1 0b1111000000000000110100000000
 #define INSM_BL_T1 0b1111100000000000110100000000
@@ -190,32 +192,41 @@ static void armDasmT_bl_blx(uint32_t pc, char instruction[4], bool x, uint32_t* 
 }
 
 static void armAsmT_b(uint32_t pc, uint32_t target, uint8_t condition, char instruction[2]) { 
-  //A8.6.16 B - T1
+  //A8.6.16 B - T1+T2
   
   uint16_t result = 0;
 
   pc = pc + 4; //Arm pipeline preloading
   int32_t offset = target - pc;
 
-  uint8_t imm8 = (uint8_t)(offset>>1);
+  if (condition == COND_AL) {
+    uint16_t imm11 = (uint16_t)(offset>>1);
 
-  result = set_bits(result, 12, 0b1101, 4);
-  result = set_bits(result, 8, condition, 4);
-  result = set_bits(result, 0, imm8, 8);
-  
+    result = set_bits(result, 11, 0b11100, 5);
+    result = set_bits(result, 0, imm11, 11);
+  } else {
+    uint8_t imm8 = (uint8_t)(offset>>1);
+
+    result = set_bits(result, 12, 0b1101, 4);
+    result = set_bits(result, 8, condition, 4);
+    result = set_bits(result, 0, imm8, 8);
+  }
+
   conv_ui_ca16(result, instruction);
 }
-static void armDasmT_b(uint32_t pc, uint16_t instruction16, uint32_t* target, uint8_t* condition) {
-  //A8.6.16 B - T1
-  //assert(INST_B_T1 == get_bits(instruction, 12, 15));
-
-  //instruction = swap_bytes_word(instruction);
-
+static void armDasmT_b1(uint32_t pc, uint16_t instruction16, uint32_t* target, uint8_t* condition) {
   int32_t offset = get_bits(instruction16, 0, 7);
   offset = offset<<1;
 
   if (condition != NULL)
     *condition = get_bits(instruction16, 8, 11);
+  if (target != NULL)
+    *target = offset + pc+4; //Arm pipeline preloading
+}
+static void armDasmT_b2(uint32_t pc, uint16_t instruction16, uint32_t* target) {
+  int32_t offset = get_bits(instruction16, 0, 11);
+  offset = offset<<1;
+
   if (target != NULL)
     *target = offset + pc+4; //Arm pipeline preloading
 }
@@ -237,7 +248,9 @@ void ArmDasmT(uint32_t pc, char instruction[4], uint32_t* target, uint8_t* condi
   uint32_t instr32 = conv_ca_ui32(instruction);
 
   if (INST_B_T1 == (INSM_B_T1&instr16)) {
-    armDasmT_b(pc, instr16, target, condition);
+    armDasmT_b1(pc, instr16, target, condition);
+  } else if (INST_B_T2 == (INSM_B_T2&instr16)) {
+    armDasmT_b2(pc, instr16, target);
   } else if (INST_BL_T1 == INSM_BL_T1&instr32) {
     //armDasmT_bl_blx(pc, instruction, false, target);
   } else if (INST_BLX_T2 == INSM_BLX_T2&instr32) {
