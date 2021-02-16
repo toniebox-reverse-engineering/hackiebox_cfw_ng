@@ -23,6 +23,7 @@ typedef struct sSearchAndReplacePatch
 
   char search[PATCH_MAX_BYTES];
   char searchMask[PATCH_MAX_BYTES];
+  uint32_t searchMemPos;
 
   char replace[PATCH_MAX_BYTES];
   char replaceMask[PATCH_MAX_BYTES];
@@ -38,8 +39,15 @@ typedef struct sSearchPosition
   char searchMask[PATCH_MAX_BYTES];
   bool deasmAddress;
 
-
 } sSearchPosition;
+
+typedef struct sAsmReplace
+{
+  char instruction[4];
+  char parameter[3];
+  uint8_t length;
+
+} sAsmReplace;
 
 void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength);
 
