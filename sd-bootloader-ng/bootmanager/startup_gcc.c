@@ -36,9 +36,15 @@
 //
 //*****************************************************************************
 
-#include <stdint.h>
+
+#include "rom.h"
+#include "rom_map.h"
+
 #include "hw_nvic.h"
 #include "hw_types.h"
+#include "hw_memmap.h"
+
+#include <stdint.h>
 
 //*****************************************************************************
 //
@@ -344,4 +350,8 @@ void * _sbrk(unsigned int incr)
     //
     return prev_heap_end;
 
+}
+
+void _putchar(char character) {
+    MAP_UARTCharPut(UARTA0_BASE, character);
 }
