@@ -65,6 +65,7 @@ VPATH+=${SDKROOT}/example/common
 
 VPATH+=lib/FatFs
 VPATH+=lib/jsmn-stream
+VPATH+=lib/printf
 
 #
 # Where to find header files that do not live in the source directory.
@@ -81,6 +82,7 @@ IPATH+=${SDKROOT}/simplelink_extlib/provisioninglib
 
 IPATH+=lib/FatFs
 IPATH+=lib/jsmn-stream
+IPATH+=lib/printf
 
 #
 # The default rule, which causes the driver library to be built.
@@ -114,6 +116,7 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/config.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/armAsm.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/patch.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/watchdog.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/logger.o
 
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/wiring.o
 
@@ -122,6 +125,7 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/udma_if.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ff.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/diskio.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/jsmn_stream.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/printf.o
 
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ccsbcs.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/network_common.o
