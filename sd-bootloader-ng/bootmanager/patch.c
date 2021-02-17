@@ -428,8 +428,10 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     while (allBytesRead<filesize)
     {
       ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
-      if (ffs_result != FR_OK)
+      if (ffs_result != FR_OK) {
+        Logger_error("Error while reading patch %s file...", patchName);
         break;
+      }
 
       for (uint16_t i = 0; i < bytesRead; i++)
       {
@@ -439,6 +441,6 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     }
     f_close(&ffile);
   } else {
-    Logger_error("Open sd:%s failed", filepath);
+    Logger_error("Open sd:%s failed error=%i", filepath, ffs_result);
   }
 }

@@ -101,7 +101,7 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
       return;
     if (jsmn_hasIgnoreName())
       return;
-      
+
     if (strcmp("general", jsonGroupName) == 0) {
       if (strcmp("activeImg", jsonValueName) == 0) {
         Config_generalSettings.activeImage = getImageNumber(value);
@@ -193,8 +193,10 @@ void Config_ReadJsonCfg(void) {
     char buffer[512];
     while (allBytesRead<filesize) {
       ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
-      if (ffs_result != FR_OK)
+      if (ffs_result != FR_OK) {
+        Logger_error("Error while reading config %s...", CFG_SD_PATH);
         break;
+      }
 
       for (uint16_t i = 0; i < bytesRead; i++)
       {
@@ -209,6 +211,6 @@ void Config_ReadJsonCfg(void) {
       Logger_setLevel(99); //Set it very high
 
   } else {
-    Logger_error("sd:%s not found.", CFG_SD_PATH);
+    Logger_error("sd:%s could not be opened  error=%i", CFG_SD_PATH, ffs_result);
   }
 }

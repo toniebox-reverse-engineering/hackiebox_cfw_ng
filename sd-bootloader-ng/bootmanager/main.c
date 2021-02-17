@@ -648,12 +648,14 @@ int main()
             Logger_info("Start firmware sd:%s ...", image);
             Run((unsigned long)pImgRun);
           } else {
+              Logger_error("Reading file failed error=%i", ffs_result);
               UtilsDelayMsWD(1000);
               prebootmgr_blink_error(4, 500);
               UtilsDelayMsWD(2000);
               prebootmgr_blink_error(ffs_result, 1000);
           }
       } else {
+          Logger_error("Opening file failed error=%i", ffs_result);
           UtilsDelayMsWD(1000);
           prebootmgr_blink_error(3, 500);
           UtilsDelayMsWD(2000);
@@ -661,13 +663,14 @@ int main()
       }
     }
     UtilsDelayMsWD(2000);
+    Logger_error("No image found");
+  } else {
+    Logger_error("Mounting sd failed error=%i", ffs_result);
+    UtilsDelayMsWD(500);
+    prebootmgr_blink_error(2, 500);
+    UtilsDelayMsWD(500);
+    prebootmgr_blink_error(ffs_result, 1000);
   }
-
-  Logger_error("Mounting sd failed!");
-  UtilsDelayMsWD(500);
-  prebootmgr_blink_error(2, 500);
-  UtilsDelayMsWD(500);
-  prebootmgr_blink_error(ffs_result, 1000);
 
   SlFsFileInfo_t pFsFileInfo;
   _i32 fhandle;
