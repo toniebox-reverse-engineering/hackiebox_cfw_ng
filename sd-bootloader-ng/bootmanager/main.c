@@ -614,7 +614,7 @@ int main()
               uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
               uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
 
-              Logger_debug("Apply OFW fix.");
+              Logger_debug("Apply OFW fix");
               if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
                 *pTarget = 0x0010014C;
               } else {
