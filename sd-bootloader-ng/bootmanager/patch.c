@@ -408,7 +408,6 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
   char* fileext = filename + strlen(filename);
   strcpy(fileext, ".json");
 
-  Logger_info("Open sd:%s", filepath);
   ffs_result = f_open(&ffile, filepath, FA_READ);
   if (ffs_result == FR_OK) {
     uint32_t filesize = f_size(&ffile);
@@ -421,7 +420,9 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     clearAsmReplace();
     image = imageBytes;
     imageLen = imageLength;
-    
+
+    Logger_info("Read patch %s", patchName);
+
     jsmn_stream_init(&parser, &cbs, NULL);
     char buffer[512];
     while (allBytesRead<filesize)
