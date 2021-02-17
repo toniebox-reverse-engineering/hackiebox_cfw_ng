@@ -89,5 +89,5 @@ void Logger_init(void) { }
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...)  { }
 void Logger_setLevel(uint8_t level) { }
 bool Logger_needed(uint8_t level) { return false; }
-bool Logger_newLine(void) { }
+void Logger_newLine(void) { }
 #endif
