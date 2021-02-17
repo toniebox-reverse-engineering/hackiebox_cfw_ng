@@ -62,16 +62,12 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
     if (Logger_needed(DEBUG_LOG_LEVEL_DEBUG)) {
       Logger_debug_nonl("search  = ");
       for (uint8_t offset=0; offset<length; offset++) {
-          printf("\"%02x\"", (uint8_t)search[offset]);
-        if (offset<length-1)
-          printf(", ");
+          printf("%02x ", (uint8_t)search[offset]);
       }
       Logger_newLine();
       Logger_debug_nonl("besthit = ");
       for (uint8_t offset=0; offset<longestHitLen; offset++) {
-          printf("\"%02x\"", (uint8_t)image[longestHitPos+offset]);
-        if (offset<length-1)
-          printf(", ");
+          printf("%02x ", (uint8_t)image[longestHitPos+offset]);
       }
       Logger_newLine();           
     }
@@ -138,7 +134,7 @@ static void doSearchAndReplace() {
       Logger_trace_nonl("replace = ");
       for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
         if (Logger_needed(DEBUG_LOG_LEVEL))
-          printf("\"%02x\", ", (uint8_t)image[offset+replaceOffset]);  
+          printf("%02x ", (uint8_t)image[offset+replaceOffset]);  
         if (patch->replaceMask[replaceOffset] == 0x00)
           continue;
         
