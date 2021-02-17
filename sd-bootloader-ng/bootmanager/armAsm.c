@@ -1,5 +1,6 @@
 #include "armAsm.h"
 #include <stddef.h>
+#include "logger.h"
 
 //A8.3 Conditional execution
 #define COND_EQ 0b0000 //Equal Equal Z == 1
@@ -233,15 +234,20 @@ static void armDasmT_b2(uint32_t pc, uint16_t instruction16, uint32_t* target) {
 
 void ArmAsmT_bl(uint32_t pc, uint32_t target, char instruction[4]) { 
   armAsmT_bl_blx(pc, target, false, instruction);
+  Logger_debug("ArmAsmT_bl: pc=0x%x target=0x%x | instr=%02x%02x%02x%02x", pc, target, instruction[0], instruction[1], instruction[2], instruction[3]);
+
 }
 void ArmAsmT_blx(uint32_t pc, uint32_t target, char instruction[4]) { 
   armAsmT_bl_blx(pc, target, true, instruction);
+  Logger_debug("ArmAsmT_blx: pc=0x%x target=0x%x | instr=%02x%02x%02x%02x", pc, target, instruction[0], instruction[1], instruction[2], instruction[3]);
 }
 void ArmAsmT_b(uint32_t pc, uint32_t target, char instruction[2]) { 
   armAsmT_b(pc, target, COND_AL, instruction);
+  Logger_debug("ArmAsmT_b: pc=0x%x target=0x%x | instr=%02x%02x", pc, target, instruction[0], instruction[1]);
 }
 void ArmAsmT_bne(uint32_t pc, uint32_t target, char instruction[2]) { 
-  armAsmT_b(pc, target, COND_NE, instruction); 
+  armAsmT_b(pc, target, COND_NE, instruction);
+  Logger_debug("ArmAsmT_bne: pc=0x%x target=0x%x | instr=%02x%02x", pc, target, instruction[0], instruction[1]);
 }
 void ArmDasmT(uint32_t pc, char instruction[4], uint32_t* target, uint8_t* condition) {
   uint16_t instr16 = conv_ca_ui16(instruction);
@@ -249,11 +255,15 @@ void ArmDasmT(uint32_t pc, char instruction[4], uint32_t* target, uint8_t* condi
 
   if (INST_B_T1 == (INSM_B_T1&instr16)) {
     armDasmT_b1(pc, instr16, target, condition);
+    Logger_debug("armDasmT_b1: pc=0x%x instr=%02x%02x | target=0x%x condition=0x%x", pc, instruction[0], instruction[1], *target, *condition);
   } else if (INST_B_T2 == (INSM_B_T2&instr16)) {
     armDasmT_b2(pc, instr16, target);
+    Logger_debug("armDasmT_b2: pc=0x%x instr=%02x%02x | target=0x%x", pc, instruction[0], instruction[1], *target);
   } else if (INST_BL_T1 == INSM_BL_T1&instr32) {
+    Logger_fatal("ArmDasmT for INST_BL_T1 not implemented");
     //armDasmT_bl_blx(pc, instruction, false, target);
   } else if (INST_BLX_T2 == INSM_BLX_T2&instr32) {
+    Logger_fatal("ArmDasmT for INSM_BLX_T2 not implemented");
     //armDasmT_bl_blx(pc, instruction, true, target);
   }
 }

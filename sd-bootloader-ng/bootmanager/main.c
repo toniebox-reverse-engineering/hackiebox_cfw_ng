@@ -299,6 +299,7 @@ static void BoardInitCustom(void)
 }
 static void BoardDeinitCustom(void)
 {
+  Logger_debug("Prepare board deinitialization...");
   watchdog_feed();
   //Power off SD
   MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, POWER_SD_PORT_MASK); //SIC! 
@@ -392,7 +393,9 @@ static void checkBattery() {
   if (isChargerConnected())
     return;
   
-  if (getBatteryLevel() < Config_generalSettings.minBatteryLevel) {
+  uint16_t batteryLevel = getBatteryLevel();
+  if (batteryLevel < Config_generalSettings.minBatteryLevel) {
+    Logger_error("Battery level is %i, treshold %i", batteryLevel, Config_generalSettings.minBatteryLevel);
     prebootmgr_blink_error(2, 66);
     prebootmgr_blink_error(2, 133);
     prebootmgr_blink_error(2, 66);
@@ -508,7 +511,6 @@ int main()
   BoardInitCustom();
   watchdog_start();
 
-
   #ifndef FIXED_BOOT_IMAGE
   Logger_info("Bootloader initialized");
   #else
@@ -531,6 +533,7 @@ int main()
   #endif
 
   UtilsDelayMsWD(100);
+  Logger_debug("Mounting sd card...");
   ffs_result = f_mount(&fatfs, "0", 1);
   if (ffs_result == FR_OK) {
     #ifdef FIXED_BOOT_IMAGE
@@ -548,12 +551,14 @@ int main()
       char* image = GetImagePathById(selectedImgNum);
     #endif
 
+      Logger_debug("Open sd:%s ...", image);
       ffs_result = f_open(&ffile, image, FA_READ);
       if (ffs_result == FR_OK) {
           uint32_t filesize = f_size(&ffile);
 
           char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
           ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
+          Logger_debug("Read sd:%s ...", image);
           if (ffs_result == FR_OK) {
             f_close(&ffile);
 
@@ -567,20 +572,24 @@ int main()
               hashAct[64] = '\0';
 
               if (Config_imageInfos[selectedImgNum].hashFile) {
+                Logger_debug("Read hash from sha-file");
+                
                 char* shaFile = HASH_SD_PATH;
                 memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
                 ffs_result = f_open(&ffile, shaFile, FA_READ);
+                Logger_debug("Open sd:%s ...", shaFile);
                 if (ffs_result == FR_OK) {
                   ffs_result = f_read(&ffile, hashExp, 64, NULL);
                   if (ffs_result == FR_OK) {
 
                   } else {
-                    //TODO
+                    Logger_error("Read sd:%s failed", shaFile);
                   }
                 } else {
-                  //TODO
+                  Logger_error("Open sd:%s failed", shaFile);
                 }
               } else {
+                Logger_debug("Read hash from the end of the image");
                 filesize -= 64; //sha256 is 64 bytes long.
                 memcpy(hashExp, (char*)(pImgRun + filesize), 64);
               }
@@ -590,7 +599,9 @@ int main()
               btox(hashAct, hashActRaw, 64);
 
               if (strncmp(hashAct, hashExp, 64) != 0) {
-                //ERROR
+                Logger_error("SHA256 differs, source=%s", Config_imageInfos[selectedImgNum].hashFile?"sha-file":"firmware");
+                Logger_error(" hashAct=%s ", hashAct);
+                Logger_error(" hashExo=%s", hashExp);
 
                 prebootmgr_blink_error(10, 50);
                 
@@ -603,8 +614,13 @@ int main()
               uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
               uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
 
+              Logger_debug("Apply OFW fix.");
               if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
                 *pTarget = 0x0010014C;
+              } else {
+                Logger_error("OFW fix failed");
+                Logger_error(" *pCheck1=0x%X *pCheck2=0x%X *pTarget=0x%X", *pCheck1, *pCheck2, *pTarget);
+                Logger_error(" pCheck1=0x%X pCheck2=0x%X pTarget=0x%X", pCheck1, pCheck2, pTarget);
               }
             }
 
@@ -629,7 +645,7 @@ int main()
             #endif
             watchdog_feed();
 
-            Logger_info("Start firmware from memory...");
+            Logger_info("Start firmware sd:%s ...", image);
             Run((unsigned long)pImgRun);
           } else {
               UtilsDelayMsWD(1000);
@@ -646,7 +662,8 @@ int main()
     }
     UtilsDelayMsWD(2000);
   }
-  
+
+  Logger_error("Mounting sd failed!");
   UtilsDelayMsWD(500);
   prebootmgr_blink_error(2, 500);
   UtilsDelayMsWD(500);
@@ -661,6 +678,7 @@ int main()
               sl_FsClose(fhandle, 0, 0, 0);
               sl_Stop(30);
               BoardDeinitCustom();
+              Logger_info("Start fallback firmware flash:%s ...", IMG_FLASH_PATH);
               Run(APP_IMG_SRAM_OFFSET);
           }
       }

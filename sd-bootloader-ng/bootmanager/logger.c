@@ -34,18 +34,6 @@ void Logger_init(void) {
     MAP_UARTEnable(UARTA0_BASE);
 }
 
-void Logger_print(const char* message) {
-    if(message != NULL) {
-        while(*message != '\0') {
-            MAP_UARTCharPut(UARTA0_BASE, *message++);
-        }
-    }
-}
-void Logger_println(const char* message) {
-    Logger_print(message);
-    Logger_print("\r\n");
-}
-
 static const char *level_strings[] = {
   "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
 };
@@ -67,7 +55,7 @@ static void uart_callback(Logger_Event *event) {
 #endif
   vprintf(event->fmt, event->ap);
   if (event->newLine)
-    printf("\r\n");
+    Logger_newLine();
 }
 
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...) {
@@ -93,9 +81,13 @@ void Logger_setLevel(uint8_t level) {
 bool Logger_needed(uint8_t level) {
   return (level >= currentLoglevel);
 }
+void Logger_newLine(void) {
+  printf("\n");
+}
 #else 
 void Logger_init(void) { }
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...)  { }
 void Logger_setLevel(uint8_t level) { }
 bool Logger_needed(uint8_t level) { return false; }
+bool Logger_newLine(void) { }
 #endif

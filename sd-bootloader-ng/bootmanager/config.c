@@ -174,11 +174,12 @@ void Config_ReadJsonCfg(void) {
     uint32_t filesize = f_size(&ffile);
     uint32_t bytesRead = 0;
     uint32_t allBytesRead = 0;
+
+    Logger_trace("Reading config with %ib in size.", filesize);
     
     jsmn_stream_init(&parser, &cbs, NULL);
     char buffer[512];
-    while (allBytesRead<filesize)
-    {
+    while (allBytesRead<filesize) {
       ffs_result = f_read(&ffile, buffer, COUNT_OF(buffer), &bytesRead);
       if (ffs_result != FR_OK)
         break;
@@ -190,8 +191,12 @@ void Config_ReadJsonCfg(void) {
       allBytesRead += bytesRead;
     }
     f_close(&ffile);
+
     Logger_setLevel(Config_generalSettings.logLevel);
     if (!Config_generalSettings.serialLog)
       Logger_setLevel(99); //Set it very high
+
+  } else {
+    Logger_error("sd:%s not found.", CFG_SD_PATH);
   }
 }

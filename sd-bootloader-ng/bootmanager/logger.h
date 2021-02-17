@@ -8,6 +8,7 @@ extern "C"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "globalDefines.h"
 
 typedef struct Logger_Event {
   va_list ap;
@@ -75,6 +76,8 @@ void Logger_log(uint8_t level, bool newLine, const char *file, const char *funct
 
 void Logger_setLevel(uint8_t level);
 bool Logger_needed(uint8_t level);
+void Logger_newLine(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -2,6 +2,8 @@
 #include "armAsm.h"
 #include <stdlib.h> 
 #include <stddef.h>
+#include "printf.h"
+#include "logger.h"
 
 static sSearchPosition searchPosition;
 static uint32_t positions[PATCH_MAX_POSITIONS];
@@ -25,17 +27,25 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
   bool found = false;
 
   uint32_t offset = 0;
+  uint32_t longestHitPos = 0;
+  uint8_t longestHitLen = 0;
   for (offset=0; offset<imageLen-length; offset++) {
     if (searchMask[0] == 0x00)
       continue;
     if (search[0] != image[offset])
       continue;
 
-    uint32_t offset2;
+    uint8_t offset2;
     for (offset2=1; offset2<length; offset2++) {
       if (searchMask[offset2] == 0x00)
         continue;
       if (search[offset2] != image[offset+offset2]) {
+        
+        if (offset2 > longestHitPos) {
+          longestHitPos = offset;
+          longestHitLen = offset2;
+        }
+
         offset2 = 0;
         break;
       }
@@ -44,6 +54,26 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
       *position = offset;
       found = true;
       break;
+    }
+  }
+
+  if (!found) {
+    Logger_error("searchInMemory failed, best result at offset=%i with length=%i", longestHitPos, longestHitLen);
+    if (Logger_needed(DEBUG_LOG_LEVEL_DEBUG)) {
+      Logger_debug_nonl("search  = ");
+      for (uint8_t offset=0; offset<length; offset++) {
+          printf("\"%02x\"", (uint8_t)search[offset]);
+        if (offset<length-1)
+          printf(", ");
+      }
+      Logger_newLine();
+      Logger_debug_nonl("besthit = ");
+      for (uint8_t offset=0; offset<longestHitLen; offset++) {
+          printf("\"%02x\"", (uint8_t)image[longestHitPos+offset]);
+        if (offset<length-1)
+          printf(", ");
+      }
+      Logger_newLine();           
     }
   }
 
@@ -64,6 +94,7 @@ static void doSearchPosition() {
 
   sSearchPosition* pos = &searchPosition;
   if (pos->length == 0 || positionCount >= COUNT_OF(positions)) {
+    Logger_error("SearchPosition length=0 or too many positions(%i)", positionCount);
     positionSearchFailed = true;
     clearSearchPosition();
     return;
@@ -101,14 +132,25 @@ static void clearSearchAndReplace() {
 static void doSearchAndReplace() {
   sSearchAndReplacePatch* patch = &searchAndReplacePatch;
   if (patch->length > 0) {
-    uint32_t offset = 0;
-    if (searchInMemory(patch->search, patch->searchMask, patch->length, &offset)) {
-      for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {
+    uint32_t offset = patch->searchMemPos;
+    if (offset > 0 || searchInMemory(patch->search, patch->searchMask, patch->length, &offset)) {
+      Logger_debug("Replace %ib @0x%x", patch->length, offset);
+      Logger_trace_nonl("replace = ");
+      for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {        
         if (patch->replaceMask[replaceOffset] == 0x00)
           continue;
+        
         image[offset+replaceOffset] = patch->replace[replaceOffset];
+        if (Logger_needed(DEBUG_LOG_LEVEL))
+          printf("\"%02x\", ", (uint8_t)image[offset+replaceOffset]);
       }
+      if (Logger_needed(DEBUG_LOG_LEVEL))
+        Logger_newLine();
+    } else {
+      Logger_error("Patch not applied, searchInMemory failed");
     }
+  } else {
+    Logger_error("Patch length == 0");
   }
   clearSearchAndReplace();
 }
@@ -119,16 +161,22 @@ static void clearAsmReplace() {
   asmReplace.length = 0;
 }
 static void doAsmReplace() {
-  if (asmReplace.length == 0)
+  if (asmReplace.length == 0) {
+    Logger_error("asmReplace.length == 0");
     return;
+  }
 
-  if (asmReplace.parameter[0] != 'p' || asmReplace.parameter[1] == '\0') 
+  if (asmReplace.parameter[0] != 'p' || asmReplace.parameter[1] == '\0') {
+    Logger_error("Invalid parameter %s", asmReplace.parameter);
     goto cleanUp;
+  }
 
   uint8_t id = strtoul(&asmReplace.parameter[1], NULL, 0);
 
-  if (positionCount <= id)
+  if (positionCount <= id) {
+    Logger_error("positionCount(%i) <= id(%i) ", positionCount, id);
     goto cleanUp;
+  }
 
   uint32_t target = APP_IMG_SRAM_OFFSET + positions[id];
 
@@ -138,6 +186,7 @@ static void doAsmReplace() {
   if (strcmp("b", asmReplace.instruction) == 0) {
     char instr[2];
     ArmAsmT_b(pc, target, instr);
+
     searchAndReplacePatch.replace[cursor] = instr[0];
     searchAndReplacePatch.replaceMask[cursor] = 0xFF;
     searchAndReplacePatch.replace[cursor+1] = instr[1];
@@ -153,6 +202,8 @@ static void doAsmReplace() {
     searchAndReplacePatch.replaceMask[cursor+2] = 0xFF;
     searchAndReplacePatch.replace[cursor+3] = instr[3];
     searchAndReplacePatch.replaceMask[cursor+3] = 0xFF;
+  } else {
+    Logger_error("Unknown instruction %s", asmReplace.instruction);
   }
 
   cleanUp:
@@ -346,6 +397,7 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
   char* fileext = filename + strlen(filename);
   strcpy(fileext, ".json");
 
+  Logger_info("Open sd:%s", filepath);
   ffs_result = f_open(&ffile, filepath, FA_READ);
   if (ffs_result == FR_OK) {
     uint32_t filesize = f_size(&ffile);
@@ -374,5 +426,7 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
       allBytesRead += bytesRead;
     }
     f_close(&ffile);
+  } else {
+    Logger_error("Open sd:%s failed", filepath);
   }
 }

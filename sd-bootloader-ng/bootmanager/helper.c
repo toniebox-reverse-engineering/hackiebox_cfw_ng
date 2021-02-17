@@ -5,6 +5,7 @@
 #include "rom_map.h"
 #include "watchdog.h"
 #include "ff.h"
+#include "logger.h"
 
 void UtilsDelayUs(unsigned long delayUs) {
     //Using the chip integrated via MAP will get too fast?!
@@ -43,7 +44,9 @@ bool SdFileExists(char* filename) {
   FIL ffile;
   if (f_open(&ffile, filename, FA_READ) == FR_OK) {
       f_close(&ffile); 
+        Logger_trace("sd:%s exist.", filename);
       return true;
   }
+  Logger_info("sd:%s doesn't exist.", filename);
   return false;
 }
