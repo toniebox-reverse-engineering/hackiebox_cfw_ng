@@ -557,8 +557,8 @@ int main()
           uint32_t filesize = f_size(&ffile);
 
           char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
-          ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
           Logger_debug("Read sd:%s ...", image);
+          ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
           if (ffs_result == FR_OK) {
             f_close(&ffile);
 
@@ -576,8 +576,8 @@ int main()
                 
                 char* shaFile = HASH_SD_PATH;
                 memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
-                ffs_result = f_open(&ffile, shaFile, FA_READ);
                 Logger_debug("Open sd:%s ...", shaFile);
+                ffs_result = f_open(&ffile, shaFile, FA_READ);
                 if (ffs_result == FR_OK) {
                   ffs_result = f_read(&ffile, hashExp, 64, NULL);
                   if (ffs_result == FR_OK) {
