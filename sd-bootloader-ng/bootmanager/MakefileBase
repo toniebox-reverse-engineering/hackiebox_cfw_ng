@@ -52,6 +52,8 @@ ifndef LINK_FILE
 LINK_FILE=bootmgr.ld
 endif
 
+MAKEFILE_CFLAGS=-DPRINTF_INCLUDE_CONFIG_H
+
 #
 # Include the common make definitions.
 #
