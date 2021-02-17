@@ -43,18 +43,19 @@
 //*****************************************************************************
 //Defined in Makefile!
 //#define  RELOC_LOCATION         0x20034000 //0x20000000 
+#define RELOC_END 0x20040000
+
+
+//*****************************************************************************
+// Pointer to source location
+//*****************************************************************************
+unsigned char * const __init_location = (unsigned char *)INIT_LOCATION;
 
 
 //*****************************************************************************
 // Pointer to destination location
 //*****************************************************************************
-unsigned long * const __init_location = (unsigned long *)INIT_LOCATION;
-
-
-//*****************************************************************************
-// Pointer to destination location
-//*****************************************************************************
-unsigned long * const __recloc_location = (unsigned long *)RELOC_LOCATION;
+unsigned char * const __recloc_location = (unsigned char  *)RELOC_LOCATION;
 
 //*****************************************************************************
 // Fucntion Decleration
@@ -81,7 +82,7 @@ void RunRelocated(unsigned long ulBaseLoc)
   // Set the SP
   //
   __asm("	ldr    sp,[r0]\n"
-	"	add    r0,r0,#4");
+	      "	add    r0,r0,#4");
 
   //
   // Jump to entry code
@@ -97,7 +98,7 @@ void main()
 {
   unsigned long ulNdx;
 
-  for( ulNdx =0; ulNdx < 8*1024; ulNdx++)
+  for( ulNdx =0; ulNdx < (RELOC_END - RELOC_LOCATION); ulNdx++)
   {
       __recloc_location[ulNdx] =  __init_location[ulNdx];
   }
