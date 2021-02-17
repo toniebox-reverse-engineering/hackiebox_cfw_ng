@@ -24,6 +24,7 @@ typedef struct sGeneralSettings
   uint16_t waitTimeoutInS;
   uint16_t minBatteryLevel;
   bool serialLog;
+  uint8_t logLevel;
 
 } sGeneralSettings;
 typedef struct sImageInfo

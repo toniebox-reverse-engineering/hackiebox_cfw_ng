@@ -73,6 +73,8 @@ void Logger_init(void);
 #define Logger_log_marco(level, newline, ...) Logger_log(level, newline, __FILE__, __func__, __LINE__, __VA_ARGS__)
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...);
 
+void Logger_setLevel(uint8_t level);
+bool Logger_needed(uint8_t level);
 #ifdef __cplusplus
 }
 #endif

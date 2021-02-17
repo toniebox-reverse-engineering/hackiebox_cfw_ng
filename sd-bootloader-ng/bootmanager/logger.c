@@ -22,6 +22,8 @@
 
 #ifndef NO_DEBUG_LOG
 
+static uint8_t currentLoglevel = DEBUG_LOG_LEVEL;
+
 void Logger_init(void) {
     MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
     MAP_PinTypeUART(PIN_55, PIN_MODE_3); //UART0_TX
@@ -69,7 +71,7 @@ static void uart_callback(Logger_Event *event) {
 }
 
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...) {
-    if (level < DEBUG_LOG_LEVEL)
+    if (!Logger_needed(level))
         return;
     
     Logger_Event event = {
@@ -85,7 +87,15 @@ void Logger_log(uint8_t level, bool newLine, const char *file, const char *funct
     uart_callback(&event);
     va_end(event.ap);
 }
+void Logger_setLevel(uint8_t level) {
+  currentLoglevel = level;
+}
+bool Logger_needed(uint8_t level) {
+  return (level >= currentLoglevel);
+}
 #else 
 void Logger_init(void) { }
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...)  { }
+void Logger_setLevel(uint8_t level) { }
+bool Logger_needed(uint8_t level) { return false; }
 #endif

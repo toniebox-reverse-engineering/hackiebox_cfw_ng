@@ -7,7 +7,12 @@ sGeneralSettings Config_generalSettings = {
   false,  //waitForPress
   60,     //waitTimeoutInS
   2100,   //minBatteryLevel (Divide through around 700 to get voltage, so 3V should be save)
-  false,  //Serial Log
+  #ifdef NO_DEBUG_LOG
+  false,  //serialLog
+  #else
+  true,  //serialLog
+  #endif
+  DEBUG_LOG_LEVEL
 };
 sImageInfo Config_imageInfos[IMG_MAX_COUNT];
 
@@ -112,6 +117,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
         Config_generalSettings.minBatteryLevel = (uint16_t)strtoul(value, NULL, 0);
       } else if (strcmp("serialLog", jsonValueName) == 0) {
         Config_generalSettings.serialLog = (value[0] == 't');
+      } else if (strcmp("logLevel", jsonValueName) == 0) {
+        Config_generalSettings.logLevel = (uint8_t)strtoul(value, NULL, 0);
       }
     } else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
@@ -183,5 +190,8 @@ void Config_ReadJsonCfg(void) {
       allBytesRead += bytesRead;
     }
     f_close(&ffile);
+    Logger_setLevel(Config_generalSettings.logLevel);
+    if (!Config_generalSettings.serialLog)
+      Logger_setLevel(99); //Set it very high
   }
 }

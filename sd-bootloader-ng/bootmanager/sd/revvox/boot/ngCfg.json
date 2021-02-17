@@ -3,7 +3,12 @@
         "activeImg": "ofw3",
         "waitForPress": false,
         "waitTimeoutInS": 60,
-        "minBatteryLevel": 2100
+        "minBatteryLevel": 2100,
+
+        "_descSerialLog": "Logging only works with the debug build!",
+        "serialLog": false,
+        "_descLogLevel": "0:Trace - 5:Fatal",
+        "logLevel": 0
     },
     "ofw1": {
         "checkHash": true,
