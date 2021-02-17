@@ -42,6 +42,12 @@ static uint8_t getImageNumber(const char* imageId)
   return 0;
 }
 
+static bool jsmn_hasIgnoreName(void) {
+    if (jsonGroupName[0]=='_' || jsonValueName[0]=='_') //Ignore
+      return true;
+    return false;
+}
+
 static void jsmn_start_arr(void *user_arg) {
     jsonArrayId = 0;
 }
@@ -72,6 +78,8 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
       jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
       break;
     case 5:
+      if (jsmn_hasIgnoreName())
+        break;
       if (strncmp(jsonGroupName, "ofw", 3) == 0
             || strncmp(jsonGroupName, "cfw", 3)
             || strncmp(jsonGroupName, "add", 3))
@@ -91,7 +99,9 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
 static void jsmn_str(const char *value, size_t len, void *user_arg) {
     if (parser.stack_height != 4)
       return;
-
+    if (jsmn_hasIgnoreName())
+      return;
+      
     if (strcmp("general", jsonGroupName) == 0) {
       if (strcmp("activeImg", jsonValueName) == 0) {
         Config_generalSettings.activeImage = getImageNumber(value);
@@ -106,6 +116,8 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
 }
 static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
     if (parser.stack_height != 4)
+      return;
+    if (jsmn_hasIgnoreName())
       return;
 
     if (strcmp("general", jsonGroupName) == 0) {

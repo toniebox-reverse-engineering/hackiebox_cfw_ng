@@ -211,11 +211,18 @@ static void doAsmReplace() {
   clearAsmReplace();
 }
 
+static bool jsmn_hasIgnoreName(void) {
+    if (jsonGroupName[0]=='_' || jsonValueName[0]=='_' || jsonSpeciName[0]=='_' || jsonSpeciSubName[0]=='_') //Ignore
+      return true;
+    return false;
+}
 static void jsmn_start_arr(void *user_arg) {
   cursor = 0;
 }
 static void jsmn_end_arr(void *user_arg) {
   if (parser.stack_height == 6) {
+    if (jsmn_hasIgnoreName())
+      return;
     if (strcmp("positions", jsonGroupName) == 0) {
       if (strcmp("search", jsonValueName) == 0) {
         searchPosition.length = cursor;
@@ -243,11 +250,15 @@ static void jsmn_end_obj(void *user_arg) {
   switch (parser.stack_height)
   {
   case 4:
+    if (jsmn_hasIgnoreName())
+      break;
     if (strcmp("positions", jsonGroupName) == 0) {
       doSearchPosition();
     }
     break;
   case 7:
+    if (jsmn_hasIgnoreName())
+      break;
     if (strcmp("searchAndReplace", jsonGroupName) == 0
       && strcmp("replace", jsonValueName) == 0
       && strcmp("asm", jsonSpeciName) == 0) {
@@ -255,8 +266,6 @@ static void jsmn_end_obj(void *user_arg) {
     }
     break;
   }
-  
-
 }
 static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
     uint8_t len;
@@ -267,13 +276,14 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
       strncpy(jsonGroupName, key, len);
       jsonGroupName[min(key_len, COUNT_OF(jsonGroupName))] = '\0';
       break;
-    case 3:
     case 4:
       len = min(key_len, COUNT_OF(jsonValueName)-1);
       strncpy(jsonValueName, key, len);
       jsonValueName[min(key_len, COUNT_OF(jsonValueName))] = '\0';
       break;
     case 6:
+        if (jsmn_hasIgnoreName())
+          break;
         if (strcmp("positions", jsonGroupName) == 0 && key_len == 2) {
           if (cursor >= PATCH_MAX_BYTES)
             return;
@@ -306,7 +316,7 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
             values = searchAndReplacePatch.replace;
             mask = searchAndReplacePatch.replaceMask;
           } else {
-            return;
+            break;
           }
           if (strcmp("??", key) == 0) {
             mask[cursor] = 0x00;
@@ -333,6 +343,8 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
     uint8_t tar_len;
     switch (parser.stack_height) {
     case 10:
+      if (jsmn_hasIgnoreName())
+        break;
       if (strcmp("searchAndReplace", jsonGroupName) == 0
         && strcmp("replace", jsonValueName) == 0
         && strcmp("asm", jsonSpeciName) == 0) {
@@ -351,9 +363,10 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
     }
 }
 static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
-
     switch (parser.stack_height) {
     case 5:
+      if (jsmn_hasIgnoreName())
+        break;
       if (strcmp("positions", jsonGroupName) == 0) {
         if (strcmp("offset", jsonValueName) == 0) {
           searchPosition.offset = (int32_t)strtol(value, NULL, 0);
@@ -363,6 +376,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       }
       break;
     case 10:
+      if (jsmn_hasIgnoreName())
+        break;
       if (strcmp("searchAndReplace", jsonGroupName) == 0
         && strcmp("replace", jsonValueName) == 0
         && strcmp("asm", jsonSpeciName) == 0) {
