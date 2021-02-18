@@ -8,7 +8,7 @@ An openocd file for the cc3200-launchpad is preconfigured in the launch.json. Yo
 ## How to build
 Currently building is only supported under Linux and tested under Debian and Ubuntu.
 As a first step it is adviced to run the
-[/common/buildAndShip.bootloader.sh](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/common/buildAndShip.bootloader.sh) script once. This will build all artefacts and needed dependency artefacts. (especially the driverlib and libsimplelink_nonos_opt)
+[**/common/buildAndShip.bootloader.sh**](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/common/buildAndShip.bootloader.sh) script once without parameters and once **/common/buildAndShip.bootloader.sh debug**. This will build all artefacts and needed dependency artefacts. (especially the driverlib and libsimplelink_nonos_opt)
 For building just single artefacts just take a look into the [buildAndShip.bootloader.sh](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/common/buildAndShip.bootloader.sh) or the provided [/.vscode/tasks.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/.vscode/tasks.json)
 
 
