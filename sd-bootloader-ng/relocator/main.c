@@ -96,17 +96,10 @@ void RunRelocated(unsigned long ulBaseLoc)
 //*****************************************************************************
 void main()
 {
-  unsigned long ulNdx;
-
-  for( ulNdx =0; ulNdx < (RELOC_END - RELOC_LOCATION); ulNdx++)
-  {
-      __recloc_location[ulNdx] =  __init_location[ulNdx];
-  }
+  for(unsigned long i=0; i<(RELOC_END - RELOC_LOCATION); i++)
+      __recloc_location[i] =  __init_location[i];
 
   RunRelocated(RELOC_LOCATION);
 
-  while(1)
-  {
-
-  }
+  while(1) { }
 }
