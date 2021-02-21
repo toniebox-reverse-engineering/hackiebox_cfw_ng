@@ -124,6 +124,8 @@ static void doSearchPosition() {
     positions[positionCount] = target - APP_IMG_SRAM_OFFSET;
   }
 
+  Logger_info("SearchPosition %i found @0x%x", positionCount, positions[positionCount]);
+
   positionCount++;
 
   clearSearchPosition();
