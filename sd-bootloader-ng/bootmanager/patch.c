@@ -26,7 +26,7 @@ static uint8_t cursor = 0;
 static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint32_t* position) {
   bool found = false;
 
-  uint32_t offset = 0;
+  uint32_t offset;
   uint32_t longestHitPos = 0;
   uint8_t longestHitLen = 0;
   for (offset=0; offset<imageLen-length; offset++) {
