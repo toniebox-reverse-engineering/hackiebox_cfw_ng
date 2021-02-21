@@ -60,12 +60,26 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
     if (Logger_needed(DEBUG_LOG_LEVEL_DEBUG)) {
       Logger_debug_nonl("search  = ");
       for (uint8_t offset=0; offset<length; offset++) {
-          printf("%02x ", (uint8_t)search[offset]);
+          if (searchMask[offset] == 0xff) { 
+            printf("%02x ", (uint8_t)search[offset]);
+          } else {
+            printf("?? ");
+          }
       }
       Logger_newLine();
       Logger_debug_nonl("besthit = ");
       for (uint8_t offset=0; offset<longestHitLen; offset++) {
-          printf("%02x ", (uint8_t)image[longestHitPos+offset]);
+          printf("%02x", (uint8_t)image[longestHitPos+offset]);
+          if (offset<longestHitLen - 1)
+            printf(" ");
+      }
+      for (uint8_t offset=longestHitLen; offset<length; offset++) {
+          if (image[longestHitPos+offset] != search[offset] && searchMask[offset] == 0xff) { 
+            printf("|", (uint8_t)search[offset]);
+          } else {
+            printf(" ");
+          }
+          printf("%02x", (uint8_t)image[longestHitPos+offset]);
       }
       Logger_newLine();           
     }
