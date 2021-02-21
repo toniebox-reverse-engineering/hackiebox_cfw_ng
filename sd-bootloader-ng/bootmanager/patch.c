@@ -245,8 +245,7 @@ static void jsmn_end_arr(void *user_arg) {
           if (searchAndReplacePatch.length == 0) {
             searchAndReplacePatch.length = cursor;
             //TODO! Searching twice and assert that search is before replace.
-            searchInMemory(searchAndReplacePatch.search, searchAndReplacePatch.searchMask, searchAndReplacePatch.length, &
-            searchAndReplacePatch.searchMemPos);  
+            searchInMemory(searchAndReplacePatch.search, searchAndReplacePatch.searchMask, searchAndReplacePatch.length, &searchAndReplacePatch.searchMemPos);  
           } else {
             searchAndReplacePatch.length = min(cursor, searchAndReplacePatch.length);
             doSearchAndReplace();
