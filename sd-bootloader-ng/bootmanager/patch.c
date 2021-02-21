@@ -141,27 +141,28 @@ static void clearSearchAndReplace() {
 
 static void doSearchAndReplace() {
   sSearchAndReplacePatch* patch = &searchAndReplacePatch;
-  if (patch->length > 0) {
-    uint32_t offset = patch->searchMemPos;
-    if (offset > 0 || searchInMemory(patch->search, patch->searchMask, patch->length, &offset)) {
-      Logger_debug("Replace %ib @0x%x", patch->length, offset);
-      Logger_trace_nonl("replace = ");
+    if (patch->length > 0) {
+      if (patch->searchMemPos > 0 || searchInMemory(patch->search, patch->searchMask, patch->length, patch->searchMemPos)) {
+        Logger_debug("Replace %ib @0x%x", patch->length, patch->searchMemPos);
+        Logger_trace_nonl("replace = ");
+        for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
       for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
+        for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
+          if (Logger_needed(DEBUG_LOG_LEVEL))
+            printf("%02x ", (uint8_t)image[patch->searchMemPos+replaceOffset]);  
+          if (patch->replaceMask[replaceOffset] == 0x00)
+            continue;
+          
+          image[patch->searchMemPos+replaceOffset] = patch->replace[replaceOffset];
+        }
         if (Logger_needed(DEBUG_LOG_LEVEL))
-          printf("%02x ", (uint8_t)image[offset+replaceOffset]);  
-        if (patch->replaceMask[replaceOffset] == 0x00)
-          continue;
-        
-        image[offset+replaceOffset] = patch->replace[replaceOffset];
+          Logger_newLine();
+      } else {
+        Logger_error("Patch not applied, searchInMemory failed");
       }
-      if (Logger_needed(DEBUG_LOG_LEVEL))
-        Logger_newLine();
     } else {
-      Logger_error("Patch not applied, searchInMemory failed");
+      Logger_error("Patch length == 0");
     }
-  } else {
-    Logger_error("Patch length == 0");
-  }
   clearSearchAndReplace();
 }
 
