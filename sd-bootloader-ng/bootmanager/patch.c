@@ -96,6 +96,7 @@ static void doSearchPosition() {
   
   uint32_t offset = 0;
   if (!searchInMemory(pos->search, pos->searchMask, pos->length, &offset)) {
+    Logger_error("SearchPosition %i not found", positionCount);
     positionSearchFailed = true;
     clearSearchPosition();
     return;
