@@ -126,7 +126,7 @@ static void armAsmT_bl_blx(uint32_t pc, uint32_t target, bool x, char instructio
 	//imm10h, bits 16-25
 	result = set_bits(result, 16, imm10h, 10);
 
-	//static
+	//static 0b11
 	result = set_bits(result, 14, 0x3, 2);
 
 	//j1 
