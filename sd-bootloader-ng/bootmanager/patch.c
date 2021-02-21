@@ -39,7 +39,7 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
         continue;
       if (search[offset2] != image[offset+offset2]) {
         
-        if (offset2 > longestHitPos) {
+        if (offset2 > longestHitLen) {
           longestHitPos = offset;
           longestHitLen = offset2;
         }
