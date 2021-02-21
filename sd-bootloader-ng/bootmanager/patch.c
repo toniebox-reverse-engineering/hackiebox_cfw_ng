@@ -122,6 +122,7 @@ static void clearSearchAndReplace() {
   memset(patch->searchMask, 0x00, COUNT_OF(patch->searchMask));
   memset(patch->replace, 0x00, COUNT_OF(patch->replace));
   memset(patch->replaceMask, 0x00, COUNT_OF(patch->replaceMask));
+  patch->searchMemPos = 0;
 }
 
 static void doSearchAndReplace() {
