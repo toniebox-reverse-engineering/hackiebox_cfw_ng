@@ -12,7 +12,8 @@ sGeneralSettings Config_generalSettings = {
   #else
   true,  //serialLog
   #endif
-  DEBUG_LOG_LEVEL
+  DEBUG_LOG_LEVEL,
+  false //logColor
 };
 sImageInfo Config_imageInfos[IMG_MAX_COUNT];
 
@@ -131,6 +132,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
         Config_generalSettings.serialLog = (value[0] == 't');
       } else if (strcmp("logLevel", jsonValueName) == 0) {
         Config_generalSettings.logLevel = (uint8_t)strtoul(value, NULL, 0);
+      } else if (strcmp("logColor", jsonValueName) == 0) {
+        Config_generalSettings.logColor = (value[0] == 't');
       }
     } else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
@@ -209,6 +212,7 @@ void Config_ReadJsonCfg(void) {
     Logger_setLevel(Config_generalSettings.logLevel);
     if (!Config_generalSettings.serialLog)
       Logger_setLevel(99); //Set it very high
+    Logger_setColored(Config_generalSettings.logColor);
 
   } else {
     Logger_error("sd:%s could not be opened  error=%i", CFG_SD_PATH, ffs_result);

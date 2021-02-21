@@ -25,6 +25,7 @@ typedef struct sGeneralSettings
   uint16_t minBatteryLevel;
   bool serialLog;
   uint8_t logLevel;
+  bool logColor;
 
 } sGeneralSettings;
 typedef struct sImageInfo

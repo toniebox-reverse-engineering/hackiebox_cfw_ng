@@ -75,6 +75,7 @@ void Logger_init(void);
 void Logger_log(uint8_t level, bool newLine, const char *file, const char *function, int line, const char *fmt, ...);
 
 void Logger_setLevel(uint8_t level);
+void Logger_setColored(bool colored);
 bool Logger_needed(uint8_t level);
 void Logger_newLine(void);
 

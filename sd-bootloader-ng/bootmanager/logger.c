@@ -23,6 +23,7 @@
 #ifndef NO_DEBUG_LOG
 
 static uint8_t currentLoglevel = DEBUG_LOG_LEVEL;
+static bool logColored = false;
 
 void Logger_init(void) {
     MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
@@ -43,16 +44,21 @@ static const char *level_colors[] = {
 };
 #endif
 static void uart_callback(Logger_Event *event) {
-#ifdef DEBUG_LOG_COLORED
-  printf(
-    "%s%-5s\x1b[0m \x1b[90m%s:%d:%s():\x1b[0m ",
-    level_colors[event->level], level_strings[event->level],
-    event->file, event->line, event->function);
-#else
-  printf(
-    "%-5s %s:%i:%s: ",
-    level_strings[event->level], event->file, event->line, event->function);
-#endif
+  
+  #ifdef DEBUG_LOG_COLORED
+  if (logColored) {
+    printf(
+      "%s%-5s\x1b[0m \x1b[90m%s:%d:%s():\x1b[0m ",
+      level_colors[event->level], level_strings[event->level],
+      event->file, event->line, event->function);
+  } else {
+  #endif
+    printf(
+      "%-5s %s:%i:%s: ",
+      level_strings[event->level], event->file, event->line, event->function);
+  #ifdef DEBUG_LOG_COLORED
+  }
+  #endif
   vprintf(event->fmt, event->ap);
   if (event->newLine)
     Logger_newLine();
@@ -77,6 +83,9 @@ void Logger_log(uint8_t level, bool newLine, const char *file, const char *funct
 }
 void Logger_setLevel(uint8_t level) {
   currentLoglevel = level;
+}
+void Logger_setColored(bool colored) {
+  logColored = colored;
 }
 bool Logger_needed(uint8_t level) {
   return (level >= currentLoglevel);

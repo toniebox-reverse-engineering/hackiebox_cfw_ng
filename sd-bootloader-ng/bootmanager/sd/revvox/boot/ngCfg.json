@@ -8,7 +8,9 @@
         "_descSerialLog": "Logging only works with the debug build!",
         "serialLog": false,
         "_descLogLevel": "0:Trace - 5:Fatal",
-        "logLevel": 0
+        "logLevel": 0,
+        "_descLogColor": "Use colors in log output",
+        "logColor": false
     },
     "ofw1": {
         "checkHash": true,
