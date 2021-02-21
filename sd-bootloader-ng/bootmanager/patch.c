@@ -141,12 +141,11 @@ static void clearSearchAndReplace() {
 
 static void doSearchAndReplace() {
   sSearchAndReplacePatch* patch = &searchAndReplacePatch;
+  if (!positionSearchFailed) {
     if (patch->length > 0) {
       if (patch->searchMemPos > 0 || searchInMemory(patch->search, patch->searchMask, patch->length, patch->searchMemPos)) {
         Logger_debug("Replace %ib @0x%x", patch->length, patch->searchMemPos);
         Logger_trace_nonl("replace = ");
-        for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
-      for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
         for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
           if (Logger_needed(DEBUG_LOG_LEVEL))
             printf("%02x ", (uint8_t)image[patch->searchMemPos+replaceOffset]);  
@@ -163,6 +162,9 @@ static void doSearchAndReplace() {
     } else {
       Logger_error("Patch length == 0");
     }
+  } else {
+    Logger_error("Error during positionSearch, skip SearchAndReplace");
+  }
   clearSearchAndReplace();
 }
 
