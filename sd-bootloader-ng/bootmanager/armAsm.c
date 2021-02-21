@@ -149,7 +149,7 @@ static void armAsmT_bl_blx(uint32_t pc, uint32_t target, bool x, char instructio
     result = set_bit(result, 0, 0x0);
   } else { //BL
     //imm11
-    result = set_bits(result, 0, imm11, 10);
+    result = set_bits(result, 0, imm11, 11);
   }
 
 /*
