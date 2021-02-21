@@ -58,7 +58,7 @@ static bool searchInMemory(char* search, char* searchMask, uint8_t length, uint3
   }
 
   if (!found) {
-    Logger_error("searchInMemory failed, best result at offset=%i with length=%i", longestHitPos, longestHitLen);
+    Logger_error("searchInMemory failed, best result at offset=0x%x with length=%i of %ibytes", longestHitPos, longestHitLen, length);
     if (Logger_needed(DEBUG_LOG_LEVEL_DEBUG)) {
       Logger_debug_nonl("search  = ");
       for (uint8_t offset=0; offset<length; offset++) {
