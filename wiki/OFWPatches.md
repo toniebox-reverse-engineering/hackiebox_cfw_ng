@@ -8,7 +8,7 @@ This patch clears the paths to the certificates. This way the box will abort the
 ## Alternative Tags (SLIX / SLIX2)
 If you want to use alternative tags those patches will help you. Even other iso15693 tags may work.
 
-### Block count >8 ([blockCheck.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheck.308.json))
+### Block count >8 ([blockCheck.307.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheck.307.json))
 Usally the toniebox checks if the tag has exactly 8 blocks. The check allows the tag to have more than that. (ex. SLIX or SLIX2)
 
 ### Block count <=8 ([blockCheckRemove.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheckRemove.308.json))
@@ -34,7 +34,7 @@ Usally doesn't allow tags without the boxine specific or the NXP specific privac
 Usally doesn't the toniebox checks for two passwords. The boxine specific and the NXP specific standard password *0f0f0f0f*. This patch changes the second password to *00000000*.
 
 
-### No UID check ([uidCheck.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/uidCheck.305.json))
+### No UID check ([uidCheck.307.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/uidCheck.307.json))
 Usally the toniebox checks if the UID of the tag starts with *E0:04:03*. With that patch you may use tags with other UIDs (ex SLIX or SLIX2)
 
 ### Hide A: Do not hide files that need new content ([noHide.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noHide.308.json))
