@@ -31,7 +31,7 @@ Filepath: sd:/revvox/boot/ng-*XXXY*.bin
 3) **add3** - (optional)
 
 
-***All error codes for the bootloader are in green.****
+***All error codes for the bootloader are in green.***
 
 ### Configuration
 
