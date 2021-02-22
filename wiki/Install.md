@@ -2,6 +2,7 @@
 
 ## Backup
 Please make a **full file based + flash backup** of your toniebox's flash with [cc3200tool](https://github.com/toniebox-reverse-engineering/cc3200tool).
+[More details on the usage of the cc3200tool can be found here](https://github.com/toniebox-reverse-engineering/toniebox/wiki/Debug-Port-&-Extract-Firmware#extract-firmware)
 
 ```
 python3 cc.py -p /dev/ttyUSB0 read_all_files targetdir/ read_flash backup.bin
@@ -11,6 +12,7 @@ python3 cc.py -p /dev/ttyUSB0 read_all_files targetdir/ read_flash backup.bin
 
 ### Get the bootloader
 Download the latest version from [here](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/releases).
+If you don't mind a slightly slower boot but want some log output via UART (Baud 115200, TX Pin) use the debug variant.
 
 ### Preface
 If you have previously installed the CFW SD Bootloader please use *1b)* otherwise for first time installation please use *1a)*.
@@ -19,17 +21,19 @@ If you have previously installed the CFW SD Bootloader please use *1b)* otherwis
 
 #### Move original bootloader
 First of all you need to copy you just backuped original mcuimg.bin from your toniebox to a different location where the preloader can run it as fallback.
+Please don't confuse the mcuimg.bin (ofw bootloader) you are going to dump with the mcuimg within the hackiebox zip package (/flash/sys/mcuimg.bin)
+
 ```
-python3 cc.py -p /dev/ttyUSB0 read_file /sys/mcuimg.bin pre-img.bin
-python3 cc.py -p /dev/ttyUSB0 write_file pre-img.bin /sys/pre-img.bin
+python3 cc.py -p /dev/ttyUSB0 read_file /sys/mcuimg.bin mcuimg.bin
+python3 cc.py -p /dev/ttyUSB0 write_file mcuimg.bin /sys/pre-img.bin
 ```
-#### Install bootloader
+#### Install preloader
 ```
-python3 cc.py -p /dev/ttyUSB0 write_file ngpreloader.bin /sys/mcuimg.bin
+python3 cc.py -p /dev/ttyUSB0 write_file flash/sys/mcuimg.bin /sys/mcuimg.bin
 ```
 #### Or as oneliner
 ```
-python3 cc.py -p /dev/ttyUSB0 read_file /sys/mcuimg.bin mcuimg.bin write_file mcuimg.bin /sys/pre-img.bin write_file ngpreloader.bin /sys/mcuimg.bin
+python3 cc.py -p /dev/ttyUSB0 read_file /sys/mcuimg.bin mcuimg.bin write_file mcuimg.bin /sys/pre-img.bin write_file flash/sys/mcuimg.bin /sys/mcuimg.bin
 ```
 
 ### 1b) Preloader (Stage 1) - For updating the sd bootloader
