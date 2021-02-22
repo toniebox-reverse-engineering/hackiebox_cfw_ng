@@ -34,6 +34,30 @@ Filepath: sd:/revvox/boot/ng-*XXXY*.bin
 ***All error codes for the bootloader are in green.***
 
 ### Configuration
+The configuration for the bootloader is saved within [sd:/revvox/boot/ngCfg.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/ngCfg.json). All sections or keys starting with and underscore "_" a comments and will be ignored.
+#### General Section
+| Key | Description | Values | Default |
+| - | - | - | - | 
+| activeImg | Sets the firmware slot to select at startup | ofw1, ofw2, ofw3, cfw1, cfw2, cfw3, add1, add2, add3 | ofw1 |
+| waitForPress | Waits for an earpress on startup with a blink sequence (blue, green, cyan, black)| true, false | false |
+| waitTimeoutInS | Timeout in seconds for waitForPress if no earpress (hibernation) | 1-255 | 60 |
+| minBatteryLevel | Poweroff voltage to protect the battery. Divide through around 700 to get voltage (Standard 3V) | | 2100 |
+| serialLog | Enable log to UART (TX) @115200 baud. Only works for debug build! | true, false | true |
+| logLevel | Set Log level 0:Trace - 5:Fatal | 0-5 | DEBUG_LOG_LEVEL |
+| logColor | Enable colored log | true, false | false |
+
+#### Firmware Section
+There are nine firmware slots, named ofw1, ofw2, ofw3, cfw1, cfw2, cfw3, add1, add2 and add3.
+
+| Key | Description | Values | Default |
+| - | - | - | - | 
+| checkHash | Check hash of firmware | true, false | false |
+| hashFile | Chech hash from ng-XXX?.sha file (true) or from the last 64 byte of the firmware itself (ofw) | true, false | false |
+| watchdog | Keep watchdog enabled when booting firmware (if booting fails, box will restart) | true, false | false |
+| ofwFix | Add magic bytes to the firmware image to make ofw directly boot | false | true, false
+| patches | List of patches to load, see [patch directory](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/tree/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch) or [patch wiki](OFWPatches.md)  | ["noCerts.305", "noPass3.305"] | [] |
+
+
 
 ### SHA256 check
 For each slot an SHA256 check is available. Either as a seperated ng-*XXXY*.sha file or directly appended to the binary
