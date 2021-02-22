@@ -3,6 +3,7 @@
         "activeImg": "ofw3",
         "waitForPress": false,
         "waitTimeoutInS": 60,
+        "_descMinBatteryLevel": "Divide through around 700 to get voltage",
         "minBatteryLevel": 2100,
 
         "_descSerialLog": "Logging only works with the debug build!",
