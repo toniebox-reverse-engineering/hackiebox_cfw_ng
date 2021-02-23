@@ -73,7 +73,6 @@ Now the HackieboxNG bootloader will instantly boot the original bootloader and r
 
 Note: The preloader will load any file placed to *sd:/revvox/boot/ngbootloader.bin*. 
 
-### 3) Configuration
 
 
-[More about the different firmware slots here.](Bootloader.md)
+[More about the different firmware slots and the configuration here.](Bootloader.md)
