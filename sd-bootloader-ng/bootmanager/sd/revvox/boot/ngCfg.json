@@ -1,6 +1,6 @@
 {
     "general": {
-        "activeImg": "ofw3",
+        "activeImg": "ofw1",
         "waitForPress": false,
         "waitTimeoutInS": 60,
         "_descMinBatteryLevel": "Divide through around 700 to get voltage",
@@ -32,18 +32,18 @@
         "patches": ["blockCheck.307", "blockCheckRemove.308", "noCerts.305", "noChargWake.305", "noHide.308", "noPass3.305", "noPrivacy.305", "uidCheck.307"]
     },
     "cfw1": {
-        "checkHash": true,
-        "hashFile": true,
+        "checkHash": false,
+        "hashFile": false,
         "watchdog": true
     },
     "cfw2": {
-        "checkHash": true,
-        "hashFile": true,
+        "checkHash": false,
+        "hashFile": false,
         "watchdog": true
     },
     "cfw3": {
-        "checkHash": true,
-        "hashFile": true,
+        "checkHash": false,
+        "hashFile": false,
         "watchdog": true
     },
     "add1": {
