@@ -41,7 +41,7 @@ python cc.py -p COM3 read_file /sys/mcuimg.bin mcuimg.bin write_file mcuimg.bin 
 *If the original firmware isn't booted please check if the ng-ofw1.bin has the sha256 hash e86749c2e47f6c87eb462516e56a0a9ad215f38beb312cc77785c54921c97c05. If not the file could be corrupted by some bitflips that may occur with the flash of the toniebox. You may disable the hash check in the ngCfg.json or create a new ng-ofw1.sha with the fitting hash* 
 
 ### 1b) Preloader (Stage 1) - For updating the sd bootloader
-You may have the (old) Hackiebox CFW to upload the preloader. This way you can install it over the air without direct access to the flash if you have already installed a previous version of the cfw bootloader/preloader.
+You may use the (old) Hackiebox CFW to upload the preloader. This way you can install it over the air without direct access to the flash if you have already installed a previous version of the cfw bootloader/preloader. Just run the Hackiebox CFW and use the webinterface to upload the new /sys/mcuimg.bin.
 
 #### Backup
 To verify that you have currently installed the ofw bootloader to */sys/pre-img.bin* you may download the file from flash
