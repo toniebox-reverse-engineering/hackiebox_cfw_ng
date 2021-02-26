@@ -23,11 +23,13 @@ enum BOOTINFO_PARSE_RESULT Bootinfo_Parse(char content[8], sBootInfoCust* bootin
     case FW_STATE_TESTING:
     case FW_STATE_TESTREADY:
         bootinfo->state = stateRaw;
+        return BOOTINFO_RESULT_OK;
         break;
     
     default:
         bootinfo->state = FW_STATE_INVALID;
     }
+    return BOOTINFO_RESULT_FAIL;
 }
 
 void Bootinfo_Generate(sBootInfoCust* bootinfo, char result[8]) {
