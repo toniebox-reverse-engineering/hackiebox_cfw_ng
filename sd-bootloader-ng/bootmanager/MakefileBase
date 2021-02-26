@@ -119,6 +119,7 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/armAsm.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/patch.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/watchdog.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/logger.o
+${BINDIR}/bootmgr.axf: ${OBJDIR}/ofwParse.o
 
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/wiring.o
 
