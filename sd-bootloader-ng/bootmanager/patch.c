@@ -145,7 +145,7 @@ static void doSearchAndReplace() {
   sSearchAndReplacePatch* patch = &searchAndReplacePatch;
   if (!positionSearchFailed) {
     if (patch->length > 0) {
-      if (patch->searchMemPos > 0 || searchInMemory(patch->search, patch->searchMask, patch->length, patch->searchMemPos)) {
+      if (patch->searchMemPos > 0 || searchInMemory(patch->search, patch->searchMask, patch->length, &patch->searchMemPos)) {
         Logger_debug("Replace %ib @0x%x", patch->length, patch->searchMemPos);
         Logger_trace_nonl("search  = ");
         if (Logger_needed(DEBUG_LOG_LEVEL)) {
