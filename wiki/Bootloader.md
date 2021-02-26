@@ -51,9 +51,10 @@ There are nine firmware slots, named ofw1, ofw2, ofw3, cfw1, cfw2, cfw3, add1, a
 
 | Key | Description | Values | Default |
 | - | - | - | - | 
-| checkHash | Check hash of firmware | true, false | false |
+| checkHash | Check hash of firmware | true, false | true |
 | hashFile | Chech hash from ng-XXX?.sha file (true) or from the last 64 byte of the firmware itself (ofw) | true, false | false |
 | watchdog | Keep watchdog enabled when booting firmware (if booting fails, box will restart) | true, false | false |
+| ofwFix | Add magic bytes to the firmware image to make ofw directly boot | true, false | false
 | ofwSimBL | Read image to boot from flash:/sys/mcubootinfo.bin and load the image from flash:/sys/mcuimgN.bin instead of reading from sd (like the ofw bootloader)| true, false | false
 | patches | List of patches to load, see [patch directory](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/tree/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch) or [patch wiki](OFWPatches.md)  | ["noCerts.305", "noPass3.305"] | [] |
 
