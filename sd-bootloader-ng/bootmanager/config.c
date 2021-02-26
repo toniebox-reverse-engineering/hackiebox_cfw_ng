@@ -146,6 +146,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
         Config_imageInfos[imageNumber].hashFile = (value[0] == 't');
       } else if (strcmp("watchdog", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].watchdog = (value[0] == 't');
+      } else if (strcmp("ofwSimBL", jsonValueName) == 0) {
+        Config_imageInfos[imageNumber].ofwSimBL = (value[0] == 't');
       } else if (strcmp("ofwFix", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].ofwFix = (value[0] == 't');
       }
@@ -172,6 +174,7 @@ void Config_InitImageInfos(void) {
     Config_imageInfos[i].hashFile = false;
     Config_imageInfos[i].watchdog = false;
     Config_imageInfos[i].ofwFix = false;
+    Config_imageInfos[i].ofwSimBL = false;
     for (uint8_t j = 0; j < PATCH_MAX_PER_IMAGE; j++) {
       Config_imageInfos[i].patches[j][0] = '\0';
     }
