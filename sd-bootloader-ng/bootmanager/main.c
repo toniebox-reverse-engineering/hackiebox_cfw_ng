@@ -87,11 +87,16 @@ static FATFS fatfs;
 #include "globalDefines.h"
 #include "watchdog.h"
 #include "logger.h"
+#include "ofwParse.h"
 
 #include "wiring.h"
 
 
+static char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
 static char imagePath[] = IMG_SD_PATH;
+static char flashPath[] = OFW_IMAGE_PATH;
+static bool slInitialized = false;
+static sBootInfoCust bootInfoData = { FW_SLOT_INVALID, FW_STATE_INVALID };
 //*****************************************************************************
 // Vector Table
 extern void (*const g_pfnVectors[])(void);
@@ -224,6 +229,23 @@ static void prebootmgr_blink_error(int times, int wait_ms) {
   #endif
 }
 
+static void watchdog_recovery_sequence() {
+  //force NWP to idle State
+  HWREG(0x400F70B8) = 0x1;
+  UtilsDelay(800000/5);
+
+  //Clear the interrupt
+  HWREG(0x400F70B0) = 0x1;
+  UtilsDelay(800000/5);
+
+  //reset NWP, WLAN domains
+  HWREG(0x4402E16C) |= 0x2;
+  UtilsDelay(800);
+
+  //Wnsure ANA DCDC is moved to PFM mode before envoking hibernate
+  HWREG(0x4402F024) &= 0xF7FFFFFF;
+}
+
 static void SdInit(void)
 {
   //Power SD
@@ -297,9 +319,28 @@ static void BoardInitCustom(void)
 
   SdInit();
 }
+
+static void SimpleLinkInit() {
+  if (slInitialized)
+    return;
+
+  watchdog_recovery_sequence();
+  sl_Start(NULL, NULL, NULL);
+  slInitialized = true;
+}
+static void SimpleLinkDeinit() {
+  if (!slInitialized)
+    return;
+
+  sl_Stop(30);
+  slInitialized = false; 
+}
+
+
 static void BoardDeinitCustom(void)
 {
   Logger_debug("Prepare board deinitialization...");
+  SimpleLinkDeinit();
   watchdog_feed();
   //Power off SD
   MAP_GPIOPinWrite(POWER_SD_PORT, POWER_SD_PORT_MASK, POWER_SD_PORT_MASK); //SIC! 
@@ -316,6 +357,11 @@ static volatile bool EarBigPressed(void) {
   return !(EAR_BIG_PORT_MASK & MAP_GPIOPinRead(EAR_BIG_PORT, EAR_BIG_PORT_MASK));
 }
 
+static char* GetFlashPathById(uint8_t number) {
+  char id = (char)((number%3) + 0x31 + 1);
+  flashPath[11] = id;
+  return flashPath;
+}
 static char* GetImagePathById(uint8_t number) {
   char id = (char)((number%3) + 0x31); //See Ascii Table - 1 starts at 0x31
   char* name;
@@ -340,11 +386,48 @@ static bool SdImageExists(uint8_t number) {
   char* image = GetImagePathById(number);
   return SdFileExists(image);
 }
+static bool ReadBootInfo() {
+  _i32 fhandle;
+  SlFsFileInfo_t pFsFileInfo;
+  char bootNfo[8];
+  SimpleLinkInit();
+
+  char* bootInfoPath = OFW_BOOTINFO_PATH;
+
+  if (bootInfoData.firmware != FW_SLOT_INVALID && bootInfoData.state != FW_STATE_INVALID)
+    return true;
+
+  if (!sl_FsOpen(bootInfoPath, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+    if (!sl_FsGetInfo(bootInfoPath, 0, &pFsFileInfo)) {
+      if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, bootNfo, 8)) {
+        sl_FsClose(fhandle, 0, 0, 0);
+        enum BOOTINFO_PARSE_RESULT result = Bootinfo_Parse(bootNfo, &bootInfoData);
+        if (result == BOOTINFO_RESULT_OK) {
+          Logger_info("Read bootinfo firmware=%i, state=0x%x", bootInfoData.firmware, bootInfoData.state);
+          return true;
+        } else {
+          Logger_error("Could not parse bootinfo error=%i", result);
+        }
+      } else {
+        Logger_error("Could not read 8 bytes from bootinfo");
+      }
+    } else {
+      Logger_error("Could not open bootinfo metadata");
+    }
+  } else {
+    Logger_error("Could not open bootinfo from flash:%s", &OFW_BOOTINFO_PATH);
+  }
+  return false;
+}
+
 static bool CheckSdImages() {
   bool hasValidImage = false;
-  for (uint8_t i=0; i<IMG_MAX_COUNT; i++)
-  {
-    Config_imageInfos[i].fileExists = SdImageExists(i);
+  for (uint8_t i=0; i<IMG_MAX_COUNT; i++) {
+    if (Config_imageInfos[i].ofwSimBL) {
+      Config_imageInfos[i].fileExists = ReadBootInfo();
+    } else {
+      Config_imageInfos[i].fileExists = SdImageExists(i);
+    }
     hasValidImage |= Config_imageInfos[i].fileExists;
   }
   return hasValidImage;
@@ -483,28 +566,110 @@ static uint8_t Selector(uint8_t startNumber) {
   }
   return counter;
 }
+static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize) {
+  FIL ffile;
+  uint8_t ffs_result;
 
-static void watchdog_recovery_sequence() {
-  //force NWP to idle State
-  HWREG(0x400F70B8) = 0x1;
-  UtilsDelay(800000/5);
+  #ifndef FIXED_BOOT_IMAGE
+  if (imageInfo->checkHash) {
+    char hashExp[65];
+    char hashAct[65];
+    uint8_t hashActRaw[32];
 
-  //Clear the interrupt
-  HWREG(0x400F70B0) = 0x1;
-  UtilsDelay(800000/5);
+    hashExp[64] = '\0';
+    hashAct[64] = '\0';
 
-  //reset NWP, WLAN domains
-  HWREG(0x4402E16C) |= 0x2;
-  UtilsDelay(800);
+    if (imageInfo->hashFile) {
+      Logger_debug("Read hash from sha-file");
+      
+      char* shaFile = HASH_SD_PATH;
+      memcpy(shaFile+IMG_SD_PATH_REPL1_POS, imagePath+IMG_SD_PATH_REPL1_POS, 4);
+      Logger_debug("Open sd:%s ...", shaFile);
+      ffs_result = f_open(&ffile, shaFile, FA_READ);
+      if (ffs_result == FR_OK) {
+        ffs_result = f_read(&ffile, hashExp, 64, NULL);
+        if (ffs_result == FR_OK) {
 
-  //Wnsure ANA DCDC is moved to PFM mode before envoking hibernate
-  HWREG(0x4402F024) &= 0xF7FFFFFF;
+        } else {
+          Logger_error("Read sd:%s failed", shaFile);
+        }
+      } else {
+        Logger_error("Open sd:%s failed", shaFile);
+      }
+    } else {
+      Logger_debug("Read hash from the end of the image");
+      filesize -= 64; //sha256 is 64 bytes long.
+      memcpy(hashExp, (char*)(pImgRun + filesize), 64);
+    }
+
+    MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
+    MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, filesize, hashActRaw);
+    btox(hashAct, hashActRaw, 64);
+
+    if (strncmp(hashAct, hashExp, 64) != 0) {
+      Logger_error("SHA256 differs, source=%s", imageInfo->hashFile?"sha-file":"firmware");
+      Logger_error(" hashAct=%s ", hashAct);
+      Logger_error(" hashExo=%s", hashExp);
+
+      prebootmgr_blink_error(10, 50);
+      
+      Config_generalSettings.waitForPress = true;
+      return false;
+    } else {
+      Logger_info("SHA256 hash=%s ", hashAct);
+    }
+  }
+  if (imageInfo->ofwFix) {
+    uint32_t* pCheck1 = (uint32_t*)(pImgRun+filesize-0x04);
+    uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
+    uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
+
+    char* gitHash = pImgRun+filesize-0x60; //len 7
+    char* creationDate = pImgRun+filesize-0x58; //len 12
+
+    Logger_info("OFW git hash=%s", gitHash);
+    Logger_info("OFW creationDate=%s", creationDate);
+
+    Logger_debug("Apply OFW fix");
+    if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
+      *pTarget = 0x0010014C;
+    } else {
+      Logger_error("OFW fix failed");
+      Logger_error(" *pCheck1=0x%X *pCheck2=0x%X *pTarget=0x%X", *pCheck1, *pCheck2, *pTarget);
+      Logger_error(" pCheck1=0x%X pCheck2=0x%X pTarget=0x%X", pCheck1, pCheck2, pTarget);
+    }
+  }
+
+  for (uint8_t i=0; i<PATCH_MAX_PER_IMAGE; i++) {
+    if (imageInfo->patches[i][0] == '\0')
+      break;
+    Patch_Apply(pImgRun, imageInfo->patches[i], filesize);
+  }
+  #endif
+
+  checkBattery();
+  BoardDeinitCustom();
+
+  #ifdef FIXED_BOOT_IMAGE
+    watchdog_start_slow();
+  #else
+  if (!imageInfo->watchdog) {
+    watchdog_stop();
+  } else {
+    watchdog_start_slow();
+  }
+  #endif
+  watchdog_feed();
+
+  Logger_info("Start firmware sd:%s ...", imagePath);
+  Run((unsigned long)pImgRun);
 }
 
 int main()
 {
-  sBootInfo_t sBootInfo;
   FIL ffile;
+  _i32 fhandle;
+  SlFsFileInfo_t pFsFileInfo;
   uint8_t ffs_result;
 
   BoardInitBase();
@@ -540,8 +705,8 @@ int main()
     char* image = IMG_SD_BOOTLOADER_PATH;
     if (SdFileExists(image)) {
     #else
+    Config_ReadJsonCfg();
     if (CheckSdImages()) {
-      Config_ReadJsonCfg();
       checkBattery();
 
       retrySelection:
@@ -549,121 +714,70 @@ int main()
         
       uint8_t selectedImgNum = Config_generalSettings.activeImage;
       char* image = GetImagePathById(selectedImgNum);
-    #endif
 
-      Logger_debug("Open sd:%s ...", image);
-      ffs_result = f_open(&ffile, image, FA_READ);
-      if (ffs_result == FR_OK) {
-          uint32_t filesize = f_size(&ffile);
+      if (Config_imageInfos[selectedImgNum].ofwSimBL) {
+        char* flashImage = GetFlashPathById(bootInfoData.firmware);
+        
+        Logger_debug("Open flash:%s ...", flashImage);
+        _i32 flash_res = sl_FsOpen(flashImage, FS_MODE_OPEN_READ, NULL, &fhandle);
+        if (!flash_res) {
+          flash_res = sl_FsGetInfo(flashImage, 0, &pFsFileInfo);
+          if (!flash_res) {
+            if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
+                sl_FsClose(fhandle, 0, 0, 0);
 
-          char* pImgRun = (char*)APP_IMG_SRAM_OFFSET;
-          Logger_debug("Read sd:%s ...", image);
-          ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
-          if (ffs_result == FR_OK) {
-            f_close(&ffile);
-
-            #ifndef FIXED_BOOT_IMAGE
-            if (Config_imageInfos[selectedImgNum].checkHash) {
-              char hashExp[65];
-              char hashAct[65];
-              uint8_t hashActRaw[32];
-
-              hashExp[64] = '\0';
-              hashAct[64] = '\0';
-
-              if (Config_imageInfos[selectedImgNum].hashFile) {
-                Logger_debug("Read hash from sha-file");
-                
-                char* shaFile = HASH_SD_PATH;
-                memcpy(shaFile+IMG_SD_PATH_REPL1_POS, image+IMG_SD_PATH_REPL1_POS, 4);
-                Logger_debug("Open sd:%s ...", shaFile);
-                ffs_result = f_open(&ffile, shaFile, FA_READ);
-                if (ffs_result == FR_OK) {
-                  ffs_result = f_read(&ffile, hashExp, 64, NULL);
-                  if (ffs_result == FR_OK) {
-
-                  } else {
-                    Logger_error("Read sd:%s failed", shaFile);
-                  }
-                } else {
-                  Logger_error("Open sd:%s failed", shaFile);
-                }
-              } else {
-                Logger_debug("Read hash from the end of the image");
-                filesize -= 64; //sha256 is 64 bytes long.
-                memcpy(hashExp, (char*)(pImgRun + filesize), 64);
-              }
-
-              MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
-              MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, filesize, hashActRaw);
-              btox(hashAct, hashActRaw, 64);
-
-              if (strncmp(hashAct, hashExp, 64) != 0) {
-                Logger_error("SHA256 differs, source=%s", Config_imageInfos[selectedImgNum].hashFile?"sha-file":"firmware");
-                Logger_error(" hashAct=%s ", hashAct);
-                Logger_error(" hashExo=%s", hashExp);
-
-                prebootmgr_blink_error(10, 50);
-                
-                Config_generalSettings.waitForPress = true;
-                goto retrySelection;
-              }
-            }
-            if (Config_imageInfos[selectedImgNum].ofwFix) {
-              uint32_t* pCheck1 = (uint32_t*)(pImgRun+filesize-0x04);
-              uint32_t* pCheck2 = (uint32_t*)(pImgRun+filesize-0x04-0x6c);
-              uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
-
-              Logger_debug("Apply OFW fix");
-              if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
-                *pTarget = 0x0010014C;
-              } else {
-                Logger_error("OFW fix failed");
-                Logger_error(" *pCheck1=0x%X *pCheck2=0x%X *pTarget=0x%X", *pCheck1, *pCheck2, *pTarget);
-                Logger_error(" pCheck1=0x%X pCheck2=0x%X pTarget=0x%X", pCheck1, pCheck2, pTarget);
-              }
-            }
-
-            for (uint8_t i=0; i<PATCH_MAX_PER_IMAGE; i++) {
-              if (Config_imageInfos[selectedImgNum].patches[i][0] == '\0')
-                break;
-              Patch_Apply(pImgRun, Config_imageInfos[selectedImgNum].patches[i], filesize);
-            }
-            #endif
-
-            checkBattery();
-            BoardDeinitCustom();
-
-            #ifdef FIXED_BOOT_IMAGE
-              watchdog_start_slow();
-            #else
-            if (!Config_imageInfos[selectedImgNum].watchdog) {
-              watchdog_stop();
+                if (!prepareRun(&Config_imageInfos[selectedImgNum], image, pFsFileInfo.FileLen))
+                  goto retrySelection;
             } else {
-              watchdog_start_slow();
+              //TODO
+              Logger_error("Reading flash file failed");
             }
-            #endif
-            watchdog_feed();
-
-            Logger_info("Start firmware sd:%s ...", image);
-            Run((unsigned long)pImgRun);
           } else {
-              Logger_error("Reading file failed error=%i", ffs_result);
-              UtilsDelayMsWD(1000);
-              prebootmgr_blink_error(4, 500);
-              UtilsDelayMsWD(2000);
-              prebootmgr_blink_error(ffs_result, 1000);
+            //TODO
+            Logger_error("Reading flash file meta failed error=%i", flash_res);
           }
+        } else {
+          //TODO
+          Logger_error("Opening flash file failed error=%i", flash_res);
+        }
       } else {
-          Logger_error("Opening file failed error=%i", ffs_result);
-          UtilsDelayMsWD(1000);
-          prebootmgr_blink_error(3, 500);
-          UtilsDelayMsWD(2000);
-          prebootmgr_blink_error(ffs_result, 1000);
+      #endif
+        Logger_debug("Open sd:%s ...", image);
+        ffs_result = f_open(&ffile, image, FA_READ);
+        if (ffs_result == FR_OK) {
+            uint32_t filesize = f_size(&ffile);
+            Logger_debug("Read sd:%s ...", image);
+            ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
+            if (ffs_result == FR_OK) {
+              f_close(&ffile);
+
+              #ifdef FIXED_BOOT_IMAGE
+                prepareRun(NULL, image, filesize);
+              #else
+                if (!prepareRun(&Config_imageInfos[selectedImgNum], image, filesize))
+                  goto retrySelection;
+              #endif
+            } else {
+                Logger_error("Reading file failed error=%i", ffs_result);
+                UtilsDelayMsWD(1000);
+                prebootmgr_blink_error(4, 500);
+                UtilsDelayMsWD(2000);
+                prebootmgr_blink_error(ffs_result, 1000);
+            }
+        } else {
+            Logger_error("Opening file failed error=%i", ffs_result);
+            UtilsDelayMsWD(1000);
+            prebootmgr_blink_error(3, 500);
+            UtilsDelayMsWD(2000);
+            prebootmgr_blink_error(ffs_result, 1000);
+        }
+      #ifndef FIXED_BOOT_IMAGE
       }
+      #endif
+    } else {
+      UtilsDelayMsWD(2000);
+      Logger_error("No image found");
     }
-    UtilsDelayMsWD(2000);
-    Logger_error("No image found");
   } else {
     Logger_error("Mounting sd failed error=%i", ffs_result);
     UtilsDelayMsWD(500);
@@ -672,14 +786,11 @@ int main()
     prebootmgr_blink_error(ffs_result, 1000);
   }
 
-  SlFsFileInfo_t pFsFileInfo;
-  _i32 fhandle;
-  sl_Start(NULL, NULL, NULL); //for reading flash
+  SimpleLinkInit();
   if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
       if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
           if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
               sl_FsClose(fhandle, 0, 0, 0);
-              sl_Stop(30);
               BoardDeinitCustom();
               Logger_info("Start fallback firmware flash:%s ...", IMG_FLASH_PATH);
               Run(APP_IMG_SRAM_OFFSET);
@@ -690,8 +801,6 @@ int main()
   prebootmgr_blink_error(3, 33);
   prebootmgr_blink_error(3, 66);
   prebootmgr_blink_error(3, 33);
-
-  sl_Stop(30);
   
   hibernate();
 }
