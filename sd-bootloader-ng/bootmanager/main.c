@@ -632,7 +632,7 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
 
     char* strFinder = ((char*)pCheck2) - 1;
     if (strFinder[0] == 0x00) {
-      for (uint8_t i=0; i<64; i++) {
+      for (uint8_t i=0; i<32; i++) {
         strFinder--;
         if (strFinder[0] == 0x00) {
           version2 = strFinder+1;
@@ -640,9 +640,10 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
         }
       }
       if (version2 != NULL) {
-        for (uint8_t i=0; i<64; i++) {
+        for (uint8_t i=0; i<32; i++) {
           strFinder--;
-          if (strFinder[0] == 0x00) {
+          if (strFinder[0] < 0x20 //ASCII Space
+              || strFinder[0] > 0x7E) { //ASCII ~
             version1 = strFinder+1;
             break;
           }
