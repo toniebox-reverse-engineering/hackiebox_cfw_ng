@@ -7,14 +7,15 @@ enum BOOTINFO_PARSE_RESULT Bootinfo_Parse(char content[8], sBootInfoCust* bootin
     memcpy(&firmwareRaw, &content[0], 1);
     memcpy(&stateRaw, &content[4], 4);
 
-
-    //Logic from OFW Bootloader
-    if (firmwareRaw == 0x01) {
-        bootinfo->firmware = FW_SLOT_MCUIMG2;
-    } else if ((firmwareRaw & 0xfd) == 0) {
+    if (firmwareRaw == 0x00) {
         bootinfo->firmware = FW_SLOT_MCUIMG1;
-    } else {
+    } else if (firmwareRaw == 0x01) {
+        bootinfo->firmware = FW_SLOT_MCUIMG2;
+    } else if (firmwareRaw == 0x02) {
         bootinfo->firmware = FW_SLOT_MCUIMG3;
+    } else {
+        bootinfo->firmware = FW_SLOT_INVALID;
+        return BOOTINFO_RESULT_FAIL;
     }
 
     //Logic needs to be reversed from bootloader see function @0x20038648
