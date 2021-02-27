@@ -360,3 +360,12 @@ void * _sbrk(unsigned int incr)
 void _putchar(char character) {
     MAP_UARTCharPut(UARTA0_BASE, character);
 }
+
+uint16_t freeMemory_Stack() {
+    uint8_t* stack_start = (uint8_t*)g_pfnVectors[0];
+    uint8_t* stack_end = (uint8_t*)pui32Stack;
+    register unsigned* stack_pointer;
+    __asm__ volatile("mov %0, sp\n" : "=r" (stack_pointer) );
+
+    return (uint16_t)((uint32_t)stack_pointer-(uint32_t)stack_end);
+}
