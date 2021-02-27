@@ -627,8 +627,38 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
     char* gitHash = pImgRun+filesize-0x60; //len 7
     char* creationDate = pImgRun+filesize-0x58; //len 12
 
-    Logger_info("OFW git hash=%s", gitHash);
-    Logger_info("OFW creationDate=%s", creationDate);
+    char* version1 = NULL;
+    char* version2 = NULL;
+
+    char* strFinder = ((char*)pCheck2) - 1;
+    if (strFinder[0] == 0x00) {
+      for (uint8_t i=0; i<64; i++) {
+        strFinder--;
+        if (strFinder[0] == 0x00) {
+          version2 = strFinder+1;
+          break;
+        }
+      }
+      if (version2 != NULL) {
+        for (uint8_t i=0; i<64; i++) {
+          strFinder--;
+          if (strFinder[0] == 0x00) {
+            version1 = strFinder+1;
+            break;
+          }
+        }
+      }
+    }
+
+    Logger_info("Found following OFW metadata:");
+    if (version1 != NULL)
+      Logger_info(" version1=%s", version1);
+    if (version2 != NULL)
+      Logger_info(" version2=%s", version2);
+    if (strnlen(gitHash, 8) == 7)
+      Logger_info(" git hash=%s", gitHash);
+    if (strnlen(creationDate, 13) == 12)
+      Logger_info(" creationDate=%s", creationDate);
 
     Logger_debug("Apply OFW fix");
     if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
