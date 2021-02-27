@@ -657,7 +657,8 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
       Logger_info(" version2=%s", version2);
     if (strnlen(gitHash, 8) == 7)
       Logger_info(" git hash=%s", gitHash);
-    if (strnlen(creationDate, 13) == 12)
+    if (strnlen(creationDate, 13) == 12 //latest format
+        || strnlen(creationDate, 29) == 28) //old format
       Logger_info(" creationDate=%s", creationDate);
 
     Logger_debug("Apply OFW fix");
