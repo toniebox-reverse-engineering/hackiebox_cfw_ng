@@ -203,6 +203,11 @@ extern uint32_t __init_data;
 void
 ResetISR(void)
 {
+    //
+    // Set Stack pointer if loaded via debugger or just be sure it is set right.
+    //
+    __asm__("ldr sp, %0\n" :: "m" (g_pfnVectors[0]) );
+
     uint32_t *pui32Src, *pui32Dest;
 
     //
