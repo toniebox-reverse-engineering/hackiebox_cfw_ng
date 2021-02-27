@@ -149,7 +149,7 @@ static void doSearchAndReplace() {
         Logger_debug("Replace %ib @0x%x", patch->length, patch->searchMemPos);
         Logger_trace_nonl("search  = ");
         if (Logger_needed(DEBUG_LOG_LEVEL)) {
-          for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {  
+          for (uint8_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {  
             if (patch->searchMask[replaceOffset] == 0x00) {
               printf(" ??");
             } else {
@@ -159,7 +159,7 @@ static void doSearchAndReplace() {
           Logger_newLine();
         }
         Logger_trace_nonl("replace = ");
-        for (uint32_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
+        for (uint8_t replaceOffset=0; replaceOffset<patch->length; replaceOffset++) {      
           if (Logger_needed(DEBUG_LOG_LEVEL)) {
             if (patch->replaceMask[replaceOffset] == 0x00) {
               printf(" ??");
