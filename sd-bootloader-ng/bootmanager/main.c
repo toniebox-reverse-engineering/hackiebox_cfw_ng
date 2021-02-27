@@ -625,7 +625,7 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
     uint32_t* pTarget = (uint32_t*)(pImgRun+filesize-0x04-0x04);
 
     char* gitHash = pImgRun+filesize-0x60; //len 7
-    char* creationDate = pImgRun+filesize-0x58; //len 12
+    char* creationDate = pImgRun+filesize-0x58; //len 12/28
 
     char* version1 = NULL;
     char* version2 = NULL;
