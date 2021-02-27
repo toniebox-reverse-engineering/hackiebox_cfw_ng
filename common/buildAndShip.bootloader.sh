@@ -12,7 +12,8 @@ source ${ROOT}/common/make/armGccPath
 export PATH="${ARMGCC_BIN}:$PATH"
 
 if [ "$1" == "debug" ]; then
-    DEBUG_APPENDIX=Debug
+    DEBUG_APPENDIX_RELOC=Debug
+    DEBUG_APPENDIX=Log
     DEBUG_APPENDIX_ZIP=_debug
     DEBUG_PATH_APPENDIX=debug/
 else
@@ -64,7 +65,7 @@ if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo 
     echo Build relocator
     cd ${RELOC_DIR}
-    make -f Makefile${DEBUG_APPENDIX} clean all
+    make -f Makefile${DEBUG_APPENDIX_RELOC} clean all
 
     echo 
     echo Build Preloader

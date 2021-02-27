@@ -1,9 +1,2 @@
 OPT_LEVEL=g
-ADDITIONAL_CFLAGS=-DFIXED_BOOT_IMAGE
-LINK_FILE=bootmgr.debug.ld
-
-RELOC_ADDR=0x20034000
-OBJSUB=debug/preloader
-BINSUB=debug/preloader
-
-include MakefileBase
+include MakefileLogPreloader
