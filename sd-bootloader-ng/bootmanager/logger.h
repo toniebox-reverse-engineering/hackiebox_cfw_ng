@@ -23,7 +23,7 @@ typedef struct Logger_Event {
 
 void Logger_init(void);
 
-#if DEBUG_LOG_LEVEL_TRACE >= DEBUG_LOG_LEVEL
+#if DEBUG_LOG_LEVEL_TRACE >= DEBUG_LOG_LEVEL && !defined(NO_DEBUG_LOG)
 #define Logger_trace(...)      Logger_log_marco(DEBUG_LOG_LEVEL_TRACE, true,  __VA_ARGS__)
 #define Logger_trace_nonl(...) Logger_log_marco(DEBUG_LOG_LEVEL_TRACE, false, __VA_ARGS__)
 #else
@@ -31,7 +31,7 @@ void Logger_init(void);
 #define Logger_trace_nonl(...)
 #endif     
 
-#if DEBUG_LOG_LEVEL_DEBUG >= DEBUG_LOG_LEVEL 
+#if DEBUG_LOG_LEVEL_DEBUG >= DEBUG_LOG_LEVEL && !defined(NO_DEBUG_LOG)
 #define Logger_debug(...)      Logger_log_marco(DEBUG_LOG_LEVEL_DEBUG, true,  __VA_ARGS__)
 #define Logger_debug_nonl(...) Logger_log_marco(DEBUG_LOG_LEVEL_DEBUG, false, __VA_ARGS__)
 #else
@@ -39,7 +39,7 @@ void Logger_init(void);
 #define Logger_debug_nonl(...)
 #endif     
 
-#if DEBUG_LOG_LEVEL_INFO >= DEBUG_LOG_LEVEL
+#if DEBUG_LOG_LEVEL_INFO >= DEBUG_LOG_LEVEL && !defined(NO_DEBUG_LOG)
 #define Logger_info(...)       Logger_log_marco(DEBUG_LOG_LEVEL_INFO, true,   __VA_ARGS__)
 #define Logger_info_nonl(...)  Logger_log_marco(DEBUG_LOG_LEVEL_INFO, false,  __VA_ARGS__)
 #else
@@ -47,7 +47,7 @@ void Logger_init(void);
 #define Logger_info_nonl(...)
 #endif     
 
-#if DEBUG_LOG_LEVEL_WARN >= DEBUG_LOG_LEVEL
+#if DEBUG_LOG_LEVEL_WARN >= DEBUG_LOG_LEVEL && !defined(NO_DEBUG_LOG)
 #define Logger_warn(...)       Logger_log_marco(DEBUG_LOG_LEVEL_WARN, true,   __VA_ARGS__)
 #define Logger_warn_nonl(...)  Logger_log_marco(DEBUG_LOG_LEVEL_WARN, false,  __VA_ARGS__)
 #else
@@ -55,7 +55,7 @@ void Logger_init(void);
 #define Logger_warn_nonl(...)
 #endif     
 
-#if DEBUG_LOG_LEVEL_ERROR >= DEBUG_LOG_LEVEL
+#if DEBUG_LOG_LEVEL_ERROR >= DEBUG_LOG_LEVEL && !defined(NO_DEBUG_LOG)
 #define Logger_error(...)      Logger_log_marco(DEBUG_LOG_LEVEL_ERROR, true,  __VA_ARGS__)
 #define Logger_error_nonl(...) Logger_log_marco(DEBUG_LOG_LEVEL_ERROR, false, __VA_ARGS__)
 #else
@@ -63,7 +63,7 @@ void Logger_init(void);
 #define Logger_error_nonl(...)
 #endif     
 
-#if DEBUG_LOG_LEVEL_FATAL >= DEBUG_LOG_LEVEL
+#if DEBUG_LOG_LEVEL_FATAL >= DEBUG_LOG_LEVEL && !defined(NO_DEBUG_LOG)
 #define Logger_fatal(...)      Logger_log_marco(DEBUG_LOG_LEVEL_FATAL, true,  __VA_ARGS__)
 #define Logger_fatal_nonl(...) Logger_log_marco(DEBUG_LOG_LEVEL_FATAL, false, __VA_ARGS__)
 #else
