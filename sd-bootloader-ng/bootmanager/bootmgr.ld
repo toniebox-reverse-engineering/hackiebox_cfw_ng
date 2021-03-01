@@ -37,7 +37,8 @@
 ******************************************************************************/
 
 
-HEAP_SIZE = 0x00000200;
+STACK_SIZE = 0x800;
+HEAP_SIZE = 0x0000;
 
 MEMORY
 {
@@ -80,6 +81,14 @@ SECTIONS
         _edata = .;
     } > SRAM
 	
+     /* start of SRAM2 */
+    .stack : {
+        _stack = .; /* start of the stack section */
+        . = . + STACK_SIZE;
+        . = ALIGN(4);
+        _estack = .;   /* end of the stack section */
+    } > SRAM2   /* stack at the start of SRAM 2*/
+
     .bss :
     {
         _bss = .;
@@ -97,4 +106,3 @@ SECTIONS
 
     } > SRAM2
 }
-

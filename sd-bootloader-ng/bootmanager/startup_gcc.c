@@ -89,8 +89,24 @@ extern int main(void);
 // Reserve space for the system stack.
 //
 //*****************************************************************************
-static uint32_t pui32Stack[512];
+//static uint32_t pui32Stack[512];
 
+
+//*****************************************************************************
+//
+// The following are constructs created by the linker, indicating where the
+// the "data" and "bss" segments reside in memory.  The initializers for the
+// for the "data" segment resides immediately following the "text" segment.
+//
+//*****************************************************************************
+extern uint32_t _etext;
+//extern uint32_t _data;
+//extern uint32_t _edata;
+extern uint32_t _stack;
+extern uint32_t _estack;
+extern uint32_t _bss;
+extern uint32_t _ebss;
+//extern uint32_t __init_data;
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -100,8 +116,8 @@ static uint32_t pui32Stack[512];
 __attribute__ ((section(".intvecs")))
 void (* const g_pfnVectors[])(void) =
 {
-    (void (*)(void))((uint32_t)pui32Stack + sizeof(pui32Stack)),
-                                            // The initial stack pointer
+    //(void (*)(void))((uint32_t)pui32Stack + sizeof(pui32Stack)),
+    (void (*)(void))(&_estack),              // The initial stack pointer
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler
     FaultISR,                               // The hard fault handler
@@ -175,20 +191,6 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Generic SPI
     IntDefaultHandler,                      // Link SPI
 };
-
-//*****************************************************************************
-//
-// The following are constructs created by the linker, indicating where the
-// the "data" and "bss" segments reside in memory.  The initializers for the
-// for the "data" segment resides immediately following the "text" segment.
-//
-//*****************************************************************************
-extern uint32_t _etext;
-extern uint32_t _data;
-extern uint32_t _edata;
-extern uint32_t _bss;
-extern uint32_t _ebss;
-extern uint32_t __init_data;
 
 //*****************************************************************************
 //
@@ -362,8 +364,8 @@ void _putchar(char character) {
 }
 
 uint16_t freeMemory_Stack() {
-    uint8_t* stack_start = (uint8_t*)g_pfnVectors[0];
-    uint8_t* stack_end = (uint8_t*)pui32Stack;
+    uint8_t* stack_start = (uint8_t*)&_estack;
+    uint8_t* stack_end = (uint8_t*)&_stack;
     register unsigned* stack_pointer;
     __asm__ volatile("mov %0, sp\n" : "=r" (stack_pointer) );
 
