@@ -121,6 +121,8 @@ ${BINDIR}/bootmgr.axf: ${OBJDIR}/watchdog.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/logger.o
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/ofwParse.o
 
+${BINDIR}/bootmgr.axf: ${OBJDIR}/stdlib-add.o
+
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/wiring.o
 
 ${BINDIR}/bootmgr.axf: ${OBJDIR}/udma_if.o

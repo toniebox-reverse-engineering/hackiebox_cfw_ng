@@ -47,9 +47,9 @@
 //! @{
 //
 //****************************************************************************
-
 #include <stdint.h>
 #include <stdbool.h>
+#include "stdlib-add.h"
 
 #include "hw_ints.h"
 #include "hw_types.h"
