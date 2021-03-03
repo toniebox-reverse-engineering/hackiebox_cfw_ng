@@ -358,7 +358,7 @@ static volatile bool EarBigPressed(void) {
 }
 
 static char* GetFlashPathById(uint8_t number) {
-  char id = (char)((number%3) + 0x31 + 1);
+  char id = (char)((number%3) + 0x31);
   flashPath[11] = id;
   return flashPath;
 }
