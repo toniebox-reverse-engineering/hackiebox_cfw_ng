@@ -693,7 +693,12 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
   #endif
   watchdog_feed();
 
-  Logger_info("Start firmware sd:%s ...", imagePath);
+  if (imageInfo->ofwSimBL) {
+    Logger_info("Start firmware flash:%s ...", GetFlashPathById(bootInfoData.firmware));
+  } else {
+    Logger_info("Start firmware sd:%s ...", imagePath);
+  }
+
   Run((unsigned long)pImgRun);
 }
 
