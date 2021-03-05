@@ -70,4 +70,4 @@ The older Hackiebox CFW doesn't have a SHA256 appened. So you may need to create
 The integrated patch engine allows to apply patches to the loaded firmware in-memory. Currently just a simple dup2 patcher style *Search & Replace* engine ist implemented. You may patch up to 256 bytes per patch and apply up to 32 patches per slot. The patchname is limited to 32 characters.
 [More about available ofw patches](https://github.com/toniebox-reverse-engineering/hackiebox_cfw/wiki/OFWPatches)
 
-## Error codes
+### Error codes
