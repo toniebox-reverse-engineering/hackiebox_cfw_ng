@@ -573,8 +573,10 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
   #ifndef FIXED_BOOT_IMAGE
   if (imageInfo->checkHash) {
     char hashExp[65];
+  #endif
     char hashAct[65];
     uint8_t hashActRaw[32];
+  #ifndef FIXED_BOOT_IMAGE
 
     hashExp[64] = '\0';
     hashAct[64] = '\0';
@@ -601,11 +603,11 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
       filesize -= 64; //sha256 is 64 bytes long.
       memcpy(hashExp, (char*)(pImgRun + filesize), 64);
     }
-
+  #endif
     MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_SHA256);
     MAP_SHAMD5DataProcess(SHAMD5_BASE, pImgRun, filesize, hashActRaw);
     btox(hashAct, hashActRaw, 64);
-
+  #ifndef FIXED_BOOT_IMAGE
     if (strncmp(hashAct, hashExp, 64) != 0) {
       Logger_error("SHA256 differs, source=%s", imageInfo->hashFile?"sha-file":"firmware");
       Logger_error(" hashAct=%s ", hashAct);
@@ -616,7 +618,9 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
       Config_generalSettings.waitForPress = true;
       return false;
     } else {
+  #endif
       Logger_info("SHA256 hash=%s ", hashAct);
+  #ifndef FIXED_BOOT_IMAGE
     }
   }
   if (imageInfo->ofwFix) {
