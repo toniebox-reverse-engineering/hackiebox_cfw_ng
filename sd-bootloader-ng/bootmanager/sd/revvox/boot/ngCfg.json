@@ -14,8 +14,8 @@
         "logColor": false
     },
     "ofw1": {
-        "checkHash": true,
-        "hashFile": true,
+        "checkHash": false,
+        "hashFile": false,
         "watchdog": true
     },
     "ofw2": {
