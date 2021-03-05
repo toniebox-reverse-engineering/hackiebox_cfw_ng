@@ -83,7 +83,6 @@ if [ -d "$RELOC_DIR" ] && [ -d "$BOOTMGR_DIR" ]; then
     echo 
     echo Copy additional files
     cp ${BOOTMGR_SRC_SD}/ngCfg.json ${BOOTMGR_DES_DIR}/ngCfg.json
-    cp ${BOOTMGR_SRC_SD}/ng-ofw1.sha ${BOOTMGR_DES_DIR}/ng-ofw1.sha
     cp ${BOOTMGR_SRC_SD}/patch/* ${BOOTMGR_DES_DIR}/patch/
 
     cd ${OUT_DIR}
