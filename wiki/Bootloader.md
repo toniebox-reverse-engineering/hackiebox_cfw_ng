@@ -66,6 +66,11 @@ For each slot an SHA256 check is available. Either as a seperated ng-*XXXY*.sha 
 For example all OFW binaries have a SHA256 appended to their file ending (except the ofw bootloader). A fitting ng-ofw1.sha is provided for the ofw bootloader.
 The older Hackiebox CFW doesn't have a SHA256 appened. So you may need to create ng-*cfwX*.sha yourself if you want to use it. For HackieboxNG the SHA256 hash will be directly appended to the firmware file itself.
 
+#### Windows
+Command: `Get-Filehash FILENAME.BIN -Algorithm SHA256`
+#### Linux
+Command: `shasum256 FILENAME.BIN`
+
 ### Patches
 The integrated patch engine allows to apply patches to the loaded firmware in-memory. Currently just a simple dup2 patcher style *Search & Replace* engine ist implemented. You may patch up to 256 bytes per patch and apply up to 32 patches per slot. The patchname is limited to 32 characters.
 [More about available ofw patches](https://github.com/toniebox-reverse-engineering/hackiebox_cfw/wiki/OFWPatches)
