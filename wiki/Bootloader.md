@@ -16,7 +16,7 @@ When no ear is pressed, the bootloader loads the selected standard bootslot. If 
 Filepath: sd:/revvox/boot/ng-*XXXY*.bin
 
 ### Green group - Original firmware
-1) **ofw1** - OFW bootloader recommended here
+1) **ofw1** - OFW bootloader recommended here (/sys/mcuimg.bin from OFW backup, size: 20956 bytes)
 2) **ofw2** - (optional)
 3) **ofw3** - specific OFW file with patches (optional)
 
