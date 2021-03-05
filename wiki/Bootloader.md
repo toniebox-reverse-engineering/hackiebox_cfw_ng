@@ -5,7 +5,7 @@ The HackieboxNG SD bootloader consists of two bootloaders (called stages). Both 
 ## Preloader (Stage 1)
 ![Start process preloader](https://raw.githubusercontent.com/toniebox-reverse-engineering/hackiebox_cfw_ng/master/wiki/graphs/HBNG-SDPreloader.png)
 The preloader runs a fixed file from the sd card (sd:/revvox/boot/ngbootloader.bin) without any checks. An update for shouldn't be necesarry in the future.
-It should be installed as primary bootloader for HackieboxNG to flash:/sys/mcuimg.bin. As fallback another bootloader should be placed to flash:/sys/pre-img.bin.
+It should be installed as primary bootloader for HackieboxNG to flash:/sys/mcuimg.bin. Optional: As fallback another bootloader can be placed at flash:/sys/pre-img.bin.
 
 ***All error codes for the preloader are in blue.***
 
