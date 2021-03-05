@@ -762,6 +762,7 @@ int main()
           if (!flash_res) {
             if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
                 sl_FsClose(fhandle, 0, 0, 0);
+                Logger_debug("Read %i bytes", pFsFileInfo.FileLen);
 
                 if (!prepareRun(&Config_imageInfos[selectedImgNum], image, pFsFileInfo.FileLen))
                   goto retrySelection;
@@ -787,7 +788,7 @@ int main()
             ffs_result = f_read(&ffile, pImgRun, filesize, &filesize);
             if (ffs_result == FR_OK) {
               f_close(&ffile);
-
+              Logger_debug("Read %i bytes", filesize);
               #ifdef FIXED_BOOT_IMAGE
                 prepareRun(NULL, image, filesize);
               #else
