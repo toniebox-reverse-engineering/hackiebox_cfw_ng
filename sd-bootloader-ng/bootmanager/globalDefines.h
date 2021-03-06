@@ -27,7 +27,8 @@
 #define SD_PATH_BASE_LEN 13
 #define IMG_SD_NAME "ng-CCCN.bin"
 
-#define IMG_FLASH_PATH "/sys/pre-img.bin"
+#define FALLBACK_IMG_FLASH_PATH "/sys/pre-img.bin"
+#define FALLBACK_IMG_FLASH_ENABLED
 #define IMG_SD_PATH SD_PATH_BASE IMG_SD_NAME
 #define IMG_SD_NAME_REPL1_POS 3
 #define IMG_SD_NAME_REPL2_POS 6

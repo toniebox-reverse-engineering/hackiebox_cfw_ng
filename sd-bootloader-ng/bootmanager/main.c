@@ -832,17 +832,19 @@ int main()
     prebootmgr_blink_error(ffs_result, 1000);
   }
 
+  #ifdef FALLBACK_IMG_FLASH_ENABLED
   SimpleLinkInit();
-  if (!sl_FsOpen(IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
-      if (!sl_FsGetInfo(IMG_FLASH_PATH, 0, &pFsFileInfo)) {
+  if (!sl_FsOpen(FALLBACK_IMG_FLASH_PATH, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+      if (!sl_FsGetInfo(FALLBACK_IMG_FLASH_PATH, 0, &pFsFileInfo)) {
           if (pFsFileInfo.FileLen == sl_FsRead(fhandle, 0, (unsigned char *)APP_IMG_SRAM_OFFSET, pFsFileInfo.FileLen)) {
               sl_FsClose(fhandle, 0, 0, 0);
               BoardDeinitCustom();
-              Logger_info("Start fallback firmware flash:%s ...", IMG_FLASH_PATH);
+              Logger_info("Start fallback firmware flash:%s ...", FALLBACK_IMG_FLASH_PATH);
               Run(APP_IMG_SRAM_OFFSET);
           }
       }
   }
+  #endif
   
   prebootmgr_blink_error(3, 33);
   prebootmgr_blink_error(3, 66);
