@@ -46,9 +46,12 @@ bool SdFileExists(char* filename) {
   FIL ffile;
   if (f_open(&ffile, filename, FA_READ) == FR_OK) {
       f_close(&ffile); 
-        Logger_trace("sd:%s exist.", filename);
+        Logger_trace("sd:%s exists.", filename);
       return true;
   }
+  Logger_warn("sd:%s doesn't exist.", filename);
+  return false;
+}
 
 bool FlashFileExists(char* filename) {
   _i32 fhandle;
