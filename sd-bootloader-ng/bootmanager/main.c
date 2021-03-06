@@ -415,7 +415,7 @@ static bool ReadBootInfo() {
       Logger_error("Could not open bootinfo metadata");
     }
   } else {
-    Logger_error("Could not open bootinfo from flash:%s", &OFW_BOOTINFO_PATH);
+    Logger_error("Could not open bootinfo from flash:%s", bootInfoPath);
   }
   return false;
 }
