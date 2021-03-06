@@ -480,8 +480,17 @@ static void checkBattery() {
     return;
   
   uint16_t batteryLevel = getBatteryLevel();
+  Logger_debug("Battery level is %i, threshold %i", batteryLevel, Config_generalSettings.minBatteryLevel);
+
+  if (isChargerConnected()) {
+    Logger_debug("Charger is connected");
+    return;
+  }
+  Logger_debug("Charger is not connected");
+
+
   if (batteryLevel < Config_generalSettings.minBatteryLevel) {
-    Logger_error("Battery level is %i, treshold %i", batteryLevel, Config_generalSettings.minBatteryLevel);
+    Logger_error("Battery level is too low, goto hibernation...");
     prebootmgr_blink_error(2, 66);
     prebootmgr_blink_error(2, 133);
     prebootmgr_blink_error(2, 66);
