@@ -5,6 +5,8 @@
 #include "rom_map.h"
 #include "watchdog.h"
 #include "ff.h"
+#include "simplelink.h"
+
 #include "logger.h"
 
 void UtilsDelayUs(unsigned long delayUs) {
@@ -47,6 +49,14 @@ bool SdFileExists(char* filename) {
         Logger_trace("sd:%s exist.", filename);
       return true;
   }
-  Logger_info("sd:%s doesn't exist.", filename);
+
+bool FlashFileExists(char* filename) {
+  _i32 fhandle;
+  if (!sl_FsOpen(filename, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+    sl_FsClose(fhandle, 0, 0, 0);
+    Logger_trace("flash:%s exists.", filename);
+    return true;
+  }
+  Logger_warn("flash:%s doesn't exist.", filename);
   return false;
 }

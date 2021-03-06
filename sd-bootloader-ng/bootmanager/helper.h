@@ -33,6 +33,7 @@ void btox(char *hexstr, const char *binarr, int hexstrlen);
 uint8_t xtob(char* hexByte);
 
 bool SdFileExists(char* filename);
+bool FlashFileExists(char* filename);
 
 #ifdef __cplusplus
 }

@@ -425,6 +425,9 @@ static bool CheckSdImages() {
   for (uint8_t i=0; i<IMG_MAX_COUNT; i++) {
     if (Config_imageInfos[i].ofwSimBL) {
       Config_imageInfos[i].fileExists = ReadBootInfo();
+    } else if (Config_imageInfos[i].bootFlashImg) {
+      SimpleLinkInit();
+      Config_imageInfos[i].fileExists = FlashFileExists(Config_imageInfos[i].flashImg);
     } else {
       Config_imageInfos[i].fileExists = SdImageExists(i);
     }
@@ -700,6 +703,8 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
   #ifndef FIXED_BOOT_IMAGE
   if (imageInfo->ofwSimBL) {
     Logger_info("Start firmware flash:%s ...", GetFlashPathById(bootInfoData.firmware));
+  } else if (imageInfo->bootFlashImg) {
+    Logger_info("Start firmware flash:%s ...", imageInfo->flashImg);
   } else {
   #endif
     Logger_info("Start firmware sd:%s ...", imagePath);
@@ -760,8 +765,15 @@ int main()
       uint8_t selectedImgNum = Config_generalSettings.activeImage;
       char* image = GetImagePathById(selectedImgNum);
 
-      if (Config_imageInfos[selectedImgNum].ofwSimBL) {
-        char* flashImage = GetFlashPathById(bootInfoData.firmware);
+      if (Config_imageInfos[selectedImgNum].ofwSimBL || Config_imageInfos[selectedImgNum].bootFlashImg) {
+        char* flashImage;
+        if (Config_imageInfos[selectedImgNum].ofwSimBL) {
+          flashImage = GetFlashPathById(bootInfoData.firmware);
+          
+        } else if (Config_imageInfos[selectedImgNum].bootFlashImg) {
+          flashImage = Config_imageInfos[selectedImgNum].flashImg;
+        }
+        
         
         Logger_debug("Open flash:%s ...", flashImage);
         _i32 flash_res = sl_FsOpen(flashImage, FS_MODE_OPEN_READ, NULL, &fhandle);

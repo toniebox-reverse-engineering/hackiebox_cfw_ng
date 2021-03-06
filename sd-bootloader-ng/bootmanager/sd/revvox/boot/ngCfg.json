@@ -16,7 +16,9 @@
     "ofw1": {
         "checkHash": false,
         "hashFile": false,
-        "watchdog": true
+        "watchdog": true,
+        "bootFlashImg": true,
+        "flashImg": "/sys/pre-img.bin"
     },
     "ofw2": {
         "checkHash": true,

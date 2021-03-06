@@ -112,6 +112,11 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
       || strncmp(jsonGroupName, "add", 3))
     {
       uint8_t imageNumber = getImageNumber(jsonGroupName);
+      if (strcmp("flashImg", jsonValueName) == 0) {
+        uint8_t cpyLen = min(len, CONFIG_FLASH_PATH_MAX-1);
+        strncpy(Config_imageInfos[imageNumber].flashImg, value, cpyLen);
+        Config_imageInfos[imageNumber].flashImg[cpyLen] = '\0';
+      }
     }
     
 }
@@ -150,6 +155,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
         Config_imageInfos[imageNumber].ofwSimBL = (value[0] == 't');
       } else if (strcmp("ofwFix", jsonValueName) == 0) {
         Config_imageInfos[imageNumber].ofwFix = (value[0] == 't');
+      } else if (strcmp("bootFlashImg", jsonValueName) == 0) {
+        Config_imageInfos[imageNumber].bootFlashImg = (value[0] == 't');
       }
     }
 }
@@ -175,6 +182,8 @@ void Config_InitImageInfos(void) {
     Config_imageInfos[i].watchdog = false;
     Config_imageInfos[i].ofwFix = false;
     Config_imageInfos[i].ofwSimBL = false;
+    Config_imageInfos[i].bootFlashImg = false;
+    memset(Config_imageInfos[i].flashImg, 0x00, CONFIG_FLASH_PATH_MAX);
     for (uint8_t j = 0; j < PATCH_MAX_PER_IMAGE; j++) {
       Config_imageInfos[i].patches[j][0] = '\0';
     }
