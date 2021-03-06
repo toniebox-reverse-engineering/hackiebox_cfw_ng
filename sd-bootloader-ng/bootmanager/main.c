@@ -611,7 +611,7 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
     if (strncmp(hashAct, hashExp, 64) != 0) {
       Logger_error("SHA256 differs, source=%s", imageInfo->hashFile?"sha-file":"firmware");
       Logger_error(" hashAct=%s ", hashAct);
-      Logger_error(" hashExo=%s", hashExp);
+      Logger_error(" hashExp=%s", hashExp);
 
       prebootmgr_blink_error(10, 50);
       
