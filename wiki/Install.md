@@ -46,7 +46,6 @@ To verify that you have currently installed the ofw bootloader to */sys/pre-img.
 ```
 http://*.*.*.*/api/ajax?cmd=get-flash-file&filepath=/sys/pre-img.bin
 ```
-Its sha256 hash should be *e86749c2e47f6c87eb462516e56a0a9ad215f38beb312cc77785c54921c97c05*.
 
 #### Copy over preloader
 ![CFW Flash upload](https://raw.githubusercontent.com/toniebox-reverse-engineering/hackiebox_cfw_ng/master/wiki/images/InstallCfwFlashUpload.png)
