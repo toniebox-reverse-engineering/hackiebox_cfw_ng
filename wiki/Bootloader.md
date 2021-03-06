@@ -42,6 +42,7 @@ The configuration for the bootloader is saved within [sd:/revvox/boot/ngCfg.json
 | waitForPress | Waits for an earpress on startup with a blink sequence (blue, green, cyan, black)| true, false | false |
 | waitTimeoutInS | Timeout in seconds for waitForPress if no earpress (hibernation) | 1-255 | 60 |
 | minBatteryLevel | Poweroff voltage to protect the battery. Divide through around 700 to get voltage (Standard 3V) | | 2100 |
+| ofwFixValue | Magic bytes to be placed into the OFW Image during boot (can be extracted from OFW BL data[-8:-4]) | hex array with 4 bytes | ["4C", "01", "10", "00"] |
 | serialLog | Enable log to UART (TX) @115200 baud. Only works for debug build! | true, false | true |
 | logLevel | Set Log level 0:Trace - 5:Fatal | 0-5 | DEBUG_LOG_LEVEL |
 | logColor | Enable colored log | true, false | false |

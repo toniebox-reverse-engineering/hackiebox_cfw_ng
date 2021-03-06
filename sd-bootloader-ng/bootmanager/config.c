@@ -7,6 +7,7 @@ sGeneralSettings Config_generalSettings = {
   false,  //waitForPress
   60,     //waitTimeoutInS
   2100,   //minBatteryLevel (Divide through around 700 to get voltage, so 3V should be save)
+  0x0010014C, //ofwFixValue - Magic bytes from OFW BL
   #ifdef NO_DEBUG_LOG
   false,  //serialLog
   #else
@@ -81,7 +82,13 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
     case 5:
       if (jsmn_hasIgnoreName())
         break;
-      if (strncmp(jsonGroupName, "ofw", 3) == 0
+      if (strcmp("general", jsonGroupName) == 0 && key_len == 2) {
+        if (jsonArrayId == 0)
+          Config_generalSettings.ofwFixValue = 0x00000000;
+        if (jsonArrayId < 4)
+          Config_generalSettings.ofwFixValue += xtob(key) << 8*jsonArrayId;
+        jsonArrayId++;
+      } else if (strncmp(jsonGroupName, "ofw", 3) == 0
             || strncmp(jsonGroupName, "cfw", 3)
             || strncmp(jsonGroupName, "add", 3))
       {

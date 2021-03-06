@@ -23,6 +23,7 @@ typedef struct sGeneralSettings
   bool waitForPress;
   uint16_t waitTimeoutInS;
   uint16_t minBatteryLevel;
+  uint32_t ofwFixValue;
   bool serialLog;
   uint8_t logLevel;
   bool logColor;

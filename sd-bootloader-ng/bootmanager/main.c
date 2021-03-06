@@ -670,9 +670,9 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
         || strnlen(creationDate, 29) == 28) //old format
       Logger_info(" creationDate=%s", creationDate);
 
-    Logger_debug("Apply OFW fix");
+    Logger_debug("Apply OFW fix 0x%08X", Config_generalSettings.ofwFixValue);
     if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {
-      *pTarget = 0x0010014C;
+      *pTarget = Config_generalSettings.ofwFixValue;
     } else {
       Logger_error("OFW fix failed");
       Logger_error(" *pCheck1=0x%X *pCheck2=0x%X *pTarget=0x%X", *pCheck1, *pCheck2, *pTarget);
