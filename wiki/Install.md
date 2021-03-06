@@ -22,9 +22,8 @@ If you have previously installed the CFW SD Bootloader please use *1b)* otherwis
 ### 1a) Preloader (Stage 1) - For first time installation
 
 #### Move original bootloader
-First of all you need to copy your just backuped original mcuimg.bin (original bootloader) from your toniebox to a different location where the preloader can run it as fallback.
+First of all you need to copy your just backuped original mcuimg.bin (original bootloader) from your toniebox to a different location (flash:/sys/pre-img.bin) to boot it with the HackieboxNG Bootloader later on.
 Please don't confuse the mcuimg.bin (ofw bootloader) you are going to dump with the mcuimg.bin within the hackiebox zip package. (/flash/sys/mcuimg.bin)
-If you want to be sure the box boots the OFW bootloader as fallback you may skip this step (or erase the /sys/pre-img.bin).
 
 ```
 python cc.py -p COM3 read_file /sys/mcuimg.bin mcuimg.bin
