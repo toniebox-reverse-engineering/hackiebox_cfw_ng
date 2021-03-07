@@ -87,7 +87,7 @@ static void jsmn_obj_key(const char *key, size_t key_len, void *user_arg) {
         if (jsonArrayId == 0)
           Config_generalSettings.ofwFixValue = 0x00000000;
         if (jsonArrayId < 4)
-          Config_generalSettings.ofwFixValue += xtob(key) << 8*jsonArrayId;
+          Config_generalSettings.ofwFixValue += xtob((char*)key) << 8*jsonArrayId;
         jsonArrayId++;
       } else if (strncmp(jsonGroupName, "ofw", 3) == 0
             || strncmp(jsonGroupName, "cfw", 3)

@@ -693,7 +693,7 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
             readLen = 0;
           }
 
-          if (readLen > 0 && (readLen == sl_FsRead(fhandle, offset, numbers, readLen))) {
+          if (readLen > 0 && (readLen == sl_FsRead(fhandle, offset, (char*)numbers, readLen))) {
             sl_FsClose(fhandle, 0, 0, 0);
             if (numbers[1] == 0xBEAC0005) {
               Config_generalSettings.ofwFixValue = numbers[0];
