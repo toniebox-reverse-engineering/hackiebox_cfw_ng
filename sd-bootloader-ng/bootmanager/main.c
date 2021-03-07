@@ -669,6 +669,47 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
     if (strnlen(creationDate, 13) == 12 //latest format
         || strnlen(creationDate, 29) == 28) //old format
       Logger_info(" creationDate=%s", creationDate);
+    
+    if (Config_generalSettings.ofwFixFlash[0] != '\0') {
+      SimpleLinkInit();
+      _i32 fhandle;
+      SlFsFileInfo_t pFsFileInfo;
+      if (!sl_FsOpen(Config_generalSettings.ofwFixFlash, FS_MODE_OPEN_READ, NULL, &fhandle)) {
+        if (!sl_FsGetInfo(Config_generalSettings.ofwFixFlash, 0, &pFsFileInfo)) {
+          uint32_t numbers[2];
+          uint32_t offset = 0;
+          uint32_t readLen = 0;
+          if (pFsFileInfo.FileLen == 4) { //File with magic bytes only
+            offset = 0;
+            readLen = 4;
+            numbers[1] = 0xBEAC0005;
+            Logger_debug("Read OfwFix from 4-byte file flash:%s", Config_generalSettings.ofwFixFlash);
+          } else if (pFsFileInfo.FileLen == 20956) { //OFW BL
+            offset = pFsFileInfo.FileLen - 8;
+            readLen = 8;
+            Logger_debug("Read OfwFix from ofw bl flash:%s", Config_generalSettings.ofwFixFlash);
+          } else {
+            Logger_debug("Invalid OfwFix file flash:%s with len=%i", Config_generalSettings.ofwFixFlash, pFsFileInfo.FileLen);
+            readLen = 0;
+          }
+
+          if (readLen > 0 && (readLen == sl_FsRead(fhandle, offset, numbers, readLen))) {
+            sl_FsClose(fhandle, 0, 0, 0);
+            if (numbers[1] == 0xBEAC0005) {
+              Config_generalSettings.ofwFixValue = numbers[0];
+            } else {
+              Logger_error("Invalid OfwFix file flash:%s with wrong id=0x%08X instead of 0xBEAC0005", Config_generalSettings.ofwFixFlash, numbers[1]);
+            }
+          } else {
+            Logger_debug("Could not get read OfwFix file flash:%s ", Config_generalSettings.ofwFixFlash);
+          }
+        } else {
+          Logger_debug("Could not get size of OfwFix file flash:%s ", Config_generalSettings.ofwFixFlash);
+        }
+      } else {
+          Logger_debug("Could not open OfwFix file flash:%s ", Config_generalSettings.ofwFixFlash);
+      }
+    }
 
     Logger_debug("Apply OFW fix 0x%08X", Config_generalSettings.ofwFixValue);
     if (*pCheck1 == 0xBEAC0005 && *pCheck1 == *pCheck2) {

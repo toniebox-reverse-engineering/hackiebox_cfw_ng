@@ -24,6 +24,7 @@ typedef struct sGeneralSettings
   uint16_t waitTimeoutInS;
   uint16_t minBatteryLevel;
   uint32_t ofwFixValue;
+  char ofwFixFlash[CONFIG_FLASH_PATH_MAX];
   bool serialLog;
   uint8_t logLevel;
   bool logColor;

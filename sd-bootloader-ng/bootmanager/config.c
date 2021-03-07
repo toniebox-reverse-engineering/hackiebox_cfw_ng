@@ -8,6 +8,7 @@ sGeneralSettings Config_generalSettings = {
   60,     //waitTimeoutInS
   2100,   //minBatteryLevel (Divide through around 700 to get voltage, so 3V should be save)
   0x0010014C, //ofwFixValue - Magic bytes from OFW BL
+  "\0",   //ofwFixFlash
   #ifdef NO_DEBUG_LOG
   false,  //serialLog
   #else
@@ -113,6 +114,10 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
     if (strcmp("general", jsonGroupName) == 0) {
       if (strcmp("activeImg", jsonValueName) == 0) {
         Config_generalSettings.activeImage = getImageNumber(value);
+      } else if (strcmp("ofwFixFlash", jsonValueName) == 0) {
+        uint8_t cpyLen = min(len, CONFIG_FLASH_PATH_MAX-1);
+        strncpy(Config_generalSettings.ofwFixFlash, value, cpyLen);
+        Config_generalSettings.ofwFixFlash[cpyLen] = '\0';
       }
     } else if (strncmp(jsonGroupName, "ofw", 3) == 0
       || strncmp(jsonGroupName, "cfw", 3)
