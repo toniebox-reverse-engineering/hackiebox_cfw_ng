@@ -1,0 +1,33 @@
+{
+    "general": {
+        "_desc": "Enable Webinterface without going into AP Mode",
+        "_memPos": "",
+        "_fwVer": "3.0.5+"
+    },
+    "positions": [{
+        "_id": 0,
+        "_name": "Prepare/CloseWifiConfigOnDoubleEar?",
+        "_fwVer": "3.0.8",
+        "offset": 0,
+        "search":  ["38", "b5", "04", "46", "0d", "46", "ff", "f7", "1b", "fd"]
+    }],
+    "searchAndReplace": [{
+        "_desc": "Keep in WiFi in ROLE_STA instead of switching to ROLE_AP",
+        "search":  [
+            "13", "db", "00", "21", "02", "20"
+        ],
+        "replace": [
+            "??", "??", "??", "??", "00", "??"
+        ]
+    },{
+        "_desc": "Disable check on SlDrvCmd result",
+        "search":  [
+            "00", "2b", "06", "db"
+        ],
+        "replace": [
+            "??", "??", "00", "bf"
+        ]
+    }]
+}
+
+
