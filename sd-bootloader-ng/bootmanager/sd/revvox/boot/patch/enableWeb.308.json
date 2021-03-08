@@ -2,7 +2,7 @@
     "general": {
         "_desc": "Enable Webinterface without going into AP Mode",
         "_memPos": "",
-        "_fwVer": "3.0.5+"
+        "_fwVer": "3.0.8"
     },
     "positions": [{
         "_id": 0,
@@ -13,6 +13,7 @@
     }],
     "searchAndReplace": [{
         "_desc": "Keep in WiFi in ROLE_STA instead of switching to ROLE_AP",
+        "_fwVer": "3.0.5+",
         "search":  [
             "13", "db", "00", "21", "02", "20"
         ],
@@ -21,13 +22,23 @@
         ]
     },{
         "_desc": "Disable check on SlDrvCmd result",
+        "_fwVer": "3.0.5+",
         "search":  [
             "00", "2b", "06", "db"
         ],
         "replace": [
             "??", "??", "00", "bf"
         ]
+    },{
+        "_desc": "Branch to tonie mode (instead of blue pulsing)",
+        "_fwVer": "3.0.8",
+        "search":  [
+            "fb", "f7", "fa", "ff",
+            "ab", "e5"
+        ],
+        "replace": [
+            "??", "??", "??", "??",
+            "06", "e0"
+        ]
     }]
 }
-
-
