@@ -81,6 +81,11 @@ SECTIONS
         _edata = .;
     } > SRAM
 	
+    .firmwareInfoSection :
+    {
+        KEEP(*(.firmwareInfo))
+    } > SRAM
+	
      /* start of SRAM2 */
     .stack : {
         _stack = .; /* start of the stack section */

@@ -50,6 +50,7 @@ MEMORY
 
 SECTIONS
 {
+    
     .text :
     {
         _text = .;
@@ -80,6 +81,11 @@ SECTIONS
         *(.data*)
 	. = ALIGN (8);
         _edata = .;
+    } > SRAM
+	
+    .firmwareInfoSection :
+    {
+        KEEP(*(.firmwareInfo))
     } > SRAM
 	
      /* start of SRAM2 */

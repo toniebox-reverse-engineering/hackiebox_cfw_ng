@@ -109,4 +109,25 @@
 #define DEBUG_LOG_COLORED
 #define DEBUG_LOG_BAUD 921600
 
+#ifdef FIXED_BOOT_IMAGE
+    #ifdef NO_DEBUG_LOG
+        #define BUILD_NAME "HackieboxNG preloader nodebug"
+    #else
+        #define BUILD_NAME "HackieboxNG preloader debug"
+    #endif
+    #define BUILD_VERSION "X.Y.Z"
+#else
+    #ifdef NO_DEBUG_LOG
+        #define BUILD_NAME "HackieboxNG bootloader nodebug"
+    #else
+        #define BUILD_NAME "HackieboxNG bootloader debug"
+    #endif
+    #define BUILD_VERSION "A.B.C"
+#endif
+#ifndef BUILD_GIT_SHORT_SHA
+    #define BUILD_GIT_SHORT_SHA "gitHash"
+#endif
+
+#define BUILD_FULL_NAME BUILD_NAME " " BUILD_VERSION " " BUILD_GIT_SHORT_SHA
+
 #endif

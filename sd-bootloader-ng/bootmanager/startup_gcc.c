@@ -46,6 +46,8 @@
 
 #include <stdint.h>
 
+#include "globalDefines.h"
+
 //*****************************************************************************
 //
 // Heap block pointers defined by linker script
@@ -91,7 +93,6 @@ extern int main(void);
 //*****************************************************************************
 //static uint32_t pui32Stack[512];
 
-
 //*****************************************************************************
 //
 // The following are constructs created by the linker, indicating where the
@@ -107,6 +108,23 @@ extern uint32_t _estack;
 extern uint32_t _bss;
 extern uint32_t _ebss;
 //extern uint32_t __init_data;
+
+
+//firmwareInfo
+typedef struct cfwFirmwareInfo
+{
+    char name[32];
+    char version[32];
+    char gitShortSha[7];
+} cfwFirmwareInfo;
+
+__attribute__((section (".firmwareInfo"))) const cfwFirmwareInfo FIRMWARE_INFO = {
+    BUILD_NAME,
+    BUILD_VERSION,
+    BUILD_GIT_SHORT_SHA,
+};
+
+
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to

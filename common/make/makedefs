@@ -57,6 +57,14 @@ os:=${shell uname -s}
 
 #******************************************************************************
 #
+# Get version data
+#
+#******************************************************************************
+build_gitShortSha:=${shell git rev-parse --short HEAD}
+VERSION_CFLAGS:=-DBUILD_GIT_SHORT_SHA=\"${build_gitShortSha}\"
+
+#******************************************************************************
+#
 # Object File directory.
 #
 #******************************************************************************
@@ -141,7 +149,7 @@ CFLAGS=-mthumb             \
        -O${OPT_LEVEL}	   \
        -c                  \
        -DTARGET_IS_CC3200  \
-       ${MAKEFILE_CFLAGS} ${ADDITIONAL_CFLAGS}
+       ${MAKEFILE_CFLAGS} ${ADDITIONAL_CFLAGS} ${VERSION_CFLAGS}
 
 #
 # The command for calling the library archiver.
