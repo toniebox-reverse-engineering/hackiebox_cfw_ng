@@ -14,7 +14,7 @@ python cc.py -p COM3 read_all_files targetdir/ read_flash backup.bin
 ### Get the bootloader
 Download the latest version from [here](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/releases). Please unzip the release to your desired directory.
 You will find a directory called flash there for the file(s) that need to be copied to the flash and a directory called sd for the sd files.
-If you don't mind a slightly slower boot but want some log output via UART (Baud 115200, TX Pin) use the debug variant (check the ngCfg.json to enable it!).
+If you don't mind a slightly slower boot but want some log output via UART (Baud 921600, TX Pin) use the debug variant (check the ngCfg.json to enable it!).
 
 ### Preface
 If you have previously installed the CFW SD Bootloader please use *1b)* otherwise for first time installation please use *1a)*.
