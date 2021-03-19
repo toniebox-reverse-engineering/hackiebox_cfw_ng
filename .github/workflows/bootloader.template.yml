@@ -1,20 +1,17 @@
-name: Build, zip, prerelease Bootloader
-
-on:
-  push:
-    branches: [ master ]
-  #pull_request:
-  #  branches: [ master ]
+name: Build, zip, prerelease Bootloader Template
 
 jobs:
-  build:
-
+  base:
     runs-on: ubuntu-latest
-
     steps:
     - name: Get current datetime
       id: get-datetime
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+  build:
+    needs: config
+
+    runs-on: ubuntu-latest
       
     - uses: actions/checkout@v2
       
@@ -43,8 +40,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
       with:
-        tag_name: nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}
-        release_name: Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}
+        tag_name: ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
         draft: true
         prerelease: true
         
@@ -56,7 +53,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./exe/sd-bootloader-ng.zip
-        asset_name: hackiebox_cfw_ng.bootloader.nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}.zip
+        asset_name: hackiebox_cfw_ng.bootloader.${{ env.ASSET_APPENDIX }}.zip
         asset_content_type: application/zip
 
     - name: Upload Debug Asset 
@@ -65,7 +62,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./exe/sd-bootloader-ng_debug.zip
-        asset_name: hackiebox_cfw_ng.bootloader_debug.nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}.zip
+        asset_name: hackiebox_cfw_ng.bootloader_debug.${{ env.ASSET_APPENDIX }}.zip
         asset_content_type: application/zip

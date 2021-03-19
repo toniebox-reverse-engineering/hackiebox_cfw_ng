@@ -1,0 +1,26 @@
+name: Build, zip, nightly Bootloader
+
+on:
+  push:
+    branches: [ master ]
+  #pull_request:
+  #  branches: [ master ]
+
+jobs:
+  base:
+    steps:
+      template: '.github/workflows/bootloader.template.yml'
+
+  config:
+    needs: base
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get current datetime
+      id: get-datetime
+      run: echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV \
+        echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV \
+        echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
+
+  build:
+    steps:
+      template: '.github/workflows/bootloader.template.yml'
