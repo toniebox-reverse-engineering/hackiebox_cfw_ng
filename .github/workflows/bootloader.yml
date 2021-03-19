@@ -1,11 +1,11 @@
-name: Build, zip, Bootloader (nightly)
+name: Build, zip, Bootloader
 
 on:
   push:
-    branches: [ master ]
-  #pull_request:
-  #  branches: [ master ]
-
+    branches: 
+      - master
+    tags:
+      - v*
 
 jobs:
   build:
@@ -15,14 +15,23 @@ jobs:
       id: get-datetime
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-    - name: Get template for nightly
-      id: get-template-nightly
+    - name: Set templates for nightly
+      id: set-templates-nightly
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       run: |
         echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV
         echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV
         echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
         echo "IS_PRERELEASE=true" >> $GITHUB_ENV
+
+    - name: Set templates for release
+      id: set-templates-release
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        echo "TAG_NAME=release_${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "RELEASE_NAME=Release ${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "ASSET_APPENDIX=release_${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "IS_PRERELEASE=false" >> $GITHUB_ENV
 
     - uses: actions/checkout@v2
       
