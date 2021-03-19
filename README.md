@@ -13,6 +13,9 @@ The HackieboxNG SD bootloader consists of two parts. The bootloader itself that 
 * Patching binaries in memory for ex. enable SLIX tags or disable charger wakeup ([more](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/wiki/OFWPatches))
 * Highly configurable via json files
 
+### Installation
+Please take a look into the [wiki](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/wiki/Install)
+
 ## HackieboxNG Custom Firmware
 TBD
 
