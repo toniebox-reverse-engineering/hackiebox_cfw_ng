@@ -5,7 +5,7 @@ on:
     branches: 
       - master
     tags:
-      - v*
+      - hbng_bl_v*
 
 jobs:
   build:
@@ -24,9 +24,9 @@ jobs:
         echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
         echo "IS_PRERELEASE=true" >> $GITHUB_ENV
 
-    - name: Set templates for release
+    - name: Set templates for release and delete trigger tag
       id: set-templates-release
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/hbng_bl_v')
       run: |
         echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
         echo "RELEASE_NAME=Release ${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
@@ -61,7 +61,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
       with:
         tag_name: ${{ env.TAG_NAME }}
-        release_name: ${{ env.RELEASE_NAME }}
+        release_name: HackieboxNG Bootloader ${{ env.RELEASE_NAME }}
         draft: true
         prerelease: ${{ env.IS_PRERELEASE }}
         
@@ -73,7 +73,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./exe/sd-bootloader-ng.zip
-        asset_name: hackiebox_cfw_ng.bootloader.${{ env.ASSET_APPENDIX }}.zip
+        asset_name: hbng-bootloader.${{ env.ASSET_APPENDIX }}.zip
         asset_content_type: application/zip
 
     - name: Upload Debug Asset 
@@ -84,5 +84,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./exe/sd-bootloader-ng_debug.zip
-        asset_name: hackiebox_cfw_ng.bootloader_debug.${{ env.ASSET_APPENDIX }}.zip
+        asset_name: hbng-bootloader_debug.${{ env.ASSET_APPENDIX }}.zip
         asset_content_type: application/zip
