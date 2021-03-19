@@ -17,9 +17,10 @@ jobs:
 
     - name: Get template names
       id: get-template-names
-      run: echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV \
-        echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV \
-        echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV \
+          echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV \
+          echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
 
     - uses: actions/checkout@v2
       
