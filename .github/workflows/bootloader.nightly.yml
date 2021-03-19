@@ -18,11 +18,11 @@ jobs:
     - name: Get template for nightly
       id: get-template-nightly
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      run: echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV \
-        echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV \
-        echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV \
+      run: |
+        echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV
+        echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV
+        echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
         echo "IS_PRERELEASE=true" >> $GITHUB_ENV
-
 
     - uses: actions/checkout@v2
       
