@@ -4,7 +4,7 @@
 HackieboxNG is the next generation bootloader and firmware for your toniebox!
 
 ## HackieboxNG SD bootloader
-The HackieboxNG SD bootloader consists of two parts. The bootloader itself that allows selecting + running different firmwares and a relocator to move the bootloaders memory to the upper end of the memory. In addition there is a sd bootloader with one fixed file to run.
+The HackieboxNG SD bootloader consists of two parts. The bootloader itself that allows selecting + running different firmwares and a relocator to move the bootloaders memory to the upper end of the memory. In addition there is a sd bootloader with one fixed file to run called preloader.
 
 ### Features
 * Nine firmware slots
