@@ -1,4 +1,8 @@
-name: Build, zip, prerelease Bootloader Template
+name: Build, zip, Bootloader Template
+
+on:
+  push:
+    branches: [ master-template ]
 
 jobs:
   base:
@@ -7,6 +11,16 @@ jobs:
     - name: Get current datetime
       id: get-datetime
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+  config:
+    needs: base
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get current datetime
+      id: get-datetime
+      run: echo "TAG_NAME=nightly_${{ env.CURRENT_DATE }}_${{ github.run_number }}" >> $GITHUB_ENV \
+        echo "RELEASE_NAME=Nightly ${{ env.CURRENT_DATE }} - Run ID ${{ github.run_number }}" >> $GITHUB_ENV \
+        echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
 
   build:
     needs: config

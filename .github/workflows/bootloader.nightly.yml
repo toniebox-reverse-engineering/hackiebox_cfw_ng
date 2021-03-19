@@ -1,4 +1,4 @@
-name: Build, zip, nightly Bootloader
+name: Build, zip, Bootloader (nightly)
 
 on:
   push:
@@ -6,14 +6,19 @@ on:
   #pull_request:
   #  branches: [ master ]
 
+
 jobs:
   base:
+    runs-on: ubuntu-latest
     steps:
-      template: '.github/workflows/bootloader.template.yml'
+    - name: Get current datetime
+      id: get-datetime
+      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
   config:
     needs: base
     runs-on: ubuntu-latest
+
     steps:
     - name: Get current datetime
       id: get-datetime
@@ -22,5 +27,60 @@ jobs:
         echo "ASSET_APPENDIX=nightly_${{ env.CURRENT_DATE }}.${{ github.run_number }}" >> $GITHUB_ENV
 
   build:
+    needs: config
+    runs-on: ubuntu-latest
+    
     steps:
-      template: '.github/workflows/bootloader.template.yml'
+    - uses: actions/checkout@v2
+      
+    - name: Build and zip Bootloader
+      id:  build-zip-bootloader
+      run: ./common/buildAndShip.bootloader.sh
+
+    - name: Build and zip Bootloader Debug
+      id:  build-zip-bootloader-debug
+      run: ./common/buildAndShip.bootloader.sh debug
+    
+    - name: Check release zip existence
+      id: check_release
+      uses: andstor/file-existence-action@v1
+      with:
+        files: "./exe/sd-bootloader-ng.zip, ./exe/sd-bootloader-ng_debug.zip"  
+        allow_failure: true 
+    
+    - name: File exists
+      if: steps.check_files.outputs.files_exists == 'true'
+      run: echo All files exists!
+      
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
+        draft: true
+        prerelease: true
+        
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./exe/sd-bootloader-ng.zip
+        asset_name: hackiebox_cfw_ng.bootloader.${{ env.ASSET_APPENDIX }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload Debug Asset 
+      id: upload-debug-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./exe/sd-bootloader-ng_debug.zip
+        asset_name: hackiebox_cfw_ng.bootloader_debug.${{ env.ASSET_APPENDIX }}.zip
+        asset_content_type: application/zip
