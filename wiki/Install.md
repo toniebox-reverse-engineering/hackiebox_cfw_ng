@@ -72,4 +72,4 @@ Note: The preloader will load any file placed to *sd:/revvox/boot/ngbootloader.b
 
 
 
-[More about the different firmware slots and the configuration here.](Bootloader.md)
+[More about the different firmware slots and the configuration here.](Bootloader)
