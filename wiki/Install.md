@@ -2,7 +2,7 @@
 
 ## Backup
 Please make a **full file based + flash backup** of your toniebox's flash with [cc3200tool](https://github.com/toniebox-reverse-engineering/cc3200tool).
-[More details on the usage of the cc3200tool can be found here](https://github.com/toniebox-reverse-engineering/toniebox/wiki/Debug-Port-&-Extract-Firmware#extract-firmware)
+[More details on the usage of the cc3200tool and the required hardware can be found here](https://github.com/toniebox-reverse-engineering/toniebox/wiki/Debug-Port-&-Extract-Firmware)
 *Python 3 is needed!* You may use a different COM port or the right device on linux ex. /dev/ttyUSB0.
 
 ```
