@@ -1,0 +1,22 @@
+{
+    "general": {
+        "_desc": "Fixes HWTEST to work offline",
+        "_memPos": "",
+        "_fwVer": ""
+    },
+    "searchAndReplace": [{
+        "_desc": "Disable - online check for HWTEST update",
+        "search":  ["06", "d0", "9a", "48"],
+        "replace": ["00", "bf", "??", "??"]
+    }, {
+        "_desc": "Disable - Register to factory cloud...",
+        "search":  ["04", "f0", "65", "fa",
+                    "03", "46",
+                    "00", "2b",
+                    "05", "d1"],
+        "replace": ["00", "bf", "00", "bf",
+                    "??", "??",
+                    "??", "??",
+                    "05", "e0"]
+    }]
+}
