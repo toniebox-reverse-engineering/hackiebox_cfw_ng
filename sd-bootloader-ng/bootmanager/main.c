@@ -492,23 +492,10 @@ static void checkBattery() {
   #endif
 }
 
-static uint8_t Selector(uint8_t startNumber) {
-  int8_t counter = startNumber;
-
-  while (!Config_imageInfos[counter].fileExists)
-  {
-    counter = (counter+1) % COUNT_OF(Config_imageInfos);
-  }
-
-  LedSet(COLOR_GREEN);
-  while (EarSmallPressed()) {
-    UtilsDelayMsWD(10); //Wait while pressed
-    watchdog_feed();
-  }  
-  
+static void WaitForEarpress(bool waitForPress) {
   uint8_t colors[] = { COLOR_BLACK, COLOR_BLUE, COLOR_GREEN, COLOR_CYAN };
   uint8_t curColorId = 0;
-  if (Config_generalSettings.waitForPress) {
+  if (waitForPress) {
     LedSet(COLOR_BLUE);
     while (EarSmallPressed() || EarBigPressed()) {
       UtilsDelayMsWD(10); //Wait while pressed
@@ -519,7 +506,7 @@ static uint8_t Selector(uint8_t startNumber) {
   //uint32_t millisStart = millis();
   uint32_t millisState = 0;
   uint32_t secondsDelta = 0;
-  while (Config_generalSettings.waitForPress)
+  while (waitForPress)
   {
     LedSet(colors[curColorId]);
     UtilsDelayMsWD(250);
@@ -548,6 +535,24 @@ static uint8_t Selector(uint8_t startNumber) {
   } 
 
   LedSet(COLOR_BLACK);
+}
+
+static uint8_t Selector(uint8_t startNumber) {
+  int8_t counter = startNumber;
+
+  while (!Config_imageInfos[counter].fileExists)
+  {
+    counter = (counter+1) % COUNT_OF(Config_imageInfos);
+  }
+
+  LedSet(COLOR_GREEN);
+  while (EarSmallPressed()) {
+    UtilsDelayMsWD(10); //Wait while pressed
+    watchdog_feed();
+  }  
+  
+  WaitForEarpress(Config_generalSettings.waitForPress);
+
   while (EarBigPressed()) {
     if (EarSmallPressed()) {
         do
@@ -754,6 +759,7 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
   }
   #endif
 
+  WaitForEarpress(Config_generalSettings.waitForBoot);
   Run((unsigned long)pImgRun);
 }
 

@@ -1,7 +1,10 @@
 {
     "general": {
         "activeImg": "ofw1",
+        "_descWaitForPress": "Waits for an earpress on startup",
         "waitForPress": false,
+        "_descWaitForBoot": "Waits for an earpress before firmware boot",
+        "waitForBoot": false,
         "waitTimeoutInS": 60,
         "_descMinBatteryLevel": "Divide through around 700 to get voltage",
         "minBatteryLevel": 2100,

@@ -5,6 +5,7 @@
 sGeneralSettings Config_generalSettings = {
   0,      //activeImage
   false,  //waitForPress
+  false,  //waitForBoot
   60,     //waitTimeoutInS
   2100,   //minBatteryLevel (Divide through around 700 to get voltage, so 3V should be save)
   0x0010014C, //ofwFixValue - Magic bytes from OFW BL
@@ -141,6 +142,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
     if (strcmp("general", jsonGroupName) == 0) {
       if (strcmp("waitForPress", jsonValueName) == 0) {
         Config_generalSettings.waitForPress = (value[0] == 't');
+      } else if (strcmp("waitForBoot", jsonValueName) == 0) {
+        Config_generalSettings.waitForBoot = (value[0] == 't');
       } else if (strcmp("waitTimeoutInS", jsonValueName) == 0) {
         Config_generalSettings.waitTimeoutInS = (uint16_t)strtoul(value, NULL, 0);
       } else if (strcmp("minBatteryLevel", jsonValueName) == 0) {

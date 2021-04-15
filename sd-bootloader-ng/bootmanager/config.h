@@ -21,6 +21,7 @@ typedef struct sGeneralSettings
 {
   uint8_t activeImage;
   bool waitForPress;
+  bool waitForBoot;
   uint16_t waitTimeoutInS;
   uint16_t minBatteryLevel;
   uint32_t ofwFixValue;
