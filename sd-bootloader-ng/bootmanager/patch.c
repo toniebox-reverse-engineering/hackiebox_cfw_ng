@@ -97,15 +97,12 @@ static void clearSearchPosition() {
   pos->deasmAddress = false;
 }
 static void doSearchPosition() {
-  if (positionSearchFailed)
-    return;
-
   sSearchPosition* pos = &searchPosition;
   if (pos->length == 0 || positionCount >= COUNT_OF(positions)) {
     Logger_error("SearchPosition length=0 or too many positions(%i)", positionCount);
     positionSearchFailed = true;
     clearSearchPosition();
-    return;
+    goto cleanUp;
   }
   
   uint32_t offset = 0;
@@ -113,7 +110,7 @@ static void doSearchPosition() {
     Logger_error("SearchPosition %i not found", positionCount);
     positionSearchFailed = true;
     clearSearchPosition();
-    return;
+    goto cleanUp;
   }
 
   positions[positionCount] = offset + pos->offset;
@@ -126,6 +123,7 @@ static void doSearchPosition() {
 
   Logger_info("SearchPosition %i found @0x%x", positionCount, positions[positionCount]);
 
+  cleanUp:
   positionCount++;
 
   clearSearchPosition();
