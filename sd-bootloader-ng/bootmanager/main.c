@@ -748,6 +748,7 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
   watchdog_feed();
 
   #ifndef FIXED_BOOT_IMAGE
+  WaitForEarpress(Config_generalSettings.waitForBoot);
   if (imageInfo->ofwSimBL) {
     Logger_info("Start firmware flash:%s ...", GetFlashPathById(bootInfoData.firmware));
   } else if (imageInfo->bootFlashImg) {
@@ -759,7 +760,6 @@ static bool prepareRun(sImageInfo* imageInfo, char* imagePath, uint32_t filesize
   }
   #endif
 
-  WaitForEarpress(Config_generalSettings.waitForBoot);
   Run((unsigned long)pImgRun);
 }
 
