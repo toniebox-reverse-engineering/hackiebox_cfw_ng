@@ -14,7 +14,8 @@ static sSearchAndReplacePatch searchAndReplacePatch;
 static char* image;
 static uint32_t imageLen;
 
-static sAsmReplace asmReplace;
+static sAsmSearchReplace asmSearch;
+static sAsmSearchReplace asmReplace;
 
 static jsmn_stream_parser parser;
 static char jsonGroupName[17];
@@ -189,27 +190,43 @@ static void doSearchAndReplace() {
   clearSearchAndReplace();
 }
 
-static void clearAsmReplace() {
-  memset(asmReplace.instruction, 0x00, COUNT_OF(asmReplace.instruction));
-  memset(asmReplace.parameter, 0x00, COUNT_OF(asmReplace.parameter));
-  asmReplace.length = 0;
+static void clearAsmSearchReplace(sAsmSearchReplace* asmSR) {
+  memset(asmSR->instruction, 0x00, COUNT_OF(asmSR->instruction));
+  memset(asmSR->parameter, 0x00, COUNT_OF(asmSR->parameter));
+  asmSR->length = 0;
 }
-static void doAsmReplace() {
-  if (asmReplace.length == 0) {
-    Logger_error("asmReplace.length == 0");
+
+static void doAsmSearchReplace(sAsmSearchReplace* asmSR) {
+  if (asmSR->type != PATCH_ASM_SOR_SEARCH && asmSR->type != PATCH_ASM_SOR_REPLACE) {
+    Logger_error("asmSR->type not valid");
+    return;
+  }
+  if (asmSR->length == 0) {
+    if (asmSR->type == PATCH_ASM_SOR_SEARCH)
+      Logger_error("asmSearch->length == 0");
+    else
+      Logger_error("asmReplace->length == 0");
     return;
   }
 
-  if (asmReplace.parameter[0] != 'p' || asmReplace.parameter[1] == '\0') {
-    Logger_error("Invalid parameter %s", asmReplace.parameter);
+  if (asmSR->parameter[0] != 'p' || asmSR->parameter[1] == '\0') {
+    Logger_error("Invalid parameter %s", asmSR->parameter);
     goto cleanUp;
   }
 
-  uint8_t id = strtoul(&asmReplace.parameter[1], NULL, 0);
+  uint8_t id = strtoul(&asmSR->parameter[1], NULL, 0);
 
   if (positionCount <= id) {
     Logger_error("positionCount(%i) <= id(%i) ", positionCount, id);
     goto cleanUp;
+  }
+
+  if (asmSR->type == PATCH_ASM_SOR_SEARCH) {
+    //TODO: generate possible asm instructions for search and do precheck
+    //Do search to get PC for generating branch
+    //cursor
+    //uint32_t searchMemPos = 0;
+    //searchInMemory(searchPosition.search, searchPosition.searchMask, cursor, &searchMemPos);
   }
 
   uint32_t target = APP_IMG_SRAM_OFFSET + positions[id];
@@ -217,32 +234,32 @@ static void doAsmReplace() {
   uint32_t offset = searchAndReplacePatch.searchMemPos; //TODO! Searching twice and assert that search is before replace.
   uint32_t pc = APP_IMG_SRAM_OFFSET + offset + cursor; 
 
-  if (strcmp("b", asmReplace.instruction) == 0) {
-    char instr[2];
+  char instr[4];
+  uint8_t instructionLen;
+  if (strcmp("b", asmSR->instruction) == 0) {
+    instructionLen = 2;
     ArmAsmT_b(pc, target, instr);
-
-    searchAndReplacePatch.replace[cursor] = instr[0];
-    searchAndReplacePatch.replaceMask[cursor] = 0xFF;
-    searchAndReplacePatch.replace[cursor+1] = instr[1];
-    searchAndReplacePatch.replaceMask[cursor+1] = 0xFF;
-  } else if (strcmp("bl", asmReplace.instruction) == 0) {
-    char instr[4];
+  } else if (strcmp("bl", asmSR->instruction) == 0) {
+    instructionLen = 4;
     ArmAsmT_bl(pc, target, instr);
-    searchAndReplacePatch.replace[cursor] = instr[0];
-    searchAndReplacePatch.replaceMask[cursor] = 0xFF;
-    searchAndReplacePatch.replace[cursor+1] = instr[1];
-    searchAndReplacePatch.replaceMask[cursor+1] = 0xFF;
-    searchAndReplacePatch.replace[cursor+2] = instr[2];
-    searchAndReplacePatch.replaceMask[cursor+2] = 0xFF;
-    searchAndReplacePatch.replace[cursor+3] = instr[3];
-    searchAndReplacePatch.replaceMask[cursor+3] = 0xFF;
   } else {
-    Logger_error("Unknown instruction %s", asmReplace.instruction);
+    Logger_error("Unknown instruction %s", asmSR->instruction);
+    goto cleanUp;
+  }
+
+  for (uint8_t i = 0; i<instructionLen; i++) {
+    if (asmSR->type == PATCH_ASM_SOR_SEARCH) {
+      searchAndReplacePatch.search[cursor+i] = instr[i];
+      searchAndReplacePatch.searchMask[cursor+i] = 0xFF;
+    } else {
+      searchAndReplacePatch.replace[cursor+i] = instr[i];
+      searchAndReplacePatch.replaceMask[cursor+i] = 0xFF;
+    }
   }
 
   cleanUp:
-  cursor += asmReplace.length;
-  clearAsmReplace();
+  cursor += asmSR->length;
+  clearAsmSearchReplace(asmSR);
 }
 
 static bool jsmn_hasIgnoreName(void) {
@@ -293,9 +310,12 @@ static void jsmn_end_obj(void *user_arg) {
     if (jsmn_hasIgnoreName())
       break;
     if (strcmp("searchAndReplace", jsonGroupName) == 0
-      && strcmp("replace", jsonValueName) == 0
       && strcmp("asm", jsonSpeciName) == 0) {
-      doAsmReplace();
+        if (strcmp("search", jsonValueName) == 0) {
+          doAsmSearchReplace(&asmSearch);
+        } else if (strcmp("replace", jsonValueName) == 0) {
+          doAsmSearchReplace(&asmReplace);
+        }
     }
     break;
   }
@@ -379,17 +399,23 @@ static void jsmn_str(const char *value, size_t len, void *user_arg) {
       if (jsmn_hasIgnoreName())
         break;
       if (strcmp("searchAndReplace", jsonGroupName) == 0
-        && strcmp("replace", jsonValueName) == 0
-        && strcmp("asm", jsonSpeciName) == 0) {
-
+         && strcmp("asm", jsonSpeciName) == 0) {
+        sAsmSearchReplace* asmSR;
+        if (strcmp("search", jsonValueName) == 0) {
+          asmSR = &asmSearch;
+        } else if (strcmp("replace", jsonValueName) == 0) {
+          asmSR = &asmReplace;
+        } else {
+          break;
+        }
         if (strcmp("instr", jsonSpeciSubName) == 0) {
-          tar_len = min(len, COUNT_OF(asmReplace.instruction)-1);
-          strncpy(asmReplace.instruction, value, tar_len);
-          asmReplace.instruction[min(len, COUNT_OF(asmReplace.instruction))] = '\0';
+          tar_len = min(len, COUNT_OF(asmSR->instruction)-1);
+          strncpy(asmSR->instruction, value, tar_len);
+          asmSR->instruction[min(len, COUNT_OF(asmSR->instruction))] = '\0';
         } else if (strcmp("param", jsonSpeciSubName) == 0) {
-          tar_len = min(len, COUNT_OF(asmReplace.parameter)-1);
-          strncpy(asmReplace.parameter, value, tar_len);
-          asmReplace.parameter[min(len, COUNT_OF(asmReplace.parameter))] = '\0';
+          tar_len = min(len, COUNT_OF(asmSR->parameter)-1);
+          strncpy(asmSR->parameter, value, tar_len);
+          asmSR->parameter[min(len, COUNT_OF(asmSR->parameter))] = '\0';
         }
       }
       break;
@@ -412,10 +438,17 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
       if (jsmn_hasIgnoreName())
         break;
       if (strcmp("searchAndReplace", jsonGroupName) == 0
-        && strcmp("replace", jsonValueName) == 0
         && strcmp("asm", jsonSpeciName) == 0) {
         if (strcmp("length", jsonSpeciSubName) == 0) {
-          asmReplace.length = (int8_t)strtoul(value, NULL, 0);
+          sAsmSearchReplace* asmSR;
+          if (strcmp("search", jsonValueName) == 0) {
+            asmSR = &asmSearch;
+          } else if (strcmp("replace", jsonValueName) == 0) {
+            asmSR = &asmReplace;
+          } else {
+            break;
+          }
+          asmSR->length = (int8_t)strtoul(value, NULL, 0);
         }
       }
       break;
@@ -454,7 +487,8 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     positionCount = 0;
     positionSearchFailed = false;
     clearSearchAndReplace();
-    clearAsmReplace();
+    clearAsmSearchReplace(&asmSearch);
+    clearAsmSearchReplace(&asmReplace);
     image = imageBytes;
     imageLen = imageLength;
 

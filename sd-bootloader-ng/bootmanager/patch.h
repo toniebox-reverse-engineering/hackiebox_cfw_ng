@@ -41,13 +41,19 @@ typedef struct sSearchPosition
 
 } sSearchPosition;
 
-typedef struct sAsmReplace
+typedef enum PATCH_ASM_SOR {
+    PATCH_ASM_SOR_SEARCH,
+    PATCH_ASM_SOR_REPLACE,
+} PATCH_ASM_SOR;
+
+typedef struct sAsmSearchReplace
 {
+  PATCH_ASM_SOR type;
   char instruction[4];
   char parameter[3];
   uint8_t length;
 
-} sAsmReplace;
+} sAsmSearchReplace;
 
 void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength);
 
