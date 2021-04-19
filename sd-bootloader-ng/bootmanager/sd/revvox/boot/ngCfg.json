@@ -29,14 +29,14 @@
         "watchdog": true,
         "ofwFix": true,
         "ofwSimBL": true,
-        "patches": ["blockCheck.307", "blockCheckRemove.308", "noCerts.305", "noChargWake.305", "noHide.308", "noPass3.305", "noPrivacy.305", "uidCheck.307"]
+        "patches": ["blockCheck.310", "blockCheckRemove.310", "noCerts.305", "noChargWake.305", "noHide.308", "noPass3.305", "noPrivacy.305", "uidCheck.307"]
     },
     "ofw3": {
         "checkHash": true,
         "hashFile": false,
         "watchdog": true,
         "ofwFix": true,
-        "patches": ["blockCheck.307", "blockCheckRemove.308", "noCerts.305", "noChargWake.305", "noHide.308", "noPass3.305", "noPrivacy.305", "uidCheck.307"]
+        "patches": ["blockCheck.310", "blockCheckRemove.310", "noCerts.305", "noChargWake.305", "noHide.308", "noPass3.305", "noPrivacy.305", "uidCheck.307"]
     },
     "cfw1": {
         "checkHash": false,

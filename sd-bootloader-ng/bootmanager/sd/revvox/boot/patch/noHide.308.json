@@ -2,10 +2,25 @@
     "general": {
         "_desc": "Do not hide files, if they are marked as deprecated from server. Breaks updating tonie (creative/live) content.",
         "_memPos": "",
-        "_fwVer": "3.0.8"
+        "_fwVer": "3.0.8+"
     },
+    "positions": [{
+        "_id": 0,
+        "_name": "f_chmod_hide",
+        "offset": 0,
+        "search":  ["f0", "b5", "8f", "b0", "0e"]
+    }],
     "searchAndReplace": [{
-        "search":  ["01", "21", "1c", "a8", "fc", "f7", "77", "fa"],
-        "replace": ["??", "??", "??", "??", "00", "bf", "00", "bf"]
+        "search":  [
+            "01", "21",
+            "1c", "a8",
+            "??", "f7", "??", "??"
+        ],
+        "replace": [
+            "??", "??",
+            "??", "??",
+            "00", "bf", "00", "bf"
+        ]
     }]
 }
+

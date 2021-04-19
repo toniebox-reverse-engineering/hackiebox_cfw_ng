@@ -1,12 +1,11 @@
 {
     "general": {
         "_desc": "Always unhides files (instead of hiding them)",
-        "_memPos": "",
-        "_fwVer": "3.0.8"
+        "_memPos": "3.0.8=0x142DC, 3.1.0=0x16ED2",
+        "_fwVer": "3.0.8+"
     },
     "searchAndReplace": [{
-        "search":  ["00", "29", "14", "bf", "02", "27", "00", "27"],
-        "replace": ["??", "??", "??", "??", "00", "??", "??", "??"]
+        "search":  ["14", "bf", "02", "27", "00", "27"],
+        "replace": ["??", "??", "00", "??", "??", "??"]
     }]
 }
-

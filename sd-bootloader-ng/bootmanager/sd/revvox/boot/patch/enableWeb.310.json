@@ -1,0 +1,56 @@
+{
+    "general": {
+        "_desc": "Enable Webinterface without going into AP Mode",
+        "_memPos": "",
+        "_fwVer": "3.1.0"
+    },
+    "positions": [{
+        "_id": 0,
+        "_name": "Prepare/CloseWifiConfigOnDoubleEar?",
+        "_fwVer": "3.1.0",
+        "offset": 0,
+        "search":  ["10", "b5", "04", "46", "1e", "f0", "1e", "fd", "02", "46"]
+    }, {
+        "_id": 1,
+        "_name": "SetTonieMode/BluePulse",
+        "_fwVer": "3.0.5+",
+        "offset": 0,
+        "search":  ["70", "b5", "14", "4e", "14", "4a", "0d", "46", "31", "68", "52", "f8", "20", "30", "52", "f8", "21", "20", "12", "49", "04", "46", "41", "f2", "fb", "70"]
+    }],    
+    "searchAndReplace": [{
+        "_desc": "Keep in WiFi in ROLE_STA instead of switching to ROLE_AP",
+        "_memPos": "3.1.0=0x2163E",
+        "_fwVer": "3.1.0",
+        "search":  [
+            "00", "2b", "0c", "db", "02", "20"
+        ],
+        "replace": [
+            "??", "??", "??", "??", "00", "??"
+        ]
+    },{
+        "_desc": "Disable check on SlDrvCmd result",
+        "_fwVer": "3.0.5+",
+        "search":  [
+            "00", "2b", "06", "db"
+        ],
+        "replace": [
+            "??", "??", "00", "bf"
+        ]
+    },{
+        "_desc": "Branch to tonie mode (instead of blue pulsing)",
+        "_fwVer": "3.0.8+",
+        "search":  [
+            "10", "21",
+            "06", "20",
+            "??", "f7", "??", "??",
+            "??", "??"
+        ],
+        
+        "replace": [
+            "??", "??",
+            "??", "??",
+            "??", "??", "??", "??",
+            "06", "e0"
+        ]
+    }]
+}

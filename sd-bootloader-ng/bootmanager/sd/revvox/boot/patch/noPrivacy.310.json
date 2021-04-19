@@ -1,0 +1,11 @@
+{
+    "general": {
+        "_desc": "Removes ENABLE PRIVACY to keep the tags readable",
+        "_memPos": "3.1.0=0x1B2BC",
+        "_fwVer": "3.1.0"
+    },
+    "searchAndReplace": [{
+        "search":  ["11", "21", "38", "46", "8d", "f8", "76", "90", "f2", "f7", "f4", "ff"],
+        "replace": ["??", "??", "??", "??", "??", "??", "??", "??", "00", "bf", "00", "bf"]
+    }]
+}
