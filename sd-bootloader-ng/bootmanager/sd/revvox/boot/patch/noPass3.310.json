@@ -1,0 +1,37 @@
+{
+    "general": {
+        "_desc": "After two failed tag passwords attempts, the box may try it without a password and shut down the rfid for a moment.",
+        "_memPos": "",
+        "_fwVer": "3.1.0+"
+    },
+    "positions": [{
+        "_id": 0,
+        "_name": "rfidFieldRegisterSet?",
+        "offset": 0,
+        "search":  ["??", "b5", "11", "??", "??", "78", "2a", "b9", "??", "??", "??", "??", "4f", "f4", "a9", "50"]
+    },{
+        "_id": 1,
+        "_name": "rfidReset?",
+        "offset": 0,
+        "search":  ["??", "b5", "??", "??", "??", "78", "??", "46", "33", "b1", "00", "22"]
+    },{
+        "_id": 2,
+        "_name": "bne LAB_AfterPwSuccess",
+        "offset": 4,
+        "search":  ["05", "28", "??", "46"],
+        "deasmAddress": true
+    }],
+    "searchAndReplace": [{
+        "search":  ["4f", "f0", "??", "31", "??", "aa", "00", "20", "??", "91", "??", "??", "??", "??", "05", "28",
+            "??", "46", "??", "d1",
+            "??", "49",
+            "??", "48", "??", "??",
+            "??", "??"],
+        "replace": ["??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "??", "00", "26",
+            {"asm":{"instr": "bl", "param":"p0", "length": 4}}, 
+            "10", "20",
+            {"asm":{"instr": "bl", "param":"p1", "length": 4}},
+            {"asm":{"instr": "b", "param":"p2", "length": 2}}
+        ]
+    }]
+}

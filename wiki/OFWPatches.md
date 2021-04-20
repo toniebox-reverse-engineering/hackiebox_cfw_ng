@@ -14,8 +14,7 @@ Usally the toniebox checks if the tag has exactly 8 blocks. The check allows the
 ### Block count <=8 ([blockCheckRemove.310.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheckRemove.310.json) / [blockCheckRemove.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/blockCheckRemove.308.json))
 Usally the toniebox checks if the tag has exactly 8 blocks. The check allows the tag to have less than that.
 
-### No privacy password ([noPass3.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPass3.305.json))
-*Deprecated replaced with noPass3.305*
+### No privacy password ([noPass3.310.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPass3.310.json) / [noPass3.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPass3.305.json))
 Usally doesn't allow tags without the boxine specific or the NXP specific privacy mode password. With the patch you can use tags without having privacy password support (ex. SLIX). It disables the rf field for a moment when the second privacy password failed. This patch uses the new dynamic patching engine to generate dynamic arm asm bytecode.
 
 ### Second privacy password to 00000000 ([secondPwZero.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/secondPwZero.305.json))
@@ -54,5 +53,5 @@ Handy patch to debug the OFW and to verify and test patches.
 Usally doesn't allow tags without the boxine specific or the NXP specific privacy mode password. With the patch you can use tags without having privacy password support (ex. SLIX).
 
 ### No privacy password ([noPass2.308.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPass2.308.json))
-*Deprecated replaced with noPass3.305*
+*Deprecated replaced with noPass3*
 Usally doesn't allow tags without the boxine specific or the NXP specific privacy mode password. With the patch you can use tags without having privacy password support (ex. SLIX). It disables the rf field for a moment when the second privacy password failed.
