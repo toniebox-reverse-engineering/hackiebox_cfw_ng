@@ -489,6 +489,8 @@ void Patch_Apply(char* imageBytes, char* patchName, uint32_t imageLength) {
     clearSearchAndReplace();
     clearAsmSearchReplace(&asmSearch);
     clearAsmSearchReplace(&asmReplace);
+    asmSearch.type = PATCH_ASM_SOR_SEARCH;
+    asmReplace.type = PATCH_ASM_SOR_REPLACE;
     image = imageBytes;
     imageLen = imageLength;
 
