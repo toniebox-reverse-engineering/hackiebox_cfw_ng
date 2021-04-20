@@ -122,7 +122,7 @@
     #else
         #define BUILD_NAME "HackieboxNG bootloader debug"
     #endif
-    #define BUILD_VERSION "0.9.0"
+    #define BUILD_VERSION "0.9.1"
 #endif
 #ifndef BUILD_GIT_SHORT_SHA
     #define BUILD_GIT_SHORT_SHA "gitHash"
