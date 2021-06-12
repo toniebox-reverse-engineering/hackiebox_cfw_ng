@@ -555,13 +555,13 @@ static uint8_t Selector(uint8_t startNumber) {
 
   while (EarBigPressed()) {
     if (EarSmallPressed()) {
-        do
-        {
+        do {
           counter = (counter+1) % COUNT_OF(Config_imageInfos);
         } while (!Config_imageInfos[counter].fileExists);
         while (EarSmallPressed()) {
             UtilsDelayMsWD(10); //Wait while pressed
         }
+        Logger_info("Selected slot with id=%i", counter);
     }
     if (counter < 3) {
       prebootmgr_blink_color((counter+1)-0, 100, COLOR_GREEN);
