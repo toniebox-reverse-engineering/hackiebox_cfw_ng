@@ -2,14 +2,15 @@
     "general": {
         "_desc": "Enable Webinterface without going into AP Mode",
         "_memPos": "",
-        "_fwVer": "3.1.0"
+        "_fwVer": "3.1.0+"
     },
     "positions": [{
         "_id": 0,
         "_name": "Prepare/CloseWifiConfigOnDoubleEar?",
-        "_fwVer": "3.1.0",
+        "_memPos": "3.1.0_bf1=0x20F0;3.1.0_bf2=0x20F0",
+        "_fwVer": "3.1.0+",
         "offset": 0,
-        "search":  ["10", "b5", "04", "46", "1e", "f0", "1e", "fd", "02", "46"]
+        "search":  ["10", "b5", "04", "46", "1e", "f0", "??", "fd", "02", "46"]
     }, {
         "_id": 1,
         "_name": "SetTonieMode/BluePulse",
