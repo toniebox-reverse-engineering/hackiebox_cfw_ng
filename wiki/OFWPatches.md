@@ -1,6 +1,6 @@
 # HackieboxNG original firmware patches
 ## Preface
-Every patch is written for one or more specific versions of the original firmware. Currently the latest version supported for all patches is **EU_V3.1.0_BF2-0**. An overview over all known firmware versions can be found in the [toniebox wiki](https://github.com/toniebox-reverse-engineering/toniebox/wiki/Known-Firmwares).
+Every patch is written for one or more specific versions of the original firmware. Currently the latest version supported for all patches is **EU_V3.1.0_BF4-0**. An overview over all known firmware versions can be found in the [toniebox wiki](https://github.com/toniebox-reverse-engineering/toniebox/wiki/Known-Firmwares).
 
 ## Offline / Privacy
 It is recommended to keep the toniebox offline if you are using a patched firmware. Using the offline mode is recommended. In addition you should enable the Null certificate patch.
