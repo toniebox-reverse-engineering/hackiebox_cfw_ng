@@ -83,3 +83,42 @@ The integrated patch engine allows to apply patches to the loaded firmware in-me
 [More about available ofw patches](OFWPatches)
 
 ### Error codes
+If the bootloader detects a problem, it blinks in a defined pattern. The preloader on the flash blinks blue, the bootloader on the sd blinks green.
+#### SD related codes
+If a sd related problem occurs, the box combines two patterns. The first one indicates where the problem roughly occured. The second one gives you more information about it.
+##### First pattern
+###### SD not found - 2x500ms, wait 500ms
+Please check if the sd is placed in the holder correctly and the sd is okay. The OFW will blink in red and shut off.
+###### File could not be opened - 3x500ms, wait 2000ms
+Problem opening the firmware file
+###### File could not be read - 4x500ms, wait 2000ms
+Problem reading the firmware file
+##### Second pattern (X times 1000ms)
+1. FR_DISK_ERR, /* (1) A hard error occurred in the low level disk I/O layer */
+2. FR_INT_ERR, /* (2) Assertion failed */
+3. FR_NOT_READY, /* (3) The physical drive cannot work */
+4. FR_NO_FILE, /* (4) Could not find the file */
+5. FR_NO_PATH, /* (5) Could not find the path */
+6. FR_INVALID_NAME, /* (6) The path name format is invalid */
+7. FR_DENIED, /* (7) Access denied due to prohibited access or directory full */
+8. FR_EXIST, /* (8) Access denied due to prohibited access */
+9. FR_INVALID_OBJECT, /* (9) The file/directory object is invalid */
+10. FR_WRITE_PROTECTED, /* (10) The physical drive is write protected */
+11. FR_INVALID_DRIVE, /* (11) The logical drive number is invalid */
+12. FR_NOT_ENABLED, /* (12) The volume has no work area */
+13. FR_NO_FILESYSTEM, /* (13) There is no valid FAT volume */
+14. FR_MKFS_ABORTED, /* (14) The f_mkfs() aborted due to any problem */
+15. FR_TIMEOUT, /* (15) Could not get a grant to access the volume within defined period */
+16. FR_LOCKED, /* (16) The operation is rejected according to the file sharing policy */
+17. FR_NOT_ENOUGH_CORE, /* (17) LFN working buffer could not be allocated */
+18. FR_TOO_MANY_OPEN_FILES, /* (18) Number of open files > _FS_LOCK */
+19. FR_INVALID_PARAMETER /* (19) Given parameter is invalid */
+#### Other
+##### Battery Low - 2x66ms, 2x133ms, 2x66ms
+Battery is low. Value is under the minimum defined in minBatteryLevel. Box hibernates
+##### Hash differs - 10x50ms
+The actual hash of the firmware is different from the one defined in the firmware itself or in the hashfile (depens on the config). Checking the UART-output may help.
+##### Watchdog reset - 5x33ms, 5x66ms, 5x33ms
+The watchdog reseted the box, because the box was in an unintended state or the firmware is broken.
+##### Application error - 3x33ms, 3x66ms, 3x33ms
+Application error. This shouldn't happen. 
