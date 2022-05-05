@@ -21,3 +21,4 @@ common/debug/gdb-dashboard.py
 
 #Keep ARM SDK files
 !arm-sdk/**
+common/debug/openocd.log
