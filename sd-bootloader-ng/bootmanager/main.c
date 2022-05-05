@@ -775,9 +775,9 @@ int main()
   watchdog_start();
 
   Logger_info(BUILD_FULL_NAME);
-
-  if (PRCM_WDT_RESET == MAP_PRCMSysResetCauseGet()) {
-    Logger_warn("Wakeup from WDT_Reset");
+  uint32_t sysResetCause = MAP_PRCMSysResetCauseGet();
+  if (sysResetCause == PRCM_WDT_RESET) {
+    Logger_warn("Wakeup by WDT_Reset");
     watchdog_recovery_sequence();
 
     prebootmgr_blink_error(5, 33);
@@ -785,6 +785,8 @@ int main()
     prebootmgr_blink_error(5, 33);
 
     hibernate();
+  } else {
+    Logger_info("Wakeup by cause %i", sysResetCause);
   }
 
   #ifndef FIXED_BOOT_IMAGE
