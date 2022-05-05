@@ -6,7 +6,7 @@
         "_descWaitForBoot": "Waits for an earpress before firmware boot",
         "waitForBoot": false,
         "waitTimeoutInS": 60,
-        "_descMinBatteryLevel": "Divide through 8869 to get voltage",
+        "_descMinBatteryLevel": "Divide through 2785 to get voltage",
         "minBatteryLevel": 8869,
         "ofwFixFlash": "/sys/pre-img.bin",
         "_descSerialLog": "Logging only works with the debug build!",
