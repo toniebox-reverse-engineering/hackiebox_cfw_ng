@@ -115,14 +115,14 @@
     #else
         #define BUILD_NAME "HackieboxNG preloader debug"
     #endif
-    #define BUILD_VERSION "0.9.0"
+    #define BUILD_VERSION "0.9.3"
 #else
     #ifdef NO_DEBUG_LOG
         #define BUILD_NAME "HackieboxNG bootloader nodebug"
     #else
         #define BUILD_NAME "HackieboxNG bootloader debug"
     #endif
-    #define BUILD_VERSION "0.9.2"
+    #define BUILD_VERSION "0.9.3"
 #endif
 #ifndef BUILD_GIT_SHORT_SHA
     #define BUILD_GIT_SHORT_SHA "gitHash"
