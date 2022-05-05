@@ -7,7 +7,7 @@ sGeneralSettings Config_generalSettings = {
   false,  //waitForPress
   false,  //waitForBoot
   60,     //waitTimeoutInS
-  2100,   //minBatteryLevel (Divide through around 700 to get voltage, so 3V should be save)
+  8869,   //minBatteryLevel (Divide through 2785 to get voltage, so 3.18V should be save)
   0x0010014C, //ofwFixValue - Magic bytes from OFW BL
   "\0",   //ofwFixFlash
   #ifdef NO_DEBUG_LOG
@@ -148,6 +148,8 @@ static void jsmn_primitive(const char *value, size_t len, void *user_arg) {
         Config_generalSettings.waitTimeoutInS = (uint16_t)strtoul(value, NULL, 0);
       } else if (strcmp("minBatteryLevel", jsonValueName) == 0) {
         Config_generalSettings.minBatteryLevel = (uint16_t)strtoul(value, NULL, 0);
+        if (Config_generalSettings.minBatteryLevel == 2100)
+          Config_generalSettings.minBatteryLevel = 8869;
       } else if (strcmp("serialLog", jsonValueName) == 0) {
         Config_generalSettings.serialLog = (value[0] == 't');
       } else if (strcmp("logLevel", jsonValueName) == 0) {

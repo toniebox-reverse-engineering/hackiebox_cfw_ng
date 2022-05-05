@@ -450,7 +450,7 @@ static uint16_t getBatteryLevel()
 	while(MAP_ADCFIFOLvlGet(ADC_BASE, channel))
     MAP_ADCFIFORead(ADC_BASE, channel); // flush the channel's FIFO if not empty
 
-	MAP_ADCTimerConfig(ADC_BASE,2^17); // Configure ADC timer which is used to timestamp the ADC data samples
+	MAP_ADCTimerConfig(ADC_BASE, 0x1FFFF); // Configure ADC timer which is used to timestamp the ADC data samples
 	MAP_ADCTimerEnable(ADC_BASE); // Enable ADC timer which is used to timestamp the ADC data samples
 	MAP_ADCEnable(ADC_BASE); // Enable ADC module
 	MAP_ADCChannelEnable(ADC_BASE, channel); // Enable ADC channel
@@ -462,7 +462,7 @@ static uint16_t getBatteryLevel()
   MAP_ADCChannelDisable(ADC_BASE, channel);
   MAP_ADCTimerDisable(ADC_BASE);
 
-	return (ulSample >> 2 ) & 0x0FFF;	
+	return ulSample & 0x3FFF;	
 }
 
 static void hibernate() {
@@ -474,21 +474,19 @@ static void hibernate() {
   PRCMHibernateEnter();
 }
 
-static void checkBattery() {
+static uint16_t checkBattery() {
   #ifndef FIXED_BOOT_IMAGE
-  if (isChargerConnected())
-    return;
-  
   uint16_t batteryLevel = getBatteryLevel();
-
-  if (batteryLevel < Config_generalSettings.minBatteryLevel) {
-    Logger_debug("Battery level is %i, threshold %i, goto hibernation...", batteryLevel, Config_generalSettings.minBatteryLevel);
+  
+  if (!isChargerConnected() && batteryLevel < Config_generalSettings.minBatteryLevel) {
+    Logger_debug("Battery low, goto hibernation...");
     prebootmgr_blink_error(2, 66);
     prebootmgr_blink_error(2, 133);
     prebootmgr_blink_error(2, 66);
 
     hibernate();
   }
+  return batteryLevel;
   #endif
 }
 
@@ -803,7 +801,8 @@ int main()
     #else
     Config_ReadJsonCfg();
     if (CheckSdImages()) {
-      checkBattery();
+      uint16_t batteryLevel = checkBattery();
+      Logger_debug("Battery level is %i, poweroff at %i", batteryLevel, Config_generalSettings.minBatteryLevel);
 
       retrySelection:
         Config_generalSettings.activeImage = Selector(Config_generalSettings.activeImage);
