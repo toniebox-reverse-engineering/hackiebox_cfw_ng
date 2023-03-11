@@ -59,13 +59,19 @@
         "watchdog": false
     },
     "add2": {
-        "checkHash": false,
+        "checkHash": true,
         "hashFile": false,
-        "watchdog": false
+        "watchdog": true,
+        "ofwFix": true,
+        "ofwSimBL": false,
+        "patches": ["altCa.305", "altUrl.305"]
     },
     "add3": {
-        "checkHash": false,
+        "checkHash": true,
         "hashFile": false,
-        "watchdog": false
+        "watchdog": true,
+        "ofwFix": true,
+        "ofwSimBL": false,
+        "patches": ["altCa.305", "altUrl.305"]
     }
 }

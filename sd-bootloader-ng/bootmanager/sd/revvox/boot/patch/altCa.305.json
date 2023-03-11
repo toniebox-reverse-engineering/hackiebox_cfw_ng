@@ -1,0 +1,12 @@
+{
+    "general": {
+        "_desc": "Change CA from /certs/ca.der to /certs/c2.der",
+        "_memPos": "",
+        "_fwVer": "3.0.5+"
+    },
+    "searchAndReplace": [{
+        "_desc": "ca.der to c2.der",
+        "search":  ["2f", "63", "65", "72", "74", "2f", "63", "61", "2e", "64", "65", "72", "00"],
+        "replace": ["??", "??", "??", "??", "??", "??", "??", "32", "??", "??", "??", "??", "??"]
+    }]
+}

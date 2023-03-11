@@ -39,6 +39,10 @@ Usally the toniebox sets the file attribute hidden of the tonie file for all liv
 ## Additional
 ### Disable privacy mode ([noPrivacy.310.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPrivacy.310.json) / [noPrivacy.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/noPrivacy.305.json))
 Usally the toniebox puts every tag into privacy mode after reading it. This patch disables that, so you can easily read the UID with any standard iso15693 reader like your phone.
+### Load CA from c2.der ([altCa.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/altCa.305.json))
+To use two CAs you can use this patch. It will change the CA path from flash:/certs/ca.der to flash:/certs/c2.der
+### Change Boxine URLs ([altUrl.305.json](https://github.com/toniebox-reverse-engineering/hackiebox_cfw_ng/blob/master/sd-bootloader-ng/bootmanager/sd/revvox/boot/patch/altUrl.305.json))
+Changes the Boxine Cloud URLs from prod.de.tbs.toys to prod.revvox and rtnl.bxcl.de to rtnl.revvox.
 
 
 ##  Development
