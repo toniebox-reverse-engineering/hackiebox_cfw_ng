@@ -1,6 +1,6 @@
 {
     "general": {
-        "_desc": "Change CA from /certs/ca.der to /certs/c2.der",
+        "_desc": "Change CA from /cert/ca.der to /cert/c2.der",
         "_memPos": "",
         "_fwVer": "3.0.5+"
     },
