@@ -29,14 +29,14 @@
         "watchdog": true,
         "ofwFix": true,
         "ofwSimBL": true,
-        "patches": ["blockCheck.310", "blockCheckRemove.310", "noCerts.305", "noHide.308", "noPass3.310", "noPrivacy.305", "uidCheck.307"]
+        "patches": ["altCa.305", "altUrl.tc.fritz.box"]
     },
     "ofw3": {
         "checkHash": true,
         "hashFile": false,
         "watchdog": true,
         "ofwFix": true,
-        "patches": ["blockCheck.310", "blockCheckRemove.310", "noCerts.305", "noHide.308", "noPass3.310", "noPrivacy.305", "uidCheck.307"]
+        "patches": ["altCa.305", "altUrl.tc.fritz.box"]
     },
     "cfw1": {
         "checkHash": false,
@@ -54,9 +54,12 @@
         "watchdog": true
     },
     "add1": {
-        "checkHash": false,
+        "checkHash": true,
         "hashFile": false,
-        "watchdog": false
+        "watchdog": true,
+        "ofwFix": true,
+        "ofwSimBL": false,        
+        "patches": ["blockCheck.310", "noCerts.305", "noPass3.310", "noPrivacy.305", "uidCheck.307"]
     },
     "add2": {
         "checkHash": true,
