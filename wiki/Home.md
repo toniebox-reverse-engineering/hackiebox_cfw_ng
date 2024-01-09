@@ -1,5 +1,5 @@
 # Home - Wiki HackieboxNG
-
+[moved](https://toniebox-reverse-engineering.github.io/docs/custom-firmware/cc3200/hackieboxng-bl/)
 
 ***
 
