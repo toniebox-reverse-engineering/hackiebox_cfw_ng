@@ -6,6 +6,9 @@ on:
       - hbng_bl_nightly
       - hbng_bl_v*
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -32,7 +35,7 @@ jobs:
         echo "ASSET_APPENDIX=release_${GITHUB_REF#refs/tags/hbng_bl_}" >> $GITHUB_ENV
         echo "IS_PRERELEASE=false" >> $GITHUB_ENV
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
       
     - name: Build and zip Bootloader
       id:  build-zip-bootloader
@@ -44,7 +47,7 @@ jobs:
     
     - name: Check release zip existence
       id: check_release
-      uses: andstor/file-existence-action@v1
+      uses: andstor/file-existence-action@v3
       with:
         files: "./exe/sd-bootloader-ng.zip, ./exe/sd-bootloader-ng_debug.zip"  
         allow_failure: true 
@@ -57,7 +60,7 @@ jobs:
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ env.TAG_NAME }}
         release_name: HackieboxNG Bootloader ${{ env.RELEASE_NAME }}
@@ -68,7 +71,7 @@ jobs:
       id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./exe/sd-bootloader-ng.zip
@@ -79,7 +82,7 @@ jobs:
       id: upload-debug-asset 
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.NIGHTLY_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./exe/sd-bootloader-ng_debug.zip
